@@ -1,4 +1,22 @@
 // ── V2 DASHBOARD ──────────────────────────────────────────────────────────
+
+// Shown when user navigates to Dashboard before running any analysis
+function v2ShowDashboardEmpty() {
+  const wrap = document.getElementById('v2-dash-wrap');
+  const nav  = document.getElementById('v2-agent-sidenav');
+  if (wrap) wrap.innerHTML = `
+    <div class="v2-dash-empty">
+      <div class="v2-dash-empty-ico">📊</div>
+      <h2 class="v2-dash-empty-title">No Analysis Yet</h2>
+      <p class="v2-dash-empty-sub">Run an analysis to see your business viability score, financials, market gap, competition intel, and more — all in one dashboard.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="v2-btn primary" onclick="v2GoTo('wizard')">🚀 Start New Analysis</button>
+        <button class="v2-btn ghost" onclick="v2StartDemo()">⚡ Try Demo Mode</button>
+      </div>
+    </div>`;
+  if (nav) nav.innerHTML = '';
+}
+
 function v2RenderDashboard(run) {
   const wrap = document.getElementById('v2-dash-wrap');
   if (!wrap) return;

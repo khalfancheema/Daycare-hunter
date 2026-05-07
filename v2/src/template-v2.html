@@ -41,7 +41,30 @@
       <button class="v2-btn ghost sm" id="v2-chat-toggle-btn" onclick="v2ToggleChat()">💬 AI Answers</button>
       <button class="v2-btn primary sm" onclick="v2GoTo('wizard')">+ New Analysis</button>
     </div>
+    <!-- Mobile hamburger — visible only at ≤768px -->
+    <button class="v2-ham-btn" id="v2-ham-btn" onclick="v2ToggleMobileNav()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
+
+  <!-- Mobile nav drawer (hidden by default) -->
+  <div id="v2-mobile-nav" class="v2-mobile-nav" onclick="v2ToggleMobileNav()">
+    <div class="v2-mobile-nav-panel" onclick="event.stopPropagation()">
+      <div class="v2-mobile-nav-header">
+        <span class="v2-nav-logo">Business Hunter</span>
+        <button class="v2-mobile-nav-close" onclick="v2ToggleMobileNav()">✕</button>
+      </div>
+      <div class="v2-mobile-nav-links">
+        <span class="v2-mobile-nav-link" onclick="v2GoTo('landing');v2ToggleMobileNav()">🏠 Home</span>
+        <span class="v2-mobile-nav-link" onclick="v2GoTo('dashboard');v2ToggleMobileNav()">📊 Dashboard</span>
+        <span class="v2-mobile-nav-link" onclick="v2GoTo('portfolio');v2ToggleMobileNav()">📁 Portfolio</span>
+        <span class="v2-mobile-nav-link" onclick="v2GoTo('traditional');v2ToggleMobileNav()">🔬 Classic View</span>
+        <span class="v2-mobile-nav-link" onclick="v2ShowApiKey();v2ToggleMobileNav()">🔑 API Key</span>
+        <span class="v2-mobile-nav-link" onclick="v2StartDemo();v2ToggleMobileNav()">⚡ Try Demo</span>
+      </div>
+      <button class="v2-btn primary" style="margin:16px;width:calc(100% - 32px)" onclick="v2GoTo('wizard');v2ToggleMobileNav()">🚀 New Analysis</button>
+    </div>
+  </div>
 
   <!-- ── LANDING SCREEN ─────────────────────────────────────── -->
   <div id="screen-landing" class="v2-screen active">

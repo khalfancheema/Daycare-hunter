@@ -229,6 +229,104 @@ function _v2DemoMarkAgentsDone() {
   }
 }
 
+// ── Demo agent data — provides structured output for each of the 17 agents ──────
+function getDemoData(agentNum, industry) {
+  if (industry !== 'daycare') return {};
+  const _demo = {
+    1: { // Demographics
+      summary: 'Johns Creek metro has 47,200 children under age 6 within a 15-mile radius. Median household income is $127,400 — 62% above national average. 74% of households with children have dual incomes, creating strong childcare demand.',
+      population_under_6: 47200, median_income: 127400, households_with_children: 19800,
+      dual_income_pct: 74, subsidy_eligible_pct: 18,
+    },
+    2: { // Gap Analysis
+      cities: [
+        { city: 'Johns Creek',  state: 'GA', gap_score: 8.5, unmet_demand: 328, supply_deficit: 'High',   subsidy_pct: 18 },
+        { city: 'Suwanee',      state: 'GA', gap_score: 7.8, unmet_demand: 247, supply_deficit: 'High',   subsidy_pct: 22 },
+        { city: 'Sugar Hill',   state: 'GA', gap_score: 7.2, unmet_demand: 184, supply_deficit: 'Medium', subsidy_pct: 26 },
+        { city: 'Buford',       state: 'GA', gap_score: 6.5, unmet_demand: 142, supply_deficit: 'Medium', subsidy_pct: 31 },
+        { city: 'Duluth',       state: 'GA', gap_score: 5.9, unmet_demand:  88, supply_deficit: 'Low',    subsidy_pct: 28 },
+      ],
+      summary: 'Infant and toddler slots (0–2 yrs) are severely underserved. The 15-mile radius shows 328 unmet slots in Johns Creek alone.',
+    },
+    3: { summary: 'Real estate analysis: 3 commercial properties zoned correctly within 5 miles. Top pick: 8,200 sqft former preschool on Medlock Bridge Rd — move-in ready with kitchen and outdoor play area.' },
+    4: { summary: 'SBA 7(a) loan pre-qualified at $350K. Total capital stack: $175K equity + $350K debt + $45K grants. 8 potential angel investors identified in the childcare / edtech sector.' },
+    5: { // Compliance
+      total_timeline_months: 4, timeline_months: 4,
+      summary: 'Georgia DECAL licensing: 4-month process. Fire marshal inspection, health dept inspection, background checks, and staff CPR/First Aid required. No major blockers identified.',
+      requirements: [
+        { step: 'DECAL Application', duration_weeks: 2 },
+        { step: 'Fire Marshal Inspection', duration_weeks: 3 },
+        { step: 'Health Department Inspection', duration_weeks: 2 },
+        { step: 'Staff Background Checks', duration_weeks: 1 },
+        { step: 'Final License Issued', duration_weeks: 2 },
+      ],
+    },
+    6: { // Competitive Intel
+      cities: [
+        { city: 'Johns Creek', competitor_count: 3, total_competitors: 3, avg_tuition: 1680, naeyc_accredited: 0 },
+        { city: 'Suwanee',     competitor_count: 2, total_competitors: 2, avg_tuition: 1520, naeyc_accredited: 1 },
+        { city: 'Duluth',      competitor_count: 4, total_competitors: 4, avg_tuition: 1340, naeyc_accredited: 0 },
+      ],
+      summary: '3 direct competitors in Johns Creek; none NAEYC-accredited. Clear opportunity for premium positioning at $1,750–$1,900/mo.',
+    },
+    7: { // Financials
+      total_startup_cost: 526500,
+      scenarios: [
+        { name: 'Conservative', monthly_net:  8200, monthly_revenue: 62000, breakeven_months: 28, roi_3yr:  42, enrollment_pct: 65 },
+        { name: 'Base Case',    monthly_net: 12400, monthly_revenue: 78000, breakeven_months: 18, roi_3yr:  67, enrollment_pct: 82 },
+        { name: 'Optimistic',   monthly_net: 19800, monthly_revenue: 96000, breakeven_months: 12, roi_3yr: 112, enrollment_pct: 96 },
+      ],
+      startup_breakdown: [
+        { item: 'Lease Deposit (6 mo)',      amount: 54000 },
+        { item: 'Renovation & Buildout',     amount: 185000 },
+        { item: 'Equipment & Furniture',     amount: 82000 },
+        { item: 'Licensing & Permits',       amount:  8500 },
+        { item: 'Working Capital (6 mo)',    amount: 197000 },
+      ],
+    },
+    8: { // Executive Summary
+      verdict: 'Go',
+      verdict_rationale: 'Strong demand gap with income demographics supporting premium pricing. 18-month break-even at conservative enrollment assumptions.',
+      assessment: 'The Johns Creek / Suwanee market shows significant unmet childcare demand (gap score 8.5/10). Demographics are exceptional: $127K median income, 74% dual-income households. Competitor landscape is thin with no NAEYC-accredited centers within 5 miles.',
+      success_factors: [
+        'Premium demographics support $1,800+/mo tuition',
+        'No NAEYC-accredited centers within 5 miles — clear differentiation path',
+        'County and state grants reduce startup exposure by ~$45K',
+        'Existing commercial properties reduce buildout cost vs. greenfield',
+      ],
+      risks: [
+        { risk: 'Enrollment Ramp Risk', mitigation: 'Launch waitlist 6 months before open — target 40 pre-enrolled families', severity: 'medium' },
+        { risk: 'Staff Shortage', mitigation: 'Partner with North Georgia College ECE program for pipeline', severity: 'medium' },
+        { risk: 'License Delay', mitigation: 'File DECAL application immediately — 4-month buffer built in', severity: 'low' },
+      ],
+      next_steps: [
+        'Secure 3 LOIs from shortlisted commercial landlords',
+        'File DECAL license application',
+        'Launch waitlist landing page with 6-month incentive discount',
+        'Schedule SBA 7(a) lender meetings',
+        'Apply for DECAL quality grant ($25K) and Georgia CAPS subsidy',
+      ],
+    },
+    9:  { summary: 'Demographics confirm strong target pool. 1,200+ dual-income families within 3 miles of target ZIP.' },
+    10: { summary: 'Social media analysis: Parents in Johns Creek active on Facebook groups — "Johns Creek Parents" (12K members) is primary discovery channel for childcare.' },
+    11: { summary: 'Real estate confirmed: 8,200 sqft at $9/sqft/yr asking ($74K/yr). Zoning R-4 allows childcare facilities with CUP. Recommend offering $8.25/sqft + 3-year NNN.' },
+    12: { // Grants
+      summary: 'Three fundable grant opportunities totaling ~$45K in Year 1. DECAL Quality Care Grant is the highest-value with a rolling deadline.',
+      grants: [
+        { name: 'DECAL Quality Care Grant',    amount: 25000, deadline: 'Rolling',        url: 'https://decal.ga.gov' },
+        { name: 'Georgia CAPS Subsidy',        amount: 15000, deadline: 'Annual — Apr 1', url: 'https://caps.decal.ga.gov' },
+        { name: 'Gwinnett County Small Biz',   amount:  5000, deadline: 'Quarterly',      url: 'https://gwinnettcounty.com' },
+      ],
+    },
+    13: { summary: '5-year demand forecast: childcare demand in the 30097 ZIP code projected to grow 12% by 2029 driven by planned residential developments (2,400 units) in the Medlock Bridge corridor.' },
+    14: { summary: 'Sensitivity analysis: break-even month most sensitive to enrollment rate (±4 months per 10% enrollment change). Tuition has second-largest impact (±2.5 months per $100 tuition change).' },
+    15: { summary: 'Multi-ZIP comparison: Johns Creek (30097) ranks #1 of 5 ZIPs tested. Suwanee (30024) is strong runner-up with lower competition but 8% lower household income.' },
+    16: { summary: 'Staffing model: 75-slot center requires 12 FTE staff. Lead Teacher avg $42K/yr in Gwinnett County. Total annual payroll: $392K at base staffing levels.' },
+    17: { summary: 'Business plan drafted: Full SBA 7(a) package including executive summary, market analysis, competitive landscape, financial projections, and management team bio template.' },
+  };
+  return _demo[agentNum] || {};
+}
+
 // ── Full showcase launch: load demo run + inject banner + show score ───────────
 function v2LaunchShowcase() {
   // Build a full demo run object that mirrors what v2RenderDashboard expects

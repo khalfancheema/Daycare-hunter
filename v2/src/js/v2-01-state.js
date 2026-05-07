@@ -73,8 +73,20 @@ function v2GoTo(screen) {
   if (overlay) overlay.scrollTo({ top: 0, behavior: 'smooth' });
 
   if (screen === 'portfolio') v2RenderPortfolio();
-  if (screen === 'dashboard' && V2.run) v2RenderDashboard(V2.run);
+  if (screen === 'dashboard') {
+    if (V2.run) v2RenderDashboard(V2.run);
+    else if (typeof v2ShowDashboardEmpty === 'function') v2ShowDashboardEmpty();
+  }
   if (screen === 'wizard' && typeof v2CheckWizardDraft === 'function') v2CheckWizardDraft();
+}
+
+function v2ToggleMobileNav() {
+  const nav = document.getElementById('v2-mobile-nav');
+  const btn = document.getElementById('v2-ham-btn');
+  if (!nav) return;
+  const open = nav.classList.toggle('open');
+  if (btn) btn.classList.toggle('open', open);
+  document.body.style.overflow = open ? 'hidden' : '';
 }
 
 function v2ToggleChat() {

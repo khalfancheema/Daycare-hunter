@@ -1624,3 +1624,108 @@ html, body { overflow-x: hidden; }
 .v2-rundiff-up   { color: var(--v2-green); font-weight: 700; }
 .v2-rundiff-down { color: #f87171; font-weight: 700; }
 .v2-rundiff-same { color: var(--v2-t3); }
+
+/* ══════════════════════════════════════════════════════════════════
+   QA FIXES
+   ══════════════════════════════════════════════════════════════════ */
+
+/* FIX #1 — Dashboard empty state */
+.v2-dash-empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 16px; padding: 80px 24px;
+  text-align: center;
+}
+.v2-dash-empty-ico  { font-size: 56px; line-height: 1; }
+.v2-dash-empty-title {
+  font-size: 24px; font-weight: 800; color: var(--v2-t1);
+  letter-spacing: -0.02em; margin: 0;
+}
+.v2-dash-empty-sub {
+  font-size: 14px; color: var(--v2-t2); max-width: 480px;
+  line-height: 1.6; margin: 0 0 8px;
+}
+
+/* FIX #2 — API Key modal: prevent phantom scrollbar */
+#v2-apikey-modal .v2-modal { overflow: hidden; max-height: none; }
+
+/* FIX #3 — Wizard CTA buttons above chat widget (z-index: 9500) */
+.v2-wiz-actions {
+  position: relative;
+  z-index: 9600;
+  padding-right: 404px; /* keep buttons clear of 380px chat widget + 24px gutter */
+}
+@media (max-width: 900px) {
+  .v2-wiz-actions { padding-right: 0; } /* widget full-width on mobile — no conflict */
+}
+
+/* FIX #6 — Light mode: hero heading & sub-text legibility */
+[data-theme="light"] .v2-hero h1 {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+[data-theme="light"] .v2-hero-sub  { color: #475569; }
+[data-theme="light"] .v2-hero-badge {
+  background: rgba(99,102,241,0.10);
+  color: #4f46e5;
+  border-color: rgba(99,102,241,0.25);
+}
+
+/* FIX #7 — Mobile hamburger button */
+.v2-ham-btn {
+  display: none;
+  flex-direction: column; justify-content: center; align-items: center;
+  gap: 5px; width: 40px; height: 40px; border: none;
+  background: var(--v2-s3); border-radius: 8px; cursor: pointer;
+  padding: 0; flex-shrink: 0;
+}
+.v2-ham-btn span {
+  display: block; width: 18px; height: 2px;
+  background: var(--v2-t1); border-radius: 2px;
+  transition: transform .2s, opacity .2s;
+}
+.v2-ham-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.v2-ham-btn.open span:nth-child(2) { opacity: 0; }
+.v2-ham-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 768px) {
+  .v2-ham-btn { display: flex; }
+  /* Hide nav-right action buttons except theme & chat toggles */
+  .v2-nav-right .v2-btn:not(#v2-theme-btn):not(#v2-chat-toggle-btn) { display: none; }
+  #v2-theme-btn, #v2-chat-toggle-btn { display: inline-flex !important; }
+}
+
+/* Mobile nav drawer */
+.v2-mobile-nav {
+  display: none; position: fixed; inset: 0; z-index: 9800;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);
+}
+.v2-mobile-nav.open { display: block; }
+
+.v2-mobile-nav-panel {
+  position: absolute; top: 0; right: 0;
+  width: min(320px, 85vw); height: 100%;
+  background: var(--v2-s1); border-left: 1px solid var(--v2-border2);
+  display: flex; flex-direction: column;
+  animation: v2slideIn .22s ease;
+}
+@keyframes v2slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+.v2-mobile-nav-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--v2-border);
+}
+.v2-mobile-nav-close {
+  background: var(--v2-s3); border: none; border-radius: 8px;
+  width: 32px; height: 32px; cursor: pointer; color: var(--v2-t2);
+  font-size: 16px; display: flex; align-items: center; justify-content: center;
+}
+.v2-mobile-nav-links {
+  display: flex; flex-direction: column; gap: 4px; padding: 12px; flex: 1;
+}
+.v2-mobile-nav-link {
+  padding: 12px 16px; border-radius: 10px; font-size: 15px; font-weight: 500;
+  color: var(--v2-t1); cursor: pointer; transition: background .15s;
+}
+.v2-mobile-nav-link:hover { background: var(--v2-s3); }
