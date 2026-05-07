@@ -45,6 +45,7 @@ const V1_JS = [
   'src/js/38-dag.js',
   'src/js/39-scenario.js',
   'src/js/40-local-guide.js',
+  'src/js/41-agent-stress-guard.js',
 ].map(f => join(ROOT, f));
 
 const V2_JS = [
@@ -63,6 +64,7 @@ const V2_JS = [
   'v2/src/js/v2-13-enhancements.js',
   'v2/src/js/v2-14-missing.js',
   'v2/src/js/v2-15-demo-showcase.js',
+  'v2/src/js/v2-16-free-apis.js',
 ].map(f => join(ROOT, f));
 
 const CSS_FILES = [

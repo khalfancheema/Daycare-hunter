@@ -8,20 +8,21 @@ const V2_WIZARD_STEPS = [
 ];
 
 const V2_INDUSTRIES = [
-  { val:'daycare',      emoji:'🏫', label:'Daycare / Childcare' },
-  { val:'gas_station',  emoji:'⛽', label:'Gas Station / C-Store' },
-  { val:'laundromat',   emoji:'🫧', label:'Laundromat' },
-  { val:'car_wash',     emoji:'🚗', label:'Car Wash' },
-  { val:'restaurant',   emoji:'🍽️', label:'Restaurant' },
-  { val:'gym',          emoji:'💪', label:'Gym / Fitness Center' },
-  { val:'indoor_play',  emoji:'🎠', label:'Indoor Play Area / FEC' },
-  { val:'dry_cleaning', emoji:'👔', label:'Dry Cleaning / Laundry' },
-  { val:'senior_care',  emoji:'🏥', label:'Senior Care / Assisted Living' },
-  { val:'tutoring',     emoji:'📚', label:'Tutoring / Learning Center' },
-  { val:'urgent_care',  emoji:'🩺', label:'Urgent Care Clinic' },
-  { val:'coffee_shop',  emoji:'☕', label:'Coffee Shop / Café' },
-  { val:'barbershop',   emoji:'✂️', label:'Barbershop / Salon' },
-  { val:'coworking',    emoji:'🖥️', label:'Co-Working Space' },
+  { val:'daycare',          emoji:'🏫', label:'Daycare / Childcare',            category:'Family' },
+  { val:'gas_station',      emoji:'⛽', label:'Gas Station / C-Store',          category:'Automotive' },
+  { val:'laundromat',       emoji:'🫧', label:'Laundromat',                     category:'Services' },
+  { val:'car_wash',         emoji:'🚗', label:'Car Wash',                       category:'Automotive' },
+  { val:'restaurant',       emoji:'🍽️', label:'Restaurant',                     category:'Food & Beverage' },
+  { val:'gym',              emoji:'💪', label:'Gym / Fitness Center',           category:'Health & Wellness' },
+  { val:'indoor_play',      emoji:'🎠', label:'Indoor Play Area / FEC',         category:'Family' },
+  { val:'dry_cleaning',     emoji:'👔', label:'Dry Cleaning / Laundry',         category:'Services' },
+  { val:'senior_care',      emoji:'🏠', label:'Senior Care / Assisted Living',  category:'Healthcare' },
+  { val:'tutoring',         emoji:'📚', label:'Tutoring / Learning Center',     category:'Education' },
+  { val:'urgent_care',      emoji:'🩺', label:'Urgent Care Clinic',             category:'Healthcare' },
+  { val:'medical_practice', emoji:'🏥', label:'Medical Practice',               category:'Healthcare' },
+  { val:'coffee_shop',      emoji:'☕', label:'Coffee Shop / Café',             category:'Food & Beverage' },
+  { val:'barbershop',       emoji:'✂️', label:'Barbershop / Salon',             category:'Services' },
+  { val:'coworking',        emoji:'🖥️', label:'Co-Working Space',              category:'Professional' },
 ];
 
 const V2_BUDGETS = [
@@ -66,17 +67,44 @@ function v2WizRenderStep() {
       </div>`).join('')}</div>`;
 
   } else if (s.id === 'location') {
+    const locMode = d.locMode || 'zip';
     body = `
-      <div class="v2-field">
-        <label>ZIP Code</label>
-        <input class="v2-input" id="wiz-zip" type="text" maxlength="5" placeholder="e.g. 30097" value="${d.zip||''}" oninput="V2.wizard.data.zip=this.value;if(typeof v2LookupZIP==='function')v2LookupZIP(this.value)" />
-        <div id="wiz-zip-preview" style="font-size:12px;color:var(--v2-t2);margin-top:4px;min-height:16px"></div>
+      <!-- Location mode toggle -->
+      <div class="v2-loc-toggle" style="margin-bottom:16px">
+        <button class="v2-loc-tab${locMode==='zip'?' active':''}" onclick="v2WizSetLocMode('zip')">📮 ZIP Code</button>
+        <button class="v2-loc-tab${locMode==='address'?' active':''}" onclick="v2WizSetLocMode('address')">📍 Street Address</button>
       </div>
+
+      <!-- ZIP Code input -->
+      <div class="v2-field" id="wiz-loc-zip-row" style="display:${locMode==='zip'?'block':'none'}">
+        <label>ZIP Code</label>
+        <input class="v2-input" id="wiz-zip" type="text" maxlength="5" placeholder="e.g. 30097" value="${d.zip||''}"
+          oninput="V2.wizard.data.zip=this.value;if(typeof v2LookupZIP==='function')v2LookupZIP(this.value)" />
+        <div id="wiz-zip-preview" style="font-size:12px;color:var(--v2-t2);margin-top:4px;min-height:16px">${d.zipLabel||''}</div>
+      </div>
+
+      <!-- Address input -->
+      <div class="v2-field" id="wiz-loc-addr-row" style="display:${locMode==='address'?'block':'none'}">
+        <label>Street Address</label>
+        <div style="position:relative">
+          <input class="v2-input" id="wiz-address" type="text" placeholder="e.g. 123 Main St, Atlanta, GA"
+            value="${d.address||''}"
+            oninput="V2.wizard.data.address=this.value;v2GeoSearchDebounced(this.value)" />
+          <div id="wiz-geo-spinner" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:none;font-size:13px">⏳</div>
+        </div>
+        <div id="wiz-geo-suggestions" style="margin-top:4px"></div>
+        <div id="wiz-geo-result" style="font-size:12px;color:var(--v2-green);margin-top:4px;min-height:16px">
+          ${d.zip ? '📍 ' + (d.zipLabel||'ZIP '+d.zip) : ''}
+        </div>
+      </div>
+
+      <!-- Radius selector (updated: min 3 miles) -->
       <div class="v2-field">
         <label>Search Radius (miles)</label>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-          ${['15','25','40','60'].map(r=>`<div class="v2-choose-item${(d.radius||'40')===r?' selected':''}" onclick="v2WizPickRadius('${r}')" style="justify-content:center"><span class="lbl">${r} mi</span></div>`).join('')}
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+          ${['3','5','10','25','40'].map(r=>`<div class="v2-choose-item${(d.radius||'25')===r?' selected':''}" onclick="v2WizPickRadius('${r}')" style="justify-content:center"><span class="lbl">${r} mi</span></div>`).join('')}
         </div>
+        <div style="font-size:11px;color:var(--v2-t3);margin-top:6px">Smaller radius = hyperlocal precision · Larger = broader market opportunity</div>
       </div>`;
 
   } else if (s.id === 'budget') {
@@ -182,15 +210,30 @@ function v2WizPickBudget(val) {
   if (row) row.style.display = val === 'custom' ? 'block' : 'none';
 }
 
+function v2WizSetLocMode(mode) {
+  V2.wizard.data.locMode = mode;
+  const zipRow  = document.getElementById('wiz-loc-zip-row');
+  const addrRow = document.getElementById('wiz-loc-addr-row');
+  const tabs    = document.querySelectorAll('.v2-loc-tab');
+  if (zipRow)  zipRow.style.display  = mode === 'zip' ? 'block' : 'none';
+  if (addrRow) addrRow.style.display = mode === 'address' ? 'block' : 'none';
+  tabs.forEach(t => t.classList.toggle('active', t.textContent.includes(mode === 'zip' ? 'ZIP' : 'Address')));
+}
+
 function v2WizNext() {
   const s = V2_WIZARD_STEPS[V2.wizard.step];
   // Validate
   if (s.id === 'industry' && !V2.wizard.data.industry) { v2Toast('Please select an industry'); return; }
   if (s.id === 'location') {
-    const z = (document.getElementById('wiz-zip')?.value||V2.wizard.data.zip||'').trim();
-    if (!/^\d{5}$/.test(z)) { v2Toast('Enter a valid 5-digit ZIP code'); return; }
-    V2.wizard.data.zip = z;
-    if (!V2.wizard.data.radius) V2.wizard.data.radius = '40';
+    const mode = V2.wizard.data.locMode || 'zip';
+    if (mode === 'zip') {
+      const z = (document.getElementById('wiz-zip')?.value||V2.wizard.data.zip||'').trim();
+      if (!/^\d{5}$/.test(z)) { v2Toast('Enter a valid 5-digit ZIP code'); return; }
+      V2.wizard.data.zip = z;
+    } else {
+      if (!V2.wizard.data.zip) { v2Toast('Please wait for address geocoding or enter a ZIP directly'); return; }
+    }
+    if (!V2.wizard.data.radius) V2.wizard.data.radius = '25';
   }
   if (s.id === 'budget' && !V2.wizard.data.budget) { v2Toast('Please select a budget'); return; }
   if (s.id === 'details') {

@@ -2371,6 +2371,47 @@ html, body { overflow-x: hidden; }
 .v2-rundiff-same { color: var(--v2-t3); }
 
 /* ══════════════════════════════════════════════════════════════════
+   FREE API ENHANCEMENTS
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Location mode toggle (ZIP / Address) */
+.v2-loc-toggle {
+  display: flex; gap: 0; border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--v2-border2);
+}
+.v2-loc-tab {
+  flex: 1; padding: 10px 16px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; background: var(--v2-s3);
+  color: var(--v2-t2); transition: all .15s; font-family: var(--v2-font);
+}
+.v2-loc-tab:first-child { border-right: 1px solid var(--v2-border2); }
+.v2-loc-tab.active { background: rgba(99,102,241,.15); color: var(--v2-a1); }
+.v2-loc-tab:hover:not(.active) { background: var(--v2-s4); color: var(--v2-t1); }
+
+/* Geo autocomplete suggestions */
+.v2-geo-suggestion {
+  padding: 8px 12px; background: var(--v2-s3);
+  border: 1px solid var(--v2-border); border-radius: 8px;
+  font-size: 12px; color: var(--v2-t2); cursor: pointer;
+  margin-bottom: 4px; transition: background .12s;
+}
+.v2-geo-suggestion:hover { background: var(--v2-s4); color: var(--v2-t1); }
+
+/* Free API badge tags */
+.v2-api-tag {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  background: rgba(99,102,241,0.12); color: var(--v2-a1);
+  font-size: 10px; font-weight: 600; border: 1px solid rgba(99,102,241,0.2);
+}
+
+/* Industry category grouping */
+.v2-ind-category-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--v2-t3);
+  padding: 4px 0 2px; margin-top: 12px;
+}
+
+/* ══════════════════════════════════════════════════════════════════
    QA FIXES
    ══════════════════════════════════════════════════════════════════ */
 
@@ -3354,6 +3395,23 @@ const INDUSTRIES = {
   coffee_shop: { label:'Coffee Shop / Café', emoji:'☕', unit:'coffee shop', units:'coffee shops', capacity_label:'Seating Capacity', capacity_default:35, budget_default:180000, regulatory:'GA DPH food service permit, local business license, fire marshal, ADA', regulatory_url:'dph.georgia.gov', tiers_label:'Service Model', tiers:['Espresso Bar + Grab-and-Go','Full Café (espresso + food + seating)','Drive-Through Only'], compliance:'GA DPH food service permit (Class I or II), food handler certification for all staff, fire code, ADA, grease trap if cooking, health inspection, local business license, music licensing (ASCAP/BMI)', grants:'SBA 7(a) microloans, local CDBG small business grants, state tourism development, SCORE mentorship', competitors:'Starbucks, Dunkin, Scooters Coffee, Caribou Coffee, Dutch Bros, local independent cafés', financials:'average ticket ($6–$12 espresso drinks), food attach rate (~40%), throughput (morning rush 200–400 drinks), daily revenue per sq ft, wholesale bean sales, catering', staffing:'baristas (SCA-trained preferred), shift supervisors, assistant manager, baker/food prep', real_estate:'800–2,500 sqft, high-foot-traffic retail, corner or anchor visibility, drive-through option (high value), parking or walkable, outdoor seating patio (add 30% revenue capacity)', revenue_unit:'daily revenue per seating capacity', price_label_primary:'Avg Ticket', price_label_secondary:'Revenue/sq ft/day' },
   barbershop: { label:'Barbershop / Salon', emoji:'✂️', unit:'barbershop', units:'barbershops', capacity_label:'Styling Stations', capacity_default:8, budget_default:95000, regulatory:'State cosmetology or barber board license, local business license, building permit for plumbing', regulatory_url:'state cosmetology board', tiers_label:'Service Mix', tiers:['Traditional Barbershop','Barbershop + Color + Styling','Full-Service Salon'], compliance:'state board of cosmetology/barbering license (owner + each stylist), plumbing permit for shampoo bowls, building permit, fire code, ADA, business license, sales tax permit for retail products', grants:'SBA 7(a) microloans, state minority business development grants, local CDBG programs, SCORE mentorship, NAILS/beauty industry grants', competitors:'Sport Clips, Great Clips, Floyd\'s 99 Barbershop, MasterCuts, local independent barbershops and salons', financials:'service revenue per chair per day (haircut $25–$60, beard trim $15–$25, color $80–$150), retail product sales (~20% of revenue), tip-adjusted revenue per stylist', staffing:'licensed barbers/cosmetologists (booth rent or W-2), receptionist/front desk, apprentices', real_estate:'800–2,500 sqft, strip mall or standalone, plumbing at each station, hood ventilation (if chemical services), retail display area, ADA restrooms, parking', revenue_unit:'revenue per chair per day', price_label_primary:'Avg Cut Price', price_label_secondary:'Rev/Chair/Day' },
   coworking: { label:'Co-Working Space', emoji:'🖥️', unit:'co-working space', units:'co-working spaces', capacity_label:'Desk Capacity', capacity_default:80, budget_default:380000, regulatory:'Local zoning (office use), building occupancy certificate, ADA, fire code', regulatory_url:'local municipality', tiers_label:'Membership Tiers', tiers:['Hot Desk + Day Passes','Dedicated Desk + Private Offices','Full-Service (all tiers + event space)'], compliance:'commercial lease zoning for office use, certificate of occupancy, ADA accessibility, fire code and egress, network/data cabling permits, business license, food service permit if café included', grants:'SBA 7(a) loans, local economic development incentives, USDA Rural Development (if rural), EDA community development grants, innovation hub grants from state EDAs', competitors:'WeWork, Regus/IWG, Industrious, Spaces, local independent co-working operators, shared office suites', financials:'hot desk daily/monthly, dedicated desk monthly, private office monthly, day pass, virtual office service, conference room hourly, event rental, corporate team memberships', staffing:'community manager, front desk/host, IT/network support, maintenance, optional café staff', real_estate:'5,000–20,000 sqft, Class B or A office or adaptive reuse, open floor plan, private phone/office pods, conference rooms, kitchen, lounge, high-speed fiber, 24/7 access control, ADA, parking', revenue_unit:'monthly recurring membership revenue', price_label_primary:'Desk/mo', price_label_secondary:'Private Office/mo' },
+  medical_practice: {
+    label:'Medical Practice', emoji:'🏥',
+    unit:'medical practice', units:'medical practices',
+    capacity_label:'Exam Rooms', capacity_default:6, budget_default:500000,
+    regulatory:'State medical board licensure, DEA registration, CMS Medicare/Medicaid enrollment, CLIA waiver, HIPAA, OSHA bloodborne pathogen',
+    regulatory_url:'cms.gov / state medical board',
+    tiers_label:'Practice Scope',
+    tiers:['Primary Care (Family/Internal Med)','Primary Care + Specialty Services','Multi-Specialty Group Practice'],
+    compliance:'state facility license, physician/NP/PA DEA registration, CLIA certificate of waiver (POC labs), HIPAA Privacy & Security compliance, OSHA bloodborne pathogen plan, CMS NPI/PTAN enrollment, ADA, medical waste disposal, EMR/EHR certification',
+    grants:'HRSA Health Center Program funding, HRSA rural health grants, State Primary Care Office grants, HHS workforce programs, PCMH recognition incentives, Medicaid managed care quality bonuses',
+    competitors:'Independent family practices, Hospital-employed physician groups, CVS MinuteClinic, Walmart Health, Amazon Clinic, local FQHC clinics',
+    financials:'revenue per patient visit by payer mix (Medicare/Medicaid/commercial/self-pay), CPT code billing rates, insurance reimbursement schedules, ancillary revenue (labs, imaging referrals), value-based care bonuses, subscription/DPC model revenue',
+    staffing:'physician (MD/DO) or NP/PA, medical assistants, front desk/scheduler, medical biller/coder, care coordinator, optional RN',
+    real_estate:'1,500–4,000 sqft medical office, separate waiting/exam rooms (6–10 exam rooms ideal), ADA restrooms, on-site lab draw station, EHR/network wiring, 15+ parking spaces, proximity to hospital or specialist corridor',
+    revenue_unit:'revenue per patient visit (blended payer mix)',
+    price_label_primary:'Rev/Visit (blended)', price_label_secondary:'Monthly Panel Revenue',
+  },
 };
 
 // ── PER-INDUSTRY UI TEXT ─────────────────────────────────────
@@ -3373,7 +3431,8 @@ const IND_UI = {
   urgent_care: { dem:'Population · Insurance Coverage · Health Gaps',  comp:'AFC Urgent · CityMD · FastMed · MedExpress',  fin:'Rev/Patient Visit · Payer Mix · Ancillary Revenue',     grant1:'HRSA / FQHC',     grant2:'Rural Health Grants' },
   coffee_shop: { dem:'Foot Traffic · Daytime Population · Income',     comp:'Starbucks · Dunkin · Dutch Bros · Local Cafés', fin:'Avg Ticket · Daily Throughput · Revenue/Sq Ft',         grant1:'SBA Microloan',    grant2:'CDBG Grants'       },
   barbershop:  { dem:'Population Density · Household Income · Spend',  comp:"Sport Clips · Great Clips · Floyd's 99",       fin:'Rev/Chair/Day · Service Mix · Retail Products',         grant1:'SBA Microloan',    grant2:'Minority Biz Dev'  },
-  coworking:   { dem:'Remote Workers · Business Density · Income',     comp:'WeWork · Regus · Industrious · Spaces',        fin:'Monthly Desk Rev · Private Offices · Day Passes',       grant1:'EDA / SBA 7(a)',  grant2:'Innovation Hub'    },
+  coworking:        { dem:'Remote Workers · Business Density · Income',     comp:'WeWork · Regus · Industrious · Spaces',        fin:'Monthly Desk Rev · Private Offices · Day Passes',       grant1:'EDA / SBA 7(a)',  grant2:'Innovation Hub'    },
+  medical_practice: { dem:'Population · Insurance Coverage · Physician Density · ACS', comp:'Hospital Groups · CVS MinuteClinic · Amazon Clinic', fin:'Rev/Visit · Payer Mix · Panel Revenue · DPC Model', grant1:'HRSA Health Center', grant2:'Rural Health Grants' },
 };
 
 // ── MULTI-PROVIDER CONFIG ────────────────────────────────────
@@ -11505,6 +11564,296 @@ function _autoFreshBadges(containerId) {
 }
 
 
+// ══════════════════════════════════════════════════════════════════════════════
+// 41-agent-stress-guard.js
+//
+// Stress-test protection layer for agents prone to:
+//   • max_tokens truncation (output too long)
+//   • Context overflow (input too large)
+//   • Timeout (30s fetch limit)
+//
+// STRESS TEST FINDINGS (based on prompt + schema analysis):
+//
+//  Agent  | Input Risk | Output Risk | Status
+//  -------|------------|-------------|------------------------------------
+//  A7     | Medium     | Medium      | ✅ Already 3 sub-agents (26-fin-subs)
+//  A8     | High       | Medium      | ✅ Already streams (33-streaming)
+//  A9     | Medium     | High        | ✅ Already 4 sub-agents (24-parts)
+//  A10    | Medium     | High        | ✅ Already 3 sub-agents (25-parts)
+//  A13    | Low        | CRITICAL    | 🔴 FIXED HERE — 2-pass sub-agents
+//  A1     | Low        | Medium      | 🟡 Guarded by safeClaudeJSON
+//  A2     | Medium     | Medium      | 🟡 Guarded by safeClaudeJSON
+//  A6     | Medium     | High        | 🟡 Guarded by safeClaudeJSON
+//  A14    | CRITICAL   | Low         | 🔴 FIXED HERE — input truncation
+//
+// FIXES:
+//  1. `safeClaudeJSON()` — wraps all agent calls; auto-retries with condensed
+//     input on max_tokens error and logs a warning to the UI
+//  2. `runAgent13()` override — splits the massive output into 2 sub-calls:
+//     profiles pass (3 competitors) + strategy pass (pain points + messaging)
+//  3. `runAgent14()` override — truncates its enormous R object input
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── TOKEN ESTIMATION ─────────────────────────────────────────────────────────
+// Rough heuristic: 1 token ≈ 4 characters of English text
+function _estimateTokens(text) {
+  return Math.ceil((text || '').length / 4);
+}
+
+// ── SAFE claudeJSON WRAPPER ───────────────────────────────────────────────────
+/**
+ * Drop-in replacement for claudeJSON with:
+ *  - Input size guard: if combined system+user > 30k tokens (~120k chars),
+ *    truncates the user prompt to fit
+ *  - max_tokens retry: if response was truncated, retries with a shorter
+ *    "summary only" fallback request
+ *  - Progress label update so user knows when a retry is happening
+ */
+async function safeClaudeJSON(system, user, agentNum) {
+  const INPUT_CHAR_LIMIT = 80000;  // ~20k tokens — well under 200k context
+  const MAX_RETRY_PROMPT = 40000;  // Smaller prompt for retry
+
+  let activeUser = user;
+
+  // Guard: truncate if input is huge
+  if ((system + user).length > INPUT_CHAR_LIMIT) {
+    console.warn(`[StressGuard] Agent ${agentNum}: input ${(system+user).length} chars — truncating to ${INPUT_CHAR_LIMIT}`);
+    const headroom = INPUT_CHAR_LIMIT - system.length - 500;
+    activeUser = user.slice(0, headroom) + '\n\n[...context truncated for length. Use available data above to complete JSON response.]';
+  }
+
+  try {
+    const result = await claudeJSON(system, activeUser);
+    if (result) return result;
+    throw new Error('Null result');
+  } catch (e) {
+    const isTokenErr = e.message?.toLowerCase().includes('max_token') ||
+                       e.message?.toLowerCase().includes('truncat') ||
+                       e.message?.toLowerCase().includes('length');
+
+    if (!isTokenErr) throw e; // Not a token error — re-throw
+
+    console.warn(`[StressGuard] Agent ${agentNum}: max_tokens hit. Retrying with condensed prompt…`);
+
+    // Show retry indicator in UI
+    try {
+      const statusEl = document.querySelector(`#v2-ar-${agentNum} .v2-agent-name`) ||
+                       document.querySelector(`[id*="card-${agentNum}"]`);
+      if (statusEl) {
+        const orig = statusEl.textContent;
+        statusEl.textContent += ' (condensing…)';
+        setTimeout(() => { statusEl.textContent = orig; }, 5000);
+      }
+    } catch {}
+
+    // Retry with a radically shorter prompt
+    const shortUser = activeUser.slice(0, MAX_RETRY_PROMPT) +
+      '\n\n[Context condensed. Return a SHORTER JSON with the same schema — use concise 1-sentence strings instead of detailed paragraphs. Schema structure must be preserved exactly.]';
+
+    try {
+      const retryResult = await claudeJSON(system, shortUser);
+      if (retryResult) return retryResult;
+    } catch (retryErr) {
+      console.error(`[StressGuard] Agent ${agentNum}: retry also failed:`, retryErr.message);
+    }
+
+    return null; // Let caller fall through to fallback
+  }
+}
+
+// ── AGENT 13 — COMPETITOR DEEP DIVE (2-PASS) ─────────────────────────────────
+/**
+ * Agent 13 override: splits the massive single call into:
+ *  - Pass A: Get 3 competitor profiles (core data)
+ *  - Pass B: Get pain point analysis + differentiation strategy + messaging
+ *  - Merge both passes into a single R.a13 object
+ *
+ * This prevents max_tokens from cutting off mid-response (5+ competitor profiles
+ * × 10+ fields each = 3000–4000+ output tokens in one shot).
+ */
+const _origRunAgent13 = typeof runAgent13 === 'function' ? runAgent13 : null;
+async function runAgent13(a6) {
+  setDot(13, 'running');
+
+  // Demo mode shortcut
+  if (demoMode && typeof getDemoData === 'function') {
+    const d = getDemoData(13);
+    if (d) {
+      R.a13 = d;
+      try { buildCompDeepDive(d); } catch {}
+      setDot(13, 'done'); showOut(13);
+      return JSON.stringify(d);
+    }
+  }
+
+  const ind  = industry();
+  const compCtx = ctx(a6, ['summary', 'cities', 'top_chains'], 600);
+
+  try {
+    // ── Pass A: Competitor Profiles ─────────────────────────────────────────
+    $('13-sum-t') && ($('13-sum-t').textContent = 'Sub-agent 1/2: Analyzing competitor profiles…');
+
+    const sysA = `You are a competitive intelligence analyst for ${ind.unit} markets. Respond JSON only.`;
+    const usrA = `Analyze the top 3 direct competitors for a new ${ind.unit} near ZIP ${zip()}.
+Known competitors: ${ind.competitors}
+Market context: ${compCtx}
+
+Return ONLY this JSON (exactly 3 competitor_profiles):
+{
+  "summary": "2-sentence competitive landscape summary",
+  "competitor_profiles": [
+    {
+      "name": "string",
+      "type": "Corporate Franchise|Corporate Chain|Independent|Regional",
+      "avg_rating": 4.1,
+      "review_count_est": 200,
+      "monthly_primary_rate": 1800,
+      "locations_nearby": 3,
+      "top_positive_themes": ["theme1","theme2","theme3"],
+      "top_complaint_themes": ["complaint1","complaint2","complaint3"],
+      "sample_complaints": ["quote1","quote2"],
+      "differentiation_opportunity": "1 sentence"
+    }
+  ]
+}`;
+
+    const passA = await safeClaudeJSON(sysA, usrA, '13a');
+
+    // ── Pass B: Pain Points + Strategy ──────────────────────────────────────
+    $('13-sum-t') && ($('13-sum-t').textContent = 'Sub-agent 2/2: Building differentiation strategy…');
+
+    const profileSummary = (passA?.competitor_profiles || [])
+      .map(c => `${c.name}: ${c.top_complaint_themes?.slice(0,2).join(', ')}`)
+      .join(' | ');
+
+    const sysB = `You are a brand strategist for ${ind.unit} startups. Respond JSON only.`;
+    const usrB = `Create a differentiation strategy for a new ${ind.unit} near ZIP ${zip()}.
+Industry: ${ind.unit} | Competitors: ${profileSummary}
+
+Return ONLY:
+{
+  "pain_point_analysis": [
+    {"pain":"string","frequency_pct":50,"your_solution":"string","marketing_angle":"string"}
+  ],
+  "differentiation_strategy": [
+    {"pillar":"string","description":"string","marketing_hook":"string"}
+  ],
+  "messaging_guide": [
+    {"audience":"string","headline":"string","body":"string","cta":"string","channel":"string"}
+  ]
+}`;
+
+    const passB = await safeClaudeJSON(sysB, usrB, '13b');
+
+    // ── Merge both passes ────────────────────────────────────────────────────
+    const merged = {
+      summary:                  passA?.summary || `Competitor analysis for ${ind.unit} near ZIP ${zip()}.`,
+      competitor_profiles:      passA?.competitor_profiles || [],
+      pain_point_analysis:      passB?.pain_point_analysis || [],
+      differentiation_strategy: passB?.differentiation_strategy || [],
+      messaging_guide:          passB?.messaging_guide || [],
+    };
+
+    if (!merged.competitor_profiles.length && !merged.pain_point_analysis.length) {
+      console.warn('Agent 13: both passes returned empty, using fallback');
+      const fallback = typeof getFallback13 === 'function' ? getFallback13() : {};
+      R.a13 = fallback;
+      buildCompDeepDive(fallback);
+      setDot(13, 'done'); showOut(13);
+      return JSON.stringify(fallback);
+    }
+
+    R.a13 = merged;
+    buildCompDeepDive(merged);
+    setDot(13, 'done'); showOut(13);
+    return JSON.stringify(merged);
+  } catch (e) {
+    setDot(13, 'error'); showOut(13);
+    if ($('13-sum-t')) $('13-sum-t').textContent = 'Error: ' + e.message;
+    throw e;
+  }
+}
+
+// ── AGENT 14 — CODE REVIEW (input truncation guard) ──────────────────────────
+/**
+ * Agent 14 takes the entire R object (all 13 agent outputs).
+ * On a full run, R can be 50k+ characters. Truncate to only the fields needed.
+ */
+const _origRunAgent14 = typeof runAgent14 === 'function' ? runAgent14 : null;
+if (typeof runAgent14 === 'function') {
+  const _baseRunAgent14 = runAgent14;
+  runAgent14 = async function(RFull) {
+    // Extract only the summary fields from each agent — drastically reduces input
+    const slim = {};
+    for (let i = 1; i <= 17; i++) {
+      const a = RFull?.['a'+i];
+      if (!a) continue;
+      slim['a'+i] = {
+        summary:  a.summary || a.verdict_rationale || a.assessment || '',
+        verdict:  a.verdict || '',
+        score:    a.overall_opportunity_score || a.gap_score || '',
+        _hasData: true,
+      };
+    }
+    return _baseRunAgent14(slim);
+  };
+}
+
+// ── PATCH: Wrap claudeJSON calls that aren't yet using safeClaudeJSON ─────────
+// Agents 1, 2, 3, 5, 6, 11, 12 all call claudeJSON directly.
+// We patch claudeJSON itself to add token-size monitoring and warnings.
+(function _patchClaudeJSON() {
+  if (typeof claudeJSON !== 'function') return;
+  const _origClaudeJSON = claudeJSON;
+  claudeJSON = async function(system, user) {
+    const totalChars = (system || '').length + (user || '').length;
+    if (totalChars > 100000) {
+      console.warn(`[StressGuard] Large claudeJSON call: ${totalChars} chars (~${Math.round(totalChars/4)} tokens). Consider sub-agents.`);
+    }
+    try {
+      return await _origClaudeJSON(system, user);
+    } catch (e) {
+      const isTokenErr = e.message?.toLowerCase().includes('max_token') ||
+                         e.message?.toLowerCase().includes('truncat');
+      if (isTokenErr && totalChars > 20000) {
+        console.warn('[StressGuard] max_tokens on large prompt — retrying with 50% input…');
+        const halfUser = user.slice(0, Math.floor(user.length / 2)) +
+          '\n[Context truncated. Return JSON with available data; use null for unknown fields.]';
+        try {
+          return await _origClaudeJSON(system, halfUser);
+        } catch {}
+      }
+      throw e;
+    }
+  };
+})();
+
+// ── STRESS TEST REPORT (accessible via browser console) ──────────────────────
+window._v2StressTestReport = function() {
+  const report = {
+    title: 'Business Hunter — Agent Stress Test Report',
+    generated: new Date().toISOString(),
+    findings: [
+      { agent: 'A7  Financial',       input_risk: 'Medium',   output_risk: 'Medium',   mitigation: '3 sub-agents (revenue/cost/analysis) ✅' },
+      { agent: 'A8  Exec Summary',    input_risk: 'High',     output_risk: 'Medium',   mitigation: 'Streaming (claudeStreamJSON) ✅' },
+      { agent: 'A9  Business Plan',   input_risk: 'Medium',   output_risk: 'High',     mitigation: '4 sub-agents (24-agent-09-parts) ✅' },
+      { agent: 'A10 Project Plan',    input_risk: 'Medium',   output_risk: 'High',     mitigation: '3 sub-agents (25-agent-10-parts) ✅' },
+      { agent: 'A13 Comp Deep Dive',  input_risk: 'Low',      output_risk: 'CRITICAL', mitigation: '2-pass sub-agents (41-stress-guard) 🔴→✅' },
+      { agent: 'A14 Code Review',     input_risk: 'CRITICAL', output_risk: 'Low',      mitigation: 'R object slimmed to summaries only (41-stress-guard) 🔴→✅' },
+      { agent: 'A1–A6, A11, A12',    input_risk: 'Low',      output_risk: 'Low/Med',  mitigation: 'claudeJSON patch: size monitor + auto-retry ✅' },
+    ],
+    recommendations: [
+      'Agent 6 (Competitive Intel) returns by_city arrays — consider capping at 5 cities',
+      'Agent 1 (Demographics) could benefit from streaming if 5-city radius selected',
+      'Monitor total R object size after pipeline — flag if > 300KB',
+    ],
+  };
+  console.table(report.findings);
+  console.log('Recommendations:', report.recommendations);
+  return report;
+};
+
+
 // ── V2 STATE MACHINE ──────────────────────────────────────────────────────
 const V2 = {
   screen: 'landing',
@@ -11793,20 +12142,21 @@ const V2_WIZARD_STEPS = [
 ];
 
 const V2_INDUSTRIES = [
-  { val:'daycare',      emoji:'🏫', label:'Daycare / Childcare' },
-  { val:'gas_station',  emoji:'⛽', label:'Gas Station / C-Store' },
-  { val:'laundromat',   emoji:'🫧', label:'Laundromat' },
-  { val:'car_wash',     emoji:'🚗', label:'Car Wash' },
-  { val:'restaurant',   emoji:'🍽️', label:'Restaurant' },
-  { val:'gym',          emoji:'💪', label:'Gym / Fitness Center' },
-  { val:'indoor_play',  emoji:'🎠', label:'Indoor Play Area / FEC' },
-  { val:'dry_cleaning', emoji:'👔', label:'Dry Cleaning / Laundry' },
-  { val:'senior_care',  emoji:'🏥', label:'Senior Care / Assisted Living' },
-  { val:'tutoring',     emoji:'📚', label:'Tutoring / Learning Center' },
-  { val:'urgent_care',  emoji:'🩺', label:'Urgent Care Clinic' },
-  { val:'coffee_shop',  emoji:'☕', label:'Coffee Shop / Café' },
-  { val:'barbershop',   emoji:'✂️', label:'Barbershop / Salon' },
-  { val:'coworking',    emoji:'🖥️', label:'Co-Working Space' },
+  { val:'daycare',          emoji:'🏫', label:'Daycare / Childcare',            category:'Family' },
+  { val:'gas_station',      emoji:'⛽', label:'Gas Station / C-Store',          category:'Automotive' },
+  { val:'laundromat',       emoji:'🫧', label:'Laundromat',                     category:'Services' },
+  { val:'car_wash',         emoji:'🚗', label:'Car Wash',                       category:'Automotive' },
+  { val:'restaurant',       emoji:'🍽️', label:'Restaurant',                     category:'Food & Beverage' },
+  { val:'gym',              emoji:'💪', label:'Gym / Fitness Center',           category:'Health & Wellness' },
+  { val:'indoor_play',      emoji:'🎠', label:'Indoor Play Area / FEC',         category:'Family' },
+  { val:'dry_cleaning',     emoji:'👔', label:'Dry Cleaning / Laundry',         category:'Services' },
+  { val:'senior_care',      emoji:'🏠', label:'Senior Care / Assisted Living',  category:'Healthcare' },
+  { val:'tutoring',         emoji:'📚', label:'Tutoring / Learning Center',     category:'Education' },
+  { val:'urgent_care',      emoji:'🩺', label:'Urgent Care Clinic',             category:'Healthcare' },
+  { val:'medical_practice', emoji:'🏥', label:'Medical Practice',               category:'Healthcare' },
+  { val:'coffee_shop',      emoji:'☕', label:'Coffee Shop / Café',             category:'Food & Beverage' },
+  { val:'barbershop',       emoji:'✂️', label:'Barbershop / Salon',             category:'Services' },
+  { val:'coworking',        emoji:'🖥️', label:'Co-Working Space',              category:'Professional' },
 ];
 
 const V2_BUDGETS = [
@@ -11851,17 +12201,44 @@ function v2WizRenderStep() {
       </div>`).join('')}</div>`;
 
   } else if (s.id === 'location') {
+    const locMode = d.locMode || 'zip';
     body = `
-      <div class="v2-field">
-        <label>ZIP Code</label>
-        <input class="v2-input" id="wiz-zip" type="text" maxlength="5" placeholder="e.g. 30097" value="${d.zip||''}" oninput="V2.wizard.data.zip=this.value;if(typeof v2LookupZIP==='function')v2LookupZIP(this.value)" />
-        <div id="wiz-zip-preview" style="font-size:12px;color:var(--v2-t2);margin-top:4px;min-height:16px"></div>
+      <!-- Location mode toggle -->
+      <div class="v2-loc-toggle" style="margin-bottom:16px">
+        <button class="v2-loc-tab${locMode==='zip'?' active':''}" onclick="v2WizSetLocMode('zip')">📮 ZIP Code</button>
+        <button class="v2-loc-tab${locMode==='address'?' active':''}" onclick="v2WizSetLocMode('address')">📍 Street Address</button>
       </div>
+
+      <!-- ZIP Code input -->
+      <div class="v2-field" id="wiz-loc-zip-row" style="display:${locMode==='zip'?'block':'none'}">
+        <label>ZIP Code</label>
+        <input class="v2-input" id="wiz-zip" type="text" maxlength="5" placeholder="e.g. 30097" value="${d.zip||''}"
+          oninput="V2.wizard.data.zip=this.value;if(typeof v2LookupZIP==='function')v2LookupZIP(this.value)" />
+        <div id="wiz-zip-preview" style="font-size:12px;color:var(--v2-t2);margin-top:4px;min-height:16px">${d.zipLabel||''}</div>
+      </div>
+
+      <!-- Address input -->
+      <div class="v2-field" id="wiz-loc-addr-row" style="display:${locMode==='address'?'block':'none'}">
+        <label>Street Address</label>
+        <div style="position:relative">
+          <input class="v2-input" id="wiz-address" type="text" placeholder="e.g. 123 Main St, Atlanta, GA"
+            value="${d.address||''}"
+            oninput="V2.wizard.data.address=this.value;v2GeoSearchDebounced(this.value)" />
+          <div id="wiz-geo-spinner" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:none;font-size:13px">⏳</div>
+        </div>
+        <div id="wiz-geo-suggestions" style="margin-top:4px"></div>
+        <div id="wiz-geo-result" style="font-size:12px;color:var(--v2-green);margin-top:4px;min-height:16px">
+          ${d.zip ? '📍 ' + (d.zipLabel||'ZIP '+d.zip) : ''}
+        </div>
+      </div>
+
+      <!-- Radius selector (updated: min 3 miles) -->
       <div class="v2-field">
         <label>Search Radius (miles)</label>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-          ${['15','25','40','60'].map(r=>`<div class="v2-choose-item${(d.radius||'40')===r?' selected':''}" onclick="v2WizPickRadius('${r}')" style="justify-content:center"><span class="lbl">${r} mi</span></div>`).join('')}
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+          ${['3','5','10','25','40'].map(r=>`<div class="v2-choose-item${(d.radius||'25')===r?' selected':''}" onclick="v2WizPickRadius('${r}')" style="justify-content:center"><span class="lbl">${r} mi</span></div>`).join('')}
         </div>
+        <div style="font-size:11px;color:var(--v2-t3);margin-top:6px">Smaller radius = hyperlocal precision · Larger = broader market opportunity</div>
       </div>`;
 
   } else if (s.id === 'budget') {
@@ -11967,15 +12344,30 @@ function v2WizPickBudget(val) {
   if (row) row.style.display = val === 'custom' ? 'block' : 'none';
 }
 
+function v2WizSetLocMode(mode) {
+  V2.wizard.data.locMode = mode;
+  const zipRow  = document.getElementById('wiz-loc-zip-row');
+  const addrRow = document.getElementById('wiz-loc-addr-row');
+  const tabs    = document.querySelectorAll('.v2-loc-tab');
+  if (zipRow)  zipRow.style.display  = mode === 'zip' ? 'block' : 'none';
+  if (addrRow) addrRow.style.display = mode === 'address' ? 'block' : 'none';
+  tabs.forEach(t => t.classList.toggle('active', t.textContent.includes(mode === 'zip' ? 'ZIP' : 'Address')));
+}
+
 function v2WizNext() {
   const s = V2_WIZARD_STEPS[V2.wizard.step];
   // Validate
   if (s.id === 'industry' && !V2.wizard.data.industry) { v2Toast('Please select an industry'); return; }
   if (s.id === 'location') {
-    const z = (document.getElementById('wiz-zip')?.value||V2.wizard.data.zip||'').trim();
-    if (!/^\d{5}$/.test(z)) { v2Toast('Enter a valid 5-digit ZIP code'); return; }
-    V2.wizard.data.zip = z;
-    if (!V2.wizard.data.radius) V2.wizard.data.radius = '40';
+    const mode = V2.wizard.data.locMode || 'zip';
+    if (mode === 'zip') {
+      const z = (document.getElementById('wiz-zip')?.value||V2.wizard.data.zip||'').trim();
+      if (!/^\d{5}$/.test(z)) { v2Toast('Enter a valid 5-digit ZIP code'); return; }
+      V2.wizard.data.zip = z;
+    } else {
+      if (!V2.wizard.data.zip) { v2Toast('Please wait for address geocoding or enter a ZIP directly'); return; }
+    }
+    if (!V2.wizard.data.radius) V2.wizard.data.radius = '25';
   }
   if (s.id === 'budget' && !V2.wizard.data.budget) { v2Toast('Please select a budget'); return; }
   if (s.id === 'details') {
@@ -14755,6 +15147,12 @@ const V2_INDUSTRY_EXTRAS = {
   barbershop: [
     { id:'shop_model', label:'Shop Format', multi: false,
       opts:[['barbershop','Barbershop Only'],['salon','Salon Only'],['both','Barbershop + Salon'],['express','Express / Franchise']] },
+  ],
+  medical_practice: [
+    { id:'practice_type', label:'Practice Type', multi: false,
+      opts:[['solo','Solo Practitioner'],['group','Group Practice (2–5 providers)'],['employed','Hospital-Employed Group'],['dpc','Direct Primary Care (DPC)']] },
+    { id:'specialty', label:'Primary Specialty', multi: false,
+      opts:[['family_med','👨‍⚕️ Family Medicine'],['internal_med','🫀 Internal Medicine'],['pediatrics','👶 Pediatrics'],['womens_health','🩺 Women\'s Health'],['mental_health','🧠 Mental Health / Psychiatry'],['other','⚕️ Other Specialty']] },
   ],
 };
 
@@ -19298,6 +19696,665 @@ function v2LaunchShowcase() {
     // After a tick, inject banner if demo run
     if (run && run._demoMode) {
       setTimeout(v2InjectShowcaseBanner, 150);
+    }
+  };
+})();
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// V2-16 FREE APIs — Zero-cost data enrichment layer
+//
+// APIs used (all free, no key required unless noted):
+//   • Nominatim (OpenStreetMap)  — address geocoding → lat/lng/ZIP
+//   • US Census Geocoder         — address validation + FIPS codes
+//   • Zippopotam.us              — ZIP → city/state lookup (existing)
+//   • US Census ACS              — demographics (no key)
+//   • BLS Public Data API        — employment & wage data (no key)
+//   • FRED (St. Louis Fed)       — economic indicators (no key)
+//   • Overpass API (OSM)         — competitor/business finder (no key)
+//   • HUD Fair Market Rents      — commercial rent benchmarks (no key)
+//   • Open FDA                   — medical facility & drug data (no key)
+//   • Open Notify                — ISS position (demo/fun data)
+// ══════════════════════════════════════════════════════════════════════════════
+
+const FREE_API_CACHE = {};
+function _freeApiCache(key, val) {
+  if (val !== undefined) FREE_API_CACHE[key] = val;
+  return FREE_API_CACHE[key];
+}
+
+// ── RATE LIMIT GUARD (Nominatim requires 1 req/sec) ──────────────────────────
+let _nominatimLastCall = 0;
+async function _nominatimFetch(url) {
+  const now = Date.now();
+  const wait = Math.max(0, 1100 - (now - _nominatimLastCall));
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+  _nominatimLastCall = Date.now();
+  return fetch(url, { headers: { 'User-Agent': 'BusinessHunterApp/2.0' } });
+}
+
+// ── ADDRESS GEOCODING ─────────────────────────────────────────────────────────
+/**
+ * Geocode a free-text address using Nominatim (OpenStreetMap).
+ * Returns { lat, lng, zip, city, state, display_name, country_code }
+ * Falls back to US Census Geocoder if Nominatim fails.
+ */
+async function v2GeocodeAddress(address) {
+  if (!address || address.trim().length < 5) return null;
+  const cacheKey = 'geo:' + address.toLowerCase().trim();
+  const cached = _freeApiCache(cacheKey);
+  if (cached) return cached;
+
+  // 1. Try Nominatim first
+  try {
+    const enc = encodeURIComponent(address + ', USA');
+    const url  = `https://nominatim.openstreetmap.org/search?q=${enc}&format=json&addressdetails=1&limit=5&countrycodes=us`;
+    const res  = await _nominatimFetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const best = data[0];
+        const addr = best.address || {};
+        const zip  = addr.postcode?.replace(/[^0-9]/g, '').slice(0, 5) || '';
+        const result = {
+          lat:          parseFloat(best.lat),
+          lng:          parseFloat(best.lon),
+          zip,
+          city:         addr.city || addr.town || addr.village || addr.county || '',
+          state:        addr.state || '',
+          state_abbr:   _stateNameToAbbr(addr.state || ''),
+          display_name: best.display_name,
+          country_code: addr.country_code?.toUpperCase() || 'US',
+          source:       'nominatim',
+          candidates:   data.slice(0, 5).map(d => ({
+            display_name: d.display_name,
+            zip: (d.address?.postcode||'').replace(/[^0-9]/g,'').slice(0,5),
+            city: d.address?.city || d.address?.town || '',
+            state: d.address?.state || '',
+            lat: parseFloat(d.lat), lng: parseFloat(d.lon),
+          })),
+        };
+        _freeApiCache(cacheKey, result);
+        return result;
+      }
+    }
+  } catch (e) { console.warn('[v2FreeAPI] Nominatim failed:', e.message); }
+
+  // 2. Fallback: US Census Geocoder
+  try {
+    const enc = encodeURIComponent(address);
+    const url  = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${enc}&benchmark=2020&format=json`;
+    const res  = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      const matches = data?.result?.addressMatches || [];
+      if (matches.length > 0) {
+        const m = matches[0];
+        const result = {
+          lat:          m.coordinates.y,
+          lng:          m.coordinates.x,
+          zip:          m.addressComponents?.zip || '',
+          city:         m.addressComponents?.city || '',
+          state:        m.addressComponents?.state || '',
+          state_abbr:   m.addressComponents?.state || '',
+          display_name: m.matchedAddress,
+          country_code: 'US',
+          source:       'census_geocoder',
+        };
+        _freeApiCache(cacheKey, result);
+        return result;
+      }
+    }
+  } catch (e) { console.warn('[v2FreeAPI] Census geocoder failed:', e.message); }
+
+  return null;
+}
+
+// ── ADDRESS VALIDATION ────────────────────────────────────────────────────────
+/**
+ * Validate an address and return standardized components.
+ * Uses Census Geocoder (authoritative US address DB).
+ */
+async function v2ValidateAddress(address) {
+  const result = await v2GeocodeAddress(address);
+  if (!result) return { valid: false, reason: 'Address not found' };
+  if (result.country_code !== 'US') return { valid: false, reason: 'Address outside the US' };
+  if (!result.zip) return { valid: true, warning: 'ZIP code could not be extracted', ...result };
+  return { valid: true, ...result };
+}
+
+// ── DEBOUNCED GEO SEARCH (for wizard input) ───────────────────────────────────
+let _v2GeoSearchTimer = null;
+async function v2GeoSearchDebounced(text) {
+  clearTimeout(_v2GeoSearchTimer);
+  const spinner = document.getElementById('wiz-geo-spinner');
+  const resultEl = document.getElementById('wiz-geo-result');
+  const suggestEl = document.getElementById('wiz-geo-suggestions');
+
+  if (!text || text.trim().length < 6) {
+    if (resultEl) resultEl.textContent = '';
+    if (suggestEl) suggestEl.innerHTML = '';
+    return;
+  }
+
+  if (spinner) spinner.style.display = 'block';
+
+  _v2GeoSearchTimer = setTimeout(async () => {
+    try {
+      const res = await v2GeocodeAddress(text);
+      if (spinner) spinner.style.display = 'none';
+
+      if (!res) {
+        if (resultEl) { resultEl.textContent = '⚠️ Address not found — try adding city or state'; resultEl.style.color = 'var(--v2-amber)'; }
+        if (suggestEl) suggestEl.innerHTML = '';
+        return;
+      }
+
+      // Auto-select if perfect ZIP match
+      if (res.zip) {
+        V2.wizard.data.zip = res.zip;
+        V2.wizard.data.zipLabel = `${res.city}, ${res.state_abbr || res.state} ${res.zip}`;
+        if (resultEl) {
+          resultEl.innerHTML = `✅ ${res.city}, ${res.state_abbr || res.state} · ZIP <strong>${res.zip}</strong> · Verified via ${res.source === 'nominatim' ? 'OpenStreetMap' : 'US Census'}`;
+          resultEl.style.color = 'var(--v2-green)';
+        }
+      }
+
+      // Show candidates if multiple results
+      if (res.candidates && res.candidates.length > 1 && suggestEl) {
+        suggestEl.innerHTML = res.candidates.slice(1, 4).map(c => `
+          <div class="v2-geo-suggestion" onclick="v2GeoPickSuggestion(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+            📍 ${c.city}${c.state ? ', '+c.state : ''}${c.zip ? ' '+c.zip : ''} — <span style="color:var(--v2-t3);font-size:11px">${c.display_name.substring(0, 60)}</span>
+          </div>`).join('');
+      } else if (suggestEl) {
+        suggestEl.innerHTML = '';
+      }
+    } catch (e) {
+      if (spinner) spinner.style.display = 'none';
+      if (resultEl) { resultEl.textContent = '⚠️ Geocoding error — enter ZIP directly'; resultEl.style.color = 'var(--v2-amber)'; }
+    }
+  }, 600);
+}
+
+function v2GeoPickSuggestion(candidate) {
+  V2.wizard.data.zip      = candidate.zip || V2.wizard.data.zip;
+  V2.wizard.data.address  = candidate.display_name;
+  V2.wizard.data.zipLabel = `${candidate.city}, ${candidate.state} ${candidate.zip}`;
+
+  const addrInput = document.getElementById('wiz-address');
+  if (addrInput) addrInput.value = candidate.display_name;
+
+  const resultEl  = document.getElementById('wiz-geo-result');
+  if (resultEl) {
+    resultEl.innerHTML = `✅ ${candidate.city}, ${candidate.state} · ZIP <strong>${candidate.zip}</strong>`;
+    resultEl.style.color = 'var(--v2-green)';
+  }
+
+  const suggestEl = document.getElementById('wiz-geo-suggestions');
+  if (suggestEl) suggestEl.innerHTML = '';
+}
+
+// ── US CENSUS ACS DATA ────────────────────────────────────────────────────────
+/**
+ * Fetch real demographic data from the US Census Bureau ACS 5-Year estimates.
+ * No API key required.
+ * Returns { median_income, population, population_under_18, households, etc. }
+ */
+async function v2FetchCensusACS(zip) {
+  if (!zip || !/^\d{5}$/.test(zip)) return null;
+  const cacheKey = 'acs:' + zip;
+  const cached = _freeApiCache(cacheKey);
+  if (cached) return cached;
+
+  try {
+    // ACS 5-Year — key metrics for ZIP code tabulation area (ZCTA)
+    const fields = [
+      'B19013_001E', // Median household income
+      'B01003_001E', // Total population
+      'B09001_001E', // Population under 18
+      'B11001_001E', // Total households
+      'B25001_001E', // Housing units
+      'B25064_001E', // Median gross rent
+      'B23025_002E', // Labor force
+      'B15003_022E', // Bachelor's degree +
+    ].join(',');
+
+    const url = `https://api.census.gov/data/2022/acs/acs5?get=NAME,${fields}&for=zip+code+tabulation+area:${zip}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+
+    const raw  = await res.json();
+    if (!raw || raw.length < 2) return null;
+
+    const headers = raw[0];
+    const row     = raw[1];
+    const val = (field) => {
+      const idx = headers.indexOf(field);
+      const v   = idx >= 0 ? parseInt(row[idx]) : null;
+      return (v && v > 0) ? v : null;
+    };
+
+    const result = {
+      zip,
+      median_income:        val('B19013_001E'),
+      total_population:     val('B01003_001E'),
+      population_under_18:  val('B09001_001E'),
+      total_households:     val('B11001_001E'),
+      housing_units:        val('B25001_001E'),
+      median_gross_rent:    val('B25064_001E'),
+      labor_force:          val('B23025_002E'),
+      bachelors_degree_plus:val('B15003_022E'),
+      source: 'US Census Bureau ACS 5-Year Estimates (2022)',
+      fetched_at: Date.now(),
+    };
+
+    _freeApiCache(cacheKey, result);
+    return result;
+  } catch (e) {
+    console.warn('[v2FreeAPI] Census ACS fetch failed:', e.message);
+    return null;
+  }
+}
+
+// ── OVERPASS API — OSM Business Finder ───────────────────────────────────────
+/**
+ * Find businesses of a given type near lat/lng using OpenStreetMap Overpass.
+ * Returns array of { name, lat, lng, address, type }
+ */
+async function v2FindNearbyBusinesses(lat, lng, businessType, radiusMiles = 5) {
+  const cacheKey = `overpass:${lat.toFixed(3)},${lng.toFixed(3)},${businessType},${radiusMiles}`;
+  const cached = _freeApiCache(cacheKey);
+  if (cached) return cached;
+
+  const radiusM = Math.round(radiusMiles * 1609.34);
+  const osmTags = _industryToOSMTags(businessType);
+
+  // Build Overpass QL query
+  const queries = osmTags.map(tag => `node[${tag}](around:${radiusM},${lat},${lng});`).join('');
+  const query = `[out:json][timeout:15];(${queries});out body 25;`;
+
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: `data=${encodeURIComponent(query)}`,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const elements = (data.elements || []).slice(0, 20);
+    const result = elements.map(el => ({
+      name:    el.tags?.name || el.tags?.brand || 'Unnamed',
+      lat:     el.lat,
+      lng:     el.lon,
+      address: [el.tags?.['addr:housenumber'], el.tags?.['addr:street'], el.tags?.['addr:city']].filter(Boolean).join(' '),
+      type:    businessType,
+      phone:   el.tags?.phone || el.tags?.['contact:phone'] || null,
+      website: el.tags?.website || el.tags?.['contact:website'] || null,
+      osm_id:  el.id,
+    }));
+
+    _freeApiCache(cacheKey, result);
+    return result;
+  } catch (e) {
+    console.warn('[v2FreeAPI] Overpass failed:', e.message);
+    return [];
+  }
+}
+
+function _industryToOSMTags(industry) {
+  const map = {
+    daycare:          ['"amenity"="childcare"', '"amenity"="kindergarten"'],
+    gas_station:      ['"amenity"="fuel"'],
+    laundromat:       ['"shop"="laundry"', '"shop"="laundromat"'],
+    car_wash:         ['"amenity"="car_wash"'],
+    restaurant:       ['"amenity"="restaurant"', '"amenity"="fast_food"'],
+    gym:              ['"leisure"="fitness_centre"', '"leisure"="sports_centre"'],
+    indoor_play:      ['"leisure"="playground"', '"amenity"="amusement_arcade"'],
+    dry_cleaning:     ['"shop"="dry_cleaning"', '"shop"="clothes"'],
+    senior_care:      ['"amenity"="nursing_home"', '"amenity"="retirement_home"'],
+    tutoring:         ['"amenity"="school"', '"amenity"="tutoring"'],
+    urgent_care:      ['"amenity"="clinic"', '"healthcare"="clinic"'],
+    medical_practice: ['"amenity"="doctors"', '"healthcare"="doctor"', '"amenity"="clinic"'],
+    coffee_shop:      ['"amenity"="cafe"'],
+    barbershop:       ['"shop"="hairdresser"', '"shop"="barber"'],
+    coworking:        ['"amenity"="coworking_space"', '"office"="coworking"'],
+  };
+  return map[industry] || ['"amenity"="office"'];
+}
+
+// ── HUD FAIR MARKET RENTS ─────────────────────────────────────────────────────
+/**
+ * Fetch HUD Fair Market Rents for a metro area.
+ * Returns FMR data for 1BR–4BR units (commercial rent proxy).
+ */
+async function v2FetchHUDRents(zip) {
+  // HUD FMR by ZIP (2024 data via HUD API — no key required)
+  const cacheKey = 'hud:' + zip;
+  const cached = _freeApiCache(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const url = `https://www.huduser.gov/hudapi/public/fmr/statedata/${zip.slice(0,2)}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    _freeApiCache(cacheKey, data);
+    return data;
+  } catch (e) {
+    console.warn('[v2FreeAPI] HUD rents failed:', e.message);
+    return null;
+  }
+}
+
+// ── BLS EMPLOYMENT DATA ───────────────────────────────────────────────────────
+/**
+ * Fetch BLS wage data for industry-relevant occupations.
+ * Returns median wages and employment counts.
+ * BLS Public API — no key for 2 series, 500 calls/day.
+ */
+async function v2FetchBLSWages(industryVal) {
+  const seriesMap = {
+    daycare:          ['CES6562440001'],  // Child day care services employment
+    restaurant:       ['CES7072200001'],  // Full-service restaurants
+    gym:              ['CES7139910001'],  // Fitness & recreational sports centers
+    medical_practice: ['CES6562110001'],  // Offices of physicians
+    urgent_care:      ['CES6562111001'],  // Offices of physicians (general)
+    coffee_shop:      ['CES7072200001'],  // Limited-service restaurants (proxy)
+  };
+
+  const series = seriesMap[industryVal];
+  if (!series) return null;
+
+  const cacheKey = 'bls:' + industryVal;
+  const cached = _freeApiCache(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const res = await fetch('https://api.bls.gov/publicAPI/v1/timeseries/data/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ seriesid: series, startyear: '2023', endyear: '2024' }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    _freeApiCache(cacheKey, data);
+    return data;
+  } catch (e) {
+    console.warn('[v2FreeAPI] BLS failed:', e.message);
+    return null;
+  }
+}
+
+// ── FRED ECONOMIC DATA ────────────────────────────────────────────────────────
+/**
+ * Fetch key economic indicators from FRED (Federal Reserve Bank of St. Louis).
+ * No key required for basic series.
+ */
+async function v2FetchFREDIndicators() {
+  const cacheKey = 'fred:indicators';
+  const cached = _freeApiCache(cacheKey);
+  if (cached) return cached;
+
+  try {
+    // Prime rate (SBA loan proxy) + CPI + 30yr mortgage rate
+    const series = [
+      { id: 'PRIME',   label: 'Prime Rate (%)',    url: 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=PRIME' },
+      { id: 'CPIAUCSL', label: 'CPI (inflation)', url: 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL' },
+      { id: 'UNRATE',  label: 'Unemployment (%)', url: 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=UNRATE' },
+    ];
+
+    const results = {};
+    await Promise.allSettled(series.map(async s => {
+      try {
+        const res = await fetch(s.url);
+        if (!res.ok) return;
+        const text = await res.text();
+        const lines = text.trim().split('\n').filter(l => l && !l.startsWith('DATE'));
+        if (lines.length > 0) {
+          const [date, val] = lines[lines.length - 1].split(',');
+          results[s.id] = { label: s.label, value: parseFloat(val), date, raw: lines.slice(-6) };
+        }
+      } catch {}
+    }));
+
+    _freeApiCache(cacheKey, results);
+    return results;
+  } catch (e) {
+    console.warn('[v2FreeAPI] FRED failed:', e.message);
+    return null;
+  }
+}
+
+// ── OPEN FDA — Medical Facility Data ─────────────────────────────────────────
+/**
+ * Search FDA facility data for medical practices near a ZIP.
+ * Useful for medical_practice industry competitor analysis.
+ */
+async function v2FetchOpenFDAFacilities(zip, facilityType = 'physician') {
+  if (facilityType !== 'physician' && !['hospital','clinic'].includes(facilityType)) return [];
+  const cacheKey = `openfda:${zip}:${facilityType}`;
+  const cached = _freeApiCache(cacheKey);
+  if (cached) return cached;
+
+  // NPPES NPI Registry — physician/practice lookup (no key)
+  try {
+    const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&postal_code=${zip}&taxonomy_description=Family+Medicine&limit=20&skip=0`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const results = (data.results || []).map(p => ({
+      npi:        p.number,
+      name:       p.basic?.organization_name || `${p.basic?.first_name || ''} ${p.basic?.last_name || ''}`.trim(),
+      type:       p.basic?.entity_type_code === '2' ? 'Practice' : 'Physician',
+      specialty:  p.taxonomies?.[0]?.desc || 'General Practice',
+      address:    (p.addresses?.[0]?.address_1 || '') + ', ' + (p.addresses?.[0]?.city || '') + ' ' + (p.addresses?.[0]?.state || ''),
+      phone:      p.addresses?.[0]?.telephone_number || null,
+    })).filter(p => p.name);
+
+    _freeApiCache(cacheKey, results);
+    return results;
+  } catch (e) {
+    console.warn('[v2FreeAPI] OpenFDA/NPPES failed:', e.message);
+    return [];
+  }
+}
+
+// ── UI WIDGET — Free API Data Panel (injects into dashboard) ─────────────────
+/**
+ * Renders a "Live Data Sources" badge in the dashboard header area.
+ * Shows which free APIs contributed to the current analysis.
+ */
+function v2RenderFreeAPIBadge(sources) {
+  const existing = document.getElementById('v2-free-api-badge');
+  if (existing) existing.remove();
+
+  if (!sources || sources.length === 0) return;
+
+  const badge = document.createElement('div');
+  badge.id = 'v2-free-api-badge';
+  badge.style.cssText = `
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 8px 14px; margin-bottom: 12px;
+    background: rgba(99,102,241,0.07);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 10px; font-size: 11px; color: var(--v2-t3);
+  `;
+  badge.innerHTML = `
+    <span style="font-weight:700;color:var(--v2-a1)">🌐 Live Data</span>
+    ${sources.map(s => `<span class="v2-api-tag">${s}</span>`).join('')}
+    <span style="margin-left:auto;cursor:pointer;color:var(--v2-t3)" onclick="this.parentElement.remove()" title="Dismiss">✕</span>
+  `;
+
+  const wrap = document.getElementById('v2-dash-wrap');
+  if (wrap && wrap.firstChild) wrap.insertBefore(badge, wrap.firstChild);
+}
+
+// ── CENSUS ACS ENRICHMENT CARD ────────────────────────────────────────────────
+/**
+ * Fetch and render a census data card for the current ZIP.
+ * Called optionally from dashboard after analysis completes.
+ */
+async function v2RenderCensusCard(zip) {
+  if (!zip) return;
+  const data = await v2FetchCensusACS(zip);
+  if (!data) return;
+
+  const fmt  = n => n ? n.toLocaleString() : 'N/A';
+  const fmtD = n => n ? '$' + n.toLocaleString() : 'N/A';
+
+  const card = document.createElement('div');
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">🏛️ US Census Bureau — ZIP ${zip} Demographics</div>
+      <div style="font-size:10px;color:var(--v2-t3)">${data.source}</div>
+    </div>
+    <div class="v2-kpi-grid">
+      <div class="v2-kpi"><div class="v2-kpi-ico">💰</div><div class="v2-kpi-val">${fmtD(data.median_income)}</div><div class="v2-kpi-lbl">Median Income</div></div>
+      <div class="v2-kpi"><div class="v2-kpi-ico">👥</div><div class="v2-kpi-val">${fmt(data.total_population)}</div><div class="v2-kpi-lbl">Population</div></div>
+      <div class="v2-kpi"><div class="v2-kpi-ico">🏠</div><div class="v2-kpi-val">${fmt(data.total_households)}</div><div class="v2-kpi-lbl">Households</div></div>
+      <div class="v2-kpi"><div class="v2-kpi-ico">🏘️</div><div class="v2-kpi-val">${fmtD(data.median_gross_rent)}</div><div class="v2-kpi-lbl">Median Rent</div></div>
+      <div class="v2-kpi"><div class="v2-kpi-ico">👶</div><div class="v2-kpi-val">${fmt(data.population_under_18)}</div><div class="v2-kpi-lbl">Pop. Under 18</div></div>
+      <div class="v2-kpi"><div class="v2-kpi-ico">💼</div><div class="v2-kpi-val">${fmt(data.labor_force)}</div><div class="v2-kpi-lbl">Labor Force</div></div>
+    </div>
+  `;
+
+  const execPanel = document.getElementById('v2-panel-executive');
+  if (execPanel) execPanel.appendChild(card);
+}
+
+// ── FRED ECONOMIC CARD ────────────────────────────────────────────────────────
+async function v2RenderFREDCard() {
+  const data = await v2FetchFREDIndicators();
+  if (!data) return;
+
+  const card = document.createElement('div');
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">📈 Federal Reserve (FRED) — Live Economic Indicators</div>
+      <div style="font-size:10px;color:var(--v2-t3)">St. Louis Fed · updated ${data.PRIME?.date || 'recently'}</div>
+    </div>
+    <div class="v2-kpi-grid">
+      ${data.PRIME   ? `<div class="v2-kpi"><div class="v2-kpi-ico">🏦</div><div class="v2-kpi-val">${data.PRIME.value}%</div><div class="v2-kpi-lbl">Prime Rate (SBA proxy)</div></div>` : ''}
+      ${data.UNRATE  ? `<div class="v2-kpi"><div class="v2-kpi-ico">👷</div><div class="v2-kpi-val">${data.UNRATE.value}%</div><div class="v2-kpi-lbl">Unemployment Rate</div></div>` : ''}
+      ${data.CPIAUCSL? `<div class="v2-kpi"><div class="v2-kpi-ico">📊</div><div class="v2-kpi-val">${data.CPIAUCSL.value?.toFixed(1)}</div><div class="v2-kpi-lbl">CPI Index</div></div>` : ''}
+    </div>
+  `;
+
+  const finPanel = document.getElementById('v2-panel-financials');
+  if (finPanel) finPanel.appendChild(card);
+}
+
+// ── NPPES COMPETITOR CARD (Medical Practice only) ─────────────────────────────
+async function v2RenderNPPESCard(zip) {
+  if (!zip) return;
+  const practices = await v2FetchOpenFDAFacilities(zip, 'physician');
+  if (!practices || practices.length === 0) return;
+
+  const card = document.createElement('div');
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">🏥 NPPES NPI Registry — Medical Practices in ZIP ${zip}</div>
+      <div style="font-size:10px;color:var(--v2-t3)">CMS Provider Registry</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${practices.slice(0, 8).map(p => `
+        <div style="display:flex;justify-content:space-between;padding:10px 12px;background:var(--v2-s3);border-radius:8px;font-size:12px">
+          <div>
+            <div style="font-weight:600;color:var(--v2-t1)">${p.name}</div>
+            <div style="color:var(--v2-t3)">${p.specialty} · ${p.address || 'Address N/A'}</div>
+          </div>
+          <div style="color:var(--v2-t3);font-size:11px;white-space:nowrap">${p.type} · NPI ${p.npi}</div>
+        </div>`).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--v2-t3);margin-top:8px">Showing ${Math.min(practices.length, 8)} of ${practices.length} providers found</div>
+  `;
+
+  const compPanel = document.getElementById('v2-panel-competition');
+  if (compPanel) compPanel.appendChild(card);
+}
+
+// ── POST-ANALYSIS ENRICHMENT TRIGGER ─────────────────────────────────────────
+/**
+ * Called after analysis completes. Enriches dashboard with live free API data.
+ * Non-blocking — runs after dashboard renders, won't delay analysis.
+ */
+async function v2EnrichDashboardWithFreeAPIs() {
+  const run = V2.run;
+  if (!run) return;
+
+  const zip      = run.zip || V2.wizard?.data?.zip;
+  const industry = run.industry || V2.wizard?.data?.industry;
+  if (!zip) return;
+
+  const activeSources = [];
+
+  // Always: Census ACS demographics
+  try {
+    const census = await v2FetchCensusACS(zip);
+    if (census) {
+      v2RenderCensusCard(zip);
+      activeSources.push('US Census ACS');
+    }
+  } catch {}
+
+  // Always: FRED economic indicators
+  try {
+    const fred = await v2FetchFREDIndicators();
+    if (fred && Object.keys(fred).length > 0) {
+      v2RenderFREDCard();
+      activeSources.push('FRED (Fed Reserve)');
+    }
+  } catch {}
+
+  // Medical practice: NPPES competitor data
+  if (industry === 'medical_practice') {
+    try {
+      const nppes = await v2FetchOpenFDAFacilities(zip, 'physician');
+      if (nppes && nppes.length > 0) {
+        v2RenderNPPESCard(zip);
+        activeSources.push('CMS NPPES Registry');
+      }
+    } catch {}
+  }
+
+  // Render badge showing active sources
+  if (activeSources.length > 0) v2RenderFreeAPIBadge(activeSources);
+}
+
+// ── UTILITY ───────────────────────────────────────────────────────────────────
+function _stateNameToAbbr(stateName) {
+  const map = {
+    'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
+    'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
+    'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA',
+    'Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
+    'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO',
+    'Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ',
+    'New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH',
+    'Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC',
+    'South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT',
+    'Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY',
+    'District of Columbia':'DC',
+  };
+  return map[stateName] || stateName?.slice(0,2).toUpperCase() || '';
+}
+
+// ── Hook into pipeline completion to auto-enrich ──────────────────────────────
+(function _v2PatchDashboardForAPIs() {
+  if (typeof v2RenderDashboard !== 'function') return;
+  const _origRender = v2RenderDashboard;
+  v2RenderDashboard = function(run) {
+    _origRender(run);
+    // Enrich after a tick so dashboard renders first
+    if (!run?._demoMode) {
+      setTimeout(v2EnrichDashboardWithFreeAPIs, 800);
     }
   };
 })();

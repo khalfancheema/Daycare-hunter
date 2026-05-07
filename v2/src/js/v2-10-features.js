@@ -514,6 +514,12 @@ const V2_INDUSTRY_EXTRAS = {
     { id:'shop_model', label:'Shop Format', multi: false,
       opts:[['barbershop','Barbershop Only'],['salon','Salon Only'],['both','Barbershop + Salon'],['express','Express / Franchise']] },
   ],
+  medical_practice: [
+    { id:'practice_type', label:'Practice Type', multi: false,
+      opts:[['solo','Solo Practitioner'],['group','Group Practice (2–5 providers)'],['employed','Hospital-Employed Group'],['dpc','Direct Primary Care (DPC)']] },
+    { id:'specialty', label:'Primary Specialty', multi: false,
+      opts:[['family_med','👨‍⚕️ Family Medicine'],['internal_med','🫀 Internal Medicine'],['pediatrics','👶 Pediatrics'],['womens_health','🩺 Women\'s Health'],['mental_health','🧠 Mental Health / Psychiatry'],['other','⚕️ Other Specialty']] },
+  ],
 };
 
 function v2GetIndustryExtrasHTML(industry) {
