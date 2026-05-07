@@ -201,7 +201,7 @@
       <button class="v2-modal-close" onclick="v2CloseApiKey()">✕</button>
     </div>
     <!-- Ollama quick-connect banner -->
-    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #334155;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #334155;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div style="font-size:22px;line-height:1">🦙</div>
       <div style="flex:1;min-width:140px">
         <div style="font-size:12px;font-weight:700;color:#e2e8f0">Run 100% locally with Ollama</div>
@@ -211,6 +211,26 @@
         <option value="llama3">llama3</option>
       </select>
       <button id="v2-ollama-btn" class="v2-btn primary sm" onclick="v2ApplyOllamaPreset()" style="white-space:nowrap;font-size:12px" disabled title="Start Ollama to enable">Use Ollama →</button>
+    </div>
+    <!-- OpenRouter quick-connect banner -->
+    <div style="background:linear-gradient(135deg,#1a0a2e,#1a1230);border:1px solid #4c1d95;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div style="font-size:22px;line-height:1;margin-top:2px">🌐</div>
+      <div style="flex:1;min-width:180px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:#e2e8f0">Free cloud models via OpenRouter</span>
+          <a href="https://openrouter.ai/keys" target="_blank" style="font-size:10px;color:#a78bfa;text-decoration:none;border:1px solid #4c1d95;border-radius:4px;padding:1px 6px">Get free key →</a>
+        </div>
+        <div id="v2-or-status" style="font-size:11px;color:var(--v2-t3);margin-bottom:8px"><span style="color:#94a3b8">● loading models…</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="v2-or-key-input" type="password" placeholder="sk-or-v1-…" autocomplete="off"
+            oninput="v2OpenRouterKeyInput()"
+            style="background:#0f172a;border:1px solid #4c1d95;color:#e2e8f0;padding:5px 10px;border-radius:6px;font-size:12px;width:160px;outline:none" />
+          <select id="v2-or-model-sel" style="background:#0f172a;border:1px solid #4c1d95;color:#e2e8f0;padding:5px 8px;border-radius:6px;font-size:12px;max-width:170px">
+            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B</option>
+          </select>
+          <button id="v2-or-btn" class="v2-btn primary sm" onclick="v2ApplyOpenRouterPreset()" style="white-space:nowrap;font-size:12px;background:linear-gradient(135deg,#7c3aed,#4c1d95)" disabled>Use OpenRouter →</button>
+        </div>
+      </div>
     </div>
     <div class="v2-provider-grid" id="v2-provider-grid"></div>
     <div id="v2-custom-url-row" style="display:none;margin-bottom:16px">

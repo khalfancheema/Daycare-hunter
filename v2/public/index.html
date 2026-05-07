@@ -11984,6 +11984,8 @@ function v2ShowApiKey() {
   if (mi) mi.value = localStorage.getItem('v2_model') || '';
   // Populate Ollama model picker if Ollama is running
   v2DetectOllamaModels();
+  // Populate OpenRouter free model picker
+  v2DetectOpenRouterModels();
 }
 
 // ── OLLAMA PRESET ─────────────────────────────────────────────────────────
@@ -12018,22 +12020,102 @@ async function v2DetectOllamaModels() {
 function v2ApplyOllamaPreset() {
   const sel = document.getElementById('v2-ollama-model-sel');
   const model = sel?.value || 'llama3';
-  // Switch to openai_compat provider
   v2SelectProvider('openai_compat');
-  // Fill fields
   const cu = document.getElementById('v2-custom-url-input');
   if (cu) cu.value = 'http://localhost:11434/v1/chat/completions';
   const mi = document.getElementById('v2-model-input');
   if (mi) mi.value = model;
   const ki = document.getElementById('v2-api-key-input');
   if (ki) ki.value = 'ollama';
-  // Save immediately
   localStorage.setItem('v2_provider',   'openai_compat');
   localStorage.setItem('v2_custom_url', 'http://localhost:11434/v1/chat/completions');
   localStorage.setItem('v2_model',      model);
   localStorage.setItem('v2_apikey',     'ollama');
   v2SyncToV1Dom();
   v2Toast(`🦙 Ollama configured — using ${model}`);
+}
+
+// ── OPENROUTER PRESET ─────────────────────────────────────────────────────
+
+// Curated best free models for JSON/business-analysis tasks (fallback list)
+const _V2_OR_DEFAULTS = [
+  { id: 'meta-llama/llama-3.3-70b-instruct:free',       name: 'Llama 3.3 70B' },
+  { id: 'nousresearch/hermes-3-llama-3.1-405b:free',    name: 'Hermes 3 405B' },
+  { id: 'nvidia/nemotron-3-super-120b-a12b:free',       name: 'Nemotron 120B' },
+  { id: 'openai/gpt-oss-120b:free',                     name: 'GPT-OSS 120B' },
+  { id: 'google/gemma-4-31b-it:free',                   name: 'Gemma 4 31B' },
+  { id: 'qwen/qwen3-coder:free',                        name: 'Qwen3 Coder' },
+  { id: 'meta-llama/llama-3.2-3b-instruct:free',        name: 'Llama 3.2 3B (fast)' },
+];
+
+async function v2DetectOpenRouterModels() {
+  const sel    = document.getElementById('v2-or-model-sel');
+  const status = document.getElementById('v2-or-status');
+  const btn    = document.getElementById('v2-or-btn');
+  if (!sel) return;
+
+  // Pre-fill with curated defaults immediately
+  const savedKey = localStorage.getItem('v2_or_apikey') || '';
+  const ki = document.getElementById('v2-or-key-input');
+  if (ki) ki.value = savedKey;
+
+  // Populate with curated defaults first
+  const savedModel = localStorage.getItem('v2_or_model') || _V2_OR_DEFAULTS[0].id;
+  sel.innerHTML = _V2_OR_DEFAULTS.map(m =>
+    `<option value="${m.id}"${m.id === savedModel ? ' selected' : ''}>${m.name}</option>`
+  ).join('');
+
+  // Enable the button if a key is already saved
+  if (savedKey && btn) btn.disabled = false;
+
+  // Fetch live free models from OpenRouter public API
+  try {
+    const r = await fetch('https://openrouter.ai/api/v1/models', { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    const free = (d.data || [])
+      .filter(m => m.pricing?.prompt === '0' && m.pricing?.completion === '0' && m.id.endsWith(':free'))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (free.length) {
+      sel.innerHTML = free.map(m =>
+        `<option value="${m.id}"${m.id === savedModel ? ' selected' : ''}>${m.name} (${m.id.split('/')[0]})</option>`
+      ).join('');
+      if (status) status.innerHTML = `<span style="color:#22c55e">● ${free.length} free models available</span>`;
+    }
+  } catch {
+    if (status) status.innerHTML = `<span style="color:#94a3b8">● ${_V2_OR_DEFAULTS.length} curated free models</span>`;
+  }
+}
+
+function v2OpenRouterKeyInput() {
+  const ki  = document.getElementById('v2-or-key-input');
+  const btn = document.getElementById('v2-or-btn');
+  if (btn) btn.disabled = !(ki?.value.trim());
+}
+
+function v2ApplyOpenRouterPreset() {
+  const ki  = document.getElementById('v2-or-key-input');
+  const sel = document.getElementById('v2-or-model-sel');
+  const key = ki?.value.trim() || '';
+  const model = sel?.value || _V2_OR_DEFAULTS[0].id;
+  if (!key) { v2Toast('⚠️ Enter your OpenRouter API key first'); return; }
+
+  v2SelectProvider('openai_compat');
+  const cu = document.getElementById('v2-custom-url-input');
+  if (cu) cu.value = 'https://openrouter.ai/api/v1/chat/completions';
+  const mi = document.getElementById('v2-model-input');
+  if (mi) mi.value = model;
+  const mainKey = document.getElementById('v2-api-key-input');
+  if (mainKey) mainKey.value = key;
+
+  localStorage.setItem('v2_provider',   'openai_compat');
+  localStorage.setItem('v2_custom_url', 'https://openrouter.ai/api/v1/chat/completions');
+  localStorage.setItem('v2_model',      model);
+  localStorage.setItem('v2_apikey',     key);
+  localStorage.setItem('v2_or_apikey',  key);
+  localStorage.setItem('v2_or_model',   model);
+  v2SyncToV1Dom();
+  v2Toast(`🌐 OpenRouter configured — using ${model.split('/').pop()}`);
 }
 
 function v2CloseApiKey() {
@@ -20966,7 +21048,7 @@ let _v2EnrichPending = false;
       <button class="v2-modal-close" onclick="v2CloseApiKey()">✕</button>
     </div>
     <!-- Ollama quick-connect banner -->
-    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #334155;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #334155;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div style="font-size:22px;line-height:1">🦙</div>
       <div style="flex:1;min-width:140px">
         <div style="font-size:12px;font-weight:700;color:#e2e8f0">Run 100% locally with Ollama</div>
@@ -20976,6 +21058,26 @@ let _v2EnrichPending = false;
         <option value="llama3">llama3</option>
       </select>
       <button id="v2-ollama-btn" class="v2-btn primary sm" onclick="v2ApplyOllamaPreset()" style="white-space:nowrap;font-size:12px" disabled title="Start Ollama to enable">Use Ollama →</button>
+    </div>
+    <!-- OpenRouter quick-connect banner -->
+    <div style="background:linear-gradient(135deg,#1a0a2e,#1a1230);border:1px solid #4c1d95;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div style="font-size:22px;line-height:1;margin-top:2px">🌐</div>
+      <div style="flex:1;min-width:180px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:#e2e8f0">Free cloud models via OpenRouter</span>
+          <a href="https://openrouter.ai/keys" target="_blank" style="font-size:10px;color:#a78bfa;text-decoration:none;border:1px solid #4c1d95;border-radius:4px;padding:1px 6px">Get free key →</a>
+        </div>
+        <div id="v2-or-status" style="font-size:11px;color:var(--v2-t3);margin-bottom:8px"><span style="color:#94a3b8">● loading models…</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="v2-or-key-input" type="password" placeholder="sk-or-v1-…" autocomplete="off"
+            oninput="v2OpenRouterKeyInput()"
+            style="background:#0f172a;border:1px solid #4c1d95;color:#e2e8f0;padding:5px 10px;border-radius:6px;font-size:12px;width:160px;outline:none" />
+          <select id="v2-or-model-sel" style="background:#0f172a;border:1px solid #4c1d95;color:#e2e8f0;padding:5px 8px;border-radius:6px;font-size:12px;max-width:170px">
+            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B</option>
+          </select>
+          <button id="v2-or-btn" class="v2-btn primary sm" onclick="v2ApplyOpenRouterPreset()" style="white-space:nowrap;font-size:12px;background:linear-gradient(135deg,#7c3aed,#4c1d95)" disabled>Use OpenRouter →</button>
+        </div>
+      </div>
     </div>
     <div class="v2-provider-grid" id="v2-provider-grid"></div>
     <div id="v2-custom-url-row" style="display:none;margin-bottom:16px">

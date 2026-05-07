@@ -128,6 +128,8 @@ function v2ShowApiKey() {
   if (mi) mi.value = localStorage.getItem('v2_model') || '';
   // Populate Ollama model picker if Ollama is running
   v2DetectOllamaModels();
+  // Populate OpenRouter free model picker
+  v2DetectOpenRouterModels();
 }
 
 // ── OLLAMA PRESET ─────────────────────────────────────────────────────────
@@ -162,22 +164,102 @@ async function v2DetectOllamaModels() {
 function v2ApplyOllamaPreset() {
   const sel = document.getElementById('v2-ollama-model-sel');
   const model = sel?.value || 'llama3';
-  // Switch to openai_compat provider
   v2SelectProvider('openai_compat');
-  // Fill fields
   const cu = document.getElementById('v2-custom-url-input');
   if (cu) cu.value = 'http://localhost:11434/v1/chat/completions';
   const mi = document.getElementById('v2-model-input');
   if (mi) mi.value = model;
   const ki = document.getElementById('v2-api-key-input');
   if (ki) ki.value = 'ollama';
-  // Save immediately
   localStorage.setItem('v2_provider',   'openai_compat');
   localStorage.setItem('v2_custom_url', 'http://localhost:11434/v1/chat/completions');
   localStorage.setItem('v2_model',      model);
   localStorage.setItem('v2_apikey',     'ollama');
   v2SyncToV1Dom();
   v2Toast(`🦙 Ollama configured — using ${model}`);
+}
+
+// ── OPENROUTER PRESET ─────────────────────────────────────────────────────
+
+// Curated best free models for JSON/business-analysis tasks (fallback list)
+const _V2_OR_DEFAULTS = [
+  { id: 'meta-llama/llama-3.3-70b-instruct:free',       name: 'Llama 3.3 70B' },
+  { id: 'nousresearch/hermes-3-llama-3.1-405b:free',    name: 'Hermes 3 405B' },
+  { id: 'nvidia/nemotron-3-super-120b-a12b:free',       name: 'Nemotron 120B' },
+  { id: 'openai/gpt-oss-120b:free',                     name: 'GPT-OSS 120B' },
+  { id: 'google/gemma-4-31b-it:free',                   name: 'Gemma 4 31B' },
+  { id: 'qwen/qwen3-coder:free',                        name: 'Qwen3 Coder' },
+  { id: 'meta-llama/llama-3.2-3b-instruct:free',        name: 'Llama 3.2 3B (fast)' },
+];
+
+async function v2DetectOpenRouterModels() {
+  const sel    = document.getElementById('v2-or-model-sel');
+  const status = document.getElementById('v2-or-status');
+  const btn    = document.getElementById('v2-or-btn');
+  if (!sel) return;
+
+  // Pre-fill with curated defaults immediately
+  const savedKey = localStorage.getItem('v2_or_apikey') || '';
+  const ki = document.getElementById('v2-or-key-input');
+  if (ki) ki.value = savedKey;
+
+  // Populate with curated defaults first
+  const savedModel = localStorage.getItem('v2_or_model') || _V2_OR_DEFAULTS[0].id;
+  sel.innerHTML = _V2_OR_DEFAULTS.map(m =>
+    `<option value="${m.id}"${m.id === savedModel ? ' selected' : ''}>${m.name}</option>`
+  ).join('');
+
+  // Enable the button if a key is already saved
+  if (savedKey && btn) btn.disabled = false;
+
+  // Fetch live free models from OpenRouter public API
+  try {
+    const r = await fetch('https://openrouter.ai/api/v1/models', { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    const free = (d.data || [])
+      .filter(m => m.pricing?.prompt === '0' && m.pricing?.completion === '0' && m.id.endsWith(':free'))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (free.length) {
+      sel.innerHTML = free.map(m =>
+        `<option value="${m.id}"${m.id === savedModel ? ' selected' : ''}>${m.name} (${m.id.split('/')[0]})</option>`
+      ).join('');
+      if (status) status.innerHTML = `<span style="color:#22c55e">● ${free.length} free models available</span>`;
+    }
+  } catch {
+    if (status) status.innerHTML = `<span style="color:#94a3b8">● ${_V2_OR_DEFAULTS.length} curated free models</span>`;
+  }
+}
+
+function v2OpenRouterKeyInput() {
+  const ki  = document.getElementById('v2-or-key-input');
+  const btn = document.getElementById('v2-or-btn');
+  if (btn) btn.disabled = !(ki?.value.trim());
+}
+
+function v2ApplyOpenRouterPreset() {
+  const ki  = document.getElementById('v2-or-key-input');
+  const sel = document.getElementById('v2-or-model-sel');
+  const key = ki?.value.trim() || '';
+  const model = sel?.value || _V2_OR_DEFAULTS[0].id;
+  if (!key) { v2Toast('⚠️ Enter your OpenRouter API key first'); return; }
+
+  v2SelectProvider('openai_compat');
+  const cu = document.getElementById('v2-custom-url-input');
+  if (cu) cu.value = 'https://openrouter.ai/api/v1/chat/completions';
+  const mi = document.getElementById('v2-model-input');
+  if (mi) mi.value = model;
+  const mainKey = document.getElementById('v2-api-key-input');
+  if (mainKey) mainKey.value = key;
+
+  localStorage.setItem('v2_provider',   'openai_compat');
+  localStorage.setItem('v2_custom_url', 'https://openrouter.ai/api/v1/chat/completions');
+  localStorage.setItem('v2_model',      model);
+  localStorage.setItem('v2_apikey',     key);
+  localStorage.setItem('v2_or_apikey',  key);
+  localStorage.setItem('v2_or_model',   model);
+  v2SyncToV1Dom();
+  v2Toast(`🌐 OpenRouter configured — using ${model.split('/').pop()}`);
 }
 
 function v2CloseApiKey() {
