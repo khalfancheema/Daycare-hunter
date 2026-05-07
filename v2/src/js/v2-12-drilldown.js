@@ -828,7 +828,7 @@ function v2GetGrantsWithFit() {
     const txt    = JSON.stringify(g).toLowerCase();
     let fit      = 50;
     if (txt.includes(industry) || txt.includes('all industries') || txt.includes('small business')) fit += 20;
-    const award  = g.max_award || g.amount_max || parseInt((g.amount || '0').replace(/[^0-9]/g, '')) || 0;
+    const award  = g.max_award || g.amount_max || parseInt(String(g.amount || '0').replace(/[^0-9]/g, '')) || 0;
     if (award > 0 && award <= budget * 2) fit += 15;
     if (txt.includes(zip.slice(0, 3)) || txt.includes('federal') || txt.includes('national') || txt.includes('all states')) fit += 15;
     return { ...g, fitPct: Math.min(99, fit) };

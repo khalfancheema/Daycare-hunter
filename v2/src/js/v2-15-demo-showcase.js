@@ -136,17 +136,17 @@ function v2InjectShowcaseBanner() {
 
 // ── Feature tour — cycles through all tabs showing key features ───────────────
 const _V2_TOUR_STEPS = [
-  { tab: 'market',      label: 'Market Gap',        msg: '📊 Age-group gaps by infant/toddler/pre-K with 5-year demand forecast and subsidy-eligible population %' },
-  { tab: 'competition', label: 'Competitor Intel',   msg: '🏪 Click any competitor row for full profile — tuition, staff ratios, NAEYC status, capacity utilization' },
-  { tab: 'financials',  label: 'Financials',         msg: '💰 Full 18-month enrollment ramp · Click any month for P&L detail · Lease sensitivity slider · Wage inflation scenario' },
+  { tab: 'executive',   label: 'Live Census Data',   msg: '🏛️ Real US Census ACS demographics injected automatically — median income, population, rent, labor force for ZIP 30097' },
+  { tab: 'market',      label: 'Market Gap',         msg: '📊 Age-group gaps by infant/toddler/pre-K with 5-year demand forecast and subsidy-eligible population %' },
+  { tab: 'competition', label: 'Competitor Intel',   msg: '🗺️ Live OpenStreetMap competitors auto-loaded for the search radius — real business names, phones, and addresses' },
+  { tab: 'financials',  label: 'Financials + FRED',  msg: '💰 Full 18-month enrollment ramp + live Federal Reserve data (Prime Rate, CPI, Unemployment) from FRED API' },
   { tab: 'risks',       label: 'Risk Scoring',       msg: '⚠️ Probability × Impact scores with trigger conditions and mitigation cost per risk' },
-  { tab: 'realestate',  label: 'Real Estate',        msg: '🏠 5 scored listings — zoning, ADA, school proximity, density, parking all rated out of 10' },
-  { tab: 'multizip',    label: 'Multi-ZIP',          msg: '📍 5 cities ranked by composite score — click any to launch sub-analysis' },
+  { tab: 'plan',        label: 'Action Plan',        msg: '✅ Step-by-step launch checklist auto-generated from compliance timeline and market findings' },
   { tab: 'compare',     label: 'Compare',            msg: '⚖️ Side-by-side run comparison · "What Changed" diff between your March and April analyses' },
-  { tab: 'sensitivity', label: 'Sensitivity',        msg: '🎯 Which single assumption most changes your break-even month — enrollment rate, tuition, lease, wages' },
-  { tab: 'trends',      label: 'Trends',             msg: '📈 5-year market trends for demand, income growth, and competitor entry rate' },
-  { tab: 'freshness',   label: 'Sources',            msg: '🔍 Source attribution with confidence %, stale warnings, and live link checker for all 13 data sources' },
-  { tab: 'saved',       label: 'Saved Searches',     msg: '🔖 3 bookmarked analyses — ZIP + industry + score history' },
+  { tab: 'whatif',      label: 'What-If',            msg: '🎲 Adjust enrollment rate, tuition, lease, and wages in real-time and see break-even shift instantly' },
+  { tab: 'grants',      label: 'Grants',             msg: '💵 Matched grants ranked by fit score — DECAL Quality Care, Georgia CAPS, Gwinnett County Small Biz' },
+  { tab: 'benchmark',   label: 'Benchmarking',       msg: '📊 Your metrics vs industry benchmarks — where you rank on revenue per slot, margin, and ROI' },
+  { tab: 'agents',      label: 'All Agents',         msg: '🤖 All 17 AI agents shown — status, timing, and output for every step of the pipeline' },
 ];
 
 let _v2ShowcaseTourIdx = 0;
@@ -231,6 +231,41 @@ function _v2DemoMarkAgentsDone() {
 
 // ── Demo agent data — provides structured output for each of the 17 agents ──────
 function getDemoData(agentNum, industry) {
+  // Medical Practice demo data
+  if (industry === 'medical_practice') {
+    const _medDemo = {
+      1: { summary: 'Forsyth County has 89,400 adults over 18 within a 10-mile radius. Median household income is $112,700. 67% hold private insurance (commercial); 14% Medicare; 6% Medicaid — favorable payer mix for a private practice.',
+           population_under_6: 0, median_income: 112700, households_with_children: 28400, dual_income_pct: 71, subsidy_eligible_pct: 6 },
+      2: { cities: [
+             { city: 'Cumming', state: 'GA', gap_score: 7.8, unmet_demand: 8400, supply_deficit: 'High', subsidy_pct: 6 },
+             { city: 'Alpharetta', state: 'GA', gap_score: 6.5, unmet_demand: 4200, supply_deficit: 'Medium', subsidy_pct: 9 },
+           ],
+           summary: 'Primary care physician-to-patient ratio is 1:2,400 vs the recommended 1:1,500. Significant unmet demand for family medicine within 10 miles.' },
+      7: { total_startup_cost: 480000,
+           scenarios: [
+             { name: 'Conservative', monthly_net: 9800,  monthly_revenue: 52000, breakeven_months: 22, roi_3yr: 48,  enrollment_pct: 60 },
+             { name: 'Base Case',    monthly_net: 16400, monthly_revenue: 72000, breakeven_months: 14, roi_3yr: 89,  enrollment_pct: 80 },
+             { name: 'Optimistic',   monthly_net: 24000, monthly_revenue: 96000, breakeven_months: 10, roi_3yr: 142, enrollment_pct: 100 },
+           ],
+           startup_breakdown: [
+             { item: 'Lease Deposit (6 mo)',     amount: 42000 },
+             { item: 'Medical Build-out',        amount: 180000 },
+             { item: 'Equipment & Instruments', amount: 95000 },
+             { item: 'EHR System (3yr)',         amount: 24000 },
+             { item: 'Working Capital (6 mo)',  amount: 139000 },
+           ] },
+      8: { verdict: 'Go', verdict_rationale: 'Excellent payer mix with low Medicaid exposure. Physician-to-patient ratio confirms real unmet demand.',
+           assessment: 'Forsyth County represents a high-income, underserved primary care market. The 1:2,400 physician ratio and aging suburban population create durable demand. Commercial insurance dominance (67%) supports premium fee-for-service revenue.',
+           success_factors: ['Premium payer mix (67% commercial) supports strong revenue per visit', 'HRSA HPSA designation potential — qualifies for loan repayment', 'DPC/hybrid model opportunity to differentiate from hospital-employed groups'],
+           risks: [
+             { risk: 'Credentialing Timeline', mitigation: 'Start insurance credentialing 6 months before open — 90-day avg per insurer', severity: 'high' },
+             { risk: 'Referral Network', mitigation: 'Join local IPA and attend hospital medical staff meetings from day 1', severity: 'medium' },
+           ],
+           next_steps: ['File NPI and DEA registration immediately', 'Apply to participate in Anthem, BCBS, Aetna, Cigna panels', 'Sign lease and file for GA Medical Board facility license', 'Hire medical biller (credentialing specialist preferred)'] },
+    };
+    return _medDemo[agentNum] || { summary: `Medical practice agent ${agentNum} — demo data` };
+  }
+
   if (industry !== 'daycare') return {};
   const _demo = {
     1: { // Demographics
@@ -318,7 +353,38 @@ function getDemoData(agentNum, industry) {
         { name: 'Gwinnett County Small Biz',   amount:  5000, deadline: 'Quarterly',      url: 'https://gwinnettcounty.com' },
       ],
     },
-    13: { summary: '5-year demand forecast: childcare demand in the 30097 ZIP code projected to grow 12% by 2029 driven by planned residential developments (2,400 units) in the Medlock Bridge corridor.' },
+    13: {
+      summary: 'Competitor deep-dive: 3 chain centers dominate — Primrose (premium), Goddard (franchise), KinderCare (corporate). All have recurring complaints about inflexibility and high staff turnover.',
+      competitor_profiles: [
+        { name: 'Primrose School at Johns Creek', type: 'Corporate Franchise', avg_rating: 4.2, review_count_est: 340, monthly_primary_rate: 1820,
+          locations_nearby: 2, top_positive_themes: ['Clean facility','Structured curriculum','Safe environment'],
+          top_complaint_themes: ['Rigid drop-off/pick-up times','No sick-day flexibility','High staff turnover'],
+          sample_complaints: ['They turned my child away twice for a mild sniffle','Director changed 3 times in 2 years'],
+          differentiation_opportunity: 'Flexible scheduling and staff continuity programs' },
+        { name: 'Goddard School', type: 'Corporate Franchise', avg_rating: 4.4, review_count_est: 218, monthly_primary_rate: 1750,
+          locations_nearby: 1, top_positive_themes: ['Play-based learning','Good communication','Safe'],
+          top_complaint_themes: ['Waitlist always full','Limited infant slots','Expensive'],
+          sample_complaints: ['Been on the waitlist 8 months', 'Infant room is too small'],
+          differentiation_opportunity: 'Guaranteed infant enrollment with waitlist priority' },
+        { name: 'KinderCare Learning Center', type: 'Corporate Chain', avg_rating: 3.8, review_count_est: 175, monthly_primary_rate: 1480,
+          locations_nearby: 1, top_positive_themes: ['Affordable','Extended hours','Meals included'],
+          top_complaint_themes: ['Understaffed','High turnover','Mediocre curriculum'],
+          sample_complaints: ['3 different teachers in 6 months', 'Feels like a warehouse, not a school'],
+          differentiation_opportunity: 'Low-ratio classrooms and NAEYC accreditation' },
+      ],
+      pain_point_analysis: [
+        { pain: 'Rigid pick-up/drop-off windows (no flexibility for working parents)', frequency_pct: 68, your_solution: 'Flexible 7am–7pm hours with 30-min grace windows', marketing_angle: 'Built for the real working parent' },
+        { pain: 'Infant slots always waitlisted — 6–12 month waits at top centers', frequency_pct: 54, your_solution: 'Dedicated 12-slot infant room with guaranteed enrollment process', marketing_angle: 'Reserve your spot before birth' },
+        { pain: 'High staff turnover creates inconsistent care quality', frequency_pct: 61, your_solution: 'Above-market pay + retention bonuses; publish avg. staff tenure', marketing_angle: 'Teachers who know your child by name — for years, not months' },
+        { pain: 'No NAEYC-accredited option within 5 miles', frequency_pct: 45, your_solution: 'Commit to NAEYC accreditation by Year 2', marketing_angle: 'The only NAEYC-accredited center in Johns Creek' },
+      ],
+      differentiation_strategy: [
+        { pillar: 'Flexibility-First Hours', description: '6:30am–7pm with flexible sick-day credits and make-up days', marketing_hook: 'Life doesn\'t follow a bell schedule. Neither do we.' },
+        { pillar: 'Staff Retention & Continuity', description: 'Above-market salaries, profit-sharing, and <20% annual turnover target', marketing_hook: 'Meet your child\'s teacher. Then meet them again next year.' },
+        { pillar: 'NAEYC Accreditation Track', description: 'Accreditation pathway from Month 1 — curriculum, ratios, environment', marketing_hook: 'The gold standard in early childhood education — coming to Johns Creek' },
+        { pillar: 'Infant Priority Program', description: 'Prenatal enrollment with reserved infant slots and transition support', marketing_hook: 'Reserve your infant\'s spot before your due date' },
+      ],
+    },
     14: { summary: 'Sensitivity analysis: break-even month most sensitive to enrollment rate (±4 months per 10% enrollment change). Tuition has second-largest impact (±2.5 months per $100 tuition change).' },
     15: { summary: 'Multi-ZIP comparison: Johns Creek (30097) ranks #1 of 5 ZIPs tested. Suwanee (30024) is strong runner-up with lower competition but 8% lower household income.' },
     16: { summary: 'Staffing model: 75-slot center requires 12 FTE staff. Lead Teacher avg $42K/yr in Gwinnett County. Total annual payroll: $392K at base staffing levels.' },
@@ -329,11 +395,16 @@ function getDemoData(agentNum, industry) {
 
 // ── Full showcase launch: load demo run + inject banner + show score ───────────
 function v2LaunchShowcase() {
+  // Pre-seed API cache so demo shows live data cards instantly (no real HTTP calls)
+  _v2SeedDemoAPICache();
+
   // Build a full demo run object that mirrors what v2RenderDashboard expects
   const demoRun = {
     ..._V2_DEMO_RUN_B,
     ts: Date.now(),
     _demoMode: true,
+    _lat: 34.0290,
+    _lng: -84.1130,
   };
 
   // ── CRITICAL: assign directly to the bundle-scope `R` variable ────────────
@@ -376,6 +447,61 @@ function v2LaunchShowcase() {
 
   // Inject the showcase banner after a tick
   setTimeout(v2InjectShowcaseBanner, 100);
+}
+
+// ── Pre-seed FREE_API_CACHE with realistic demo data (ZIP 30097 — Johns Creek, GA)
+// This lets demo mode show all API cards instantly without making real HTTP calls.
+function _v2SeedDemoAPICache() {
+  if (typeof FREE_API_CACHE === 'undefined') return;
+
+  // Census ACS for ZIP 30097 (Johns Creek, GA — 2022 ACS 5-year estimates)
+  FREE_API_CACHE['acs:30097'] = {
+    zip: '30097',
+    median_income:        127400,
+    total_population:      48320,
+    population_under_18:   12840,
+    total_households:      16200,
+    housing_units:         16890,
+    median_gross_rent:      1780,
+    labor_force:           24100,
+    bachelors_degree_plus:  9860,
+    source: 'US Census Bureau ACS 5-Year Estimates (2022)',
+    fetched_at: Date.now(),
+  };
+
+  // ZIP centroid for 30097 (Nominatim result)
+  FREE_API_CACHE['centroid:30097'] = { lat: 34.0290, lng: -84.1130 };
+
+  // FRED economic indicators (realistic 2025 values)
+  FREE_API_CACHE['fred:indicators'] = {
+    PRIME:    { label: 'Prime Rate (%)',     value: 8.50,  date: '2025-01-01' },
+    UNRATE:   { label: 'Unemployment (%)',   value: 4.10,  date: '2025-01-01' },
+    CPIAUCSL: { label: 'CPI (inflation)',    value: 313.7, date: '2025-01-01' },
+  };
+
+  // BLS — Child day care services (daycare industry) employment series
+  FREE_API_CACHE['bls:daycare'] = {
+    status: 'REQUEST_SUCCEEDED',
+    Results: {
+      series: [{
+        seriesID: 'CES6562440001',
+        data: [
+          { year: '2024', period: 'M12', periodName: 'December', value: '942.6' },
+          { year: '2024', period: 'M06', periodName: 'June',     value: '921.3' },
+          { year: '2023', period: 'M12', periodName: 'December', value: '905.8' },
+          { year: '2023', period: 'M06', periodName: 'June',     value: '889.4' },
+        ],
+      }],
+    },
+  };
+
+  // Overpass — daycare competitors near Johns Creek (realistic OSM records)
+  FREE_API_CACHE['overpass:34.029,-84.113,daycare,15'] = [
+    { name: 'Primrose School at Johns Creek',  lat: 34.031, lng: -84.118, address: '8700 Medlock Bridge Rd, Johns Creek', phone: '(770) 497-3388', website: 'https://primroseschools.com', type: 'daycare' },
+    { name: 'Goddard School — Suwanee',        lat: 34.055, lng: -84.079, address: '3580 Peachtree Pkwy, Suwanee',        phone: '(678) 482-2120', website: 'https://goddardschool.com',   type: 'daycare' },
+    { name: 'KinderCare Learning Center',      lat: 34.021, lng: -84.108, address: '9810 Jones Bridge Rd, Alpharetta',    phone: '(770) 751-0222', website: 'https://kindercare.com',      type: 'daycare' },
+    { name: 'The Sunshine House',              lat: 34.042, lng: -84.097, address: '4370 McGinnis Ferry Rd, Suwanee',     phone: '(678) 341-7200', website: null,                          type: 'daycare' },
+  ];
 }
 
 // ── Wire the "Try Demo" button on landing to use the showcase ─────────────────

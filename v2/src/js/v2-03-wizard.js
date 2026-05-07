@@ -79,8 +79,9 @@ function v2WizRenderStep() {
       <div class="v2-field" id="wiz-loc-zip-row" style="display:${locMode==='zip'?'block':'none'}">
         <label>ZIP Code</label>
         <input class="v2-input" id="wiz-zip" type="text" maxlength="5" placeholder="e.g. 30097" value="${d.zip||''}"
-          oninput="V2.wizard.data.zip=this.value;if(typeof v2LookupZIP==='function')v2LookupZIP(this.value)" />
+          oninput="V2.wizard.data.zip=this.value;if(typeof v2LookupZIP==='function')v2LookupZIP(this.value);if(typeof v2ShowWizardZIPStats==='function')v2ShowWizardZIPStats(this.value)" />
         <div id="wiz-zip-preview" style="font-size:12px;color:var(--v2-t2);margin-top:4px;min-height:16px">${d.zipLabel||''}</div>
+        <div id="wiz-zip-stats"></div>
       </div>
 
       <!-- Address input -->

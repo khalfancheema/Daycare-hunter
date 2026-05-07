@@ -494,6 +494,9 @@ function v2RenderFreeAPIBadge(sources) {
  */
 async function v2RenderCensusCard(zip) {
   if (!zip) return;
+  // Deduplicate — remove any existing card first
+  document.getElementById('v2-census-card')?.remove();
+
   const data = await v2FetchCensusACS(zip);
   if (!data) return;
 
@@ -501,6 +504,7 @@ async function v2RenderCensusCard(zip) {
   const fmtD = n => n ? '$' + n.toLocaleString() : 'N/A';
 
   const card = document.createElement('div');
+  card.id = 'v2-census-card';
   card.className = 'v2-card';
   card.style.cssText = 'padding:20px;margin-top:16px';
   card.innerHTML = `
@@ -524,10 +528,14 @@ async function v2RenderCensusCard(zip) {
 
 // ── FRED ECONOMIC CARD ────────────────────────────────────────────────────────
 async function v2RenderFREDCard() {
+  // Deduplicate
+  document.getElementById('v2-fred-card')?.remove();
+
   const data = await v2FetchFREDIndicators();
   if (!data) return;
 
   const card = document.createElement('div');
+  card.id = 'v2-fred-card';
   card.className = 'v2-card';
   card.style.cssText = 'padding:20px;margin-top:16px';
   card.innerHTML = `
@@ -549,10 +557,14 @@ async function v2RenderFREDCard() {
 // ── NPPES COMPETITOR CARD (Medical Practice only) ─────────────────────────────
 async function v2RenderNPPESCard(zip) {
   if (!zip) return;
+  // Deduplicate
+  document.getElementById('v2-nppes-card')?.remove();
+
   const practices = await v2FetchOpenFDAFacilities(zip, 'physician');
   if (!practices || practices.length === 0) return;
 
   const card = document.createElement('div');
+  card.id = 'v2-nppes-card';
   card.className = 'v2-card';
   card.style.cssText = 'padding:20px;margin-top:16px';
   card.innerHTML = `
@@ -577,6 +589,204 @@ async function v2RenderNPPESCard(zip) {
   if (compPanel) compPanel.appendChild(card);
 }
 
+// ── UTILITY ───────────────────────────────────────────────────────────────────
+function _stateNameToAbbr(stateName) {
+  const map = {
+    'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
+    'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
+    'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA',
+    'Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
+    'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO',
+    'Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ',
+    'New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH',
+    'Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC',
+    'South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT',
+    'Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY',
+    'District of Columbia':'DC',
+  };
+  return map[stateName] || stateName?.slice(0,2).toUpperCase() || '';
+}
+
+// ── ZIP CENTROID LOOKUP ───────────────────────────────────────────────────────
+/**
+ * Get lat/lng centroid for a ZIP code (for Overpass queries).
+ * Uses Nominatim to geocode "{zip}, USA".
+ */
+async function v2GetZIPCentroid(zip) {
+  if (!zip || !/^\d{5}$/.test(zip)) return null;
+  const cacheKey = 'centroid:' + zip;
+  const cached = _freeApiCache(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const enc = encodeURIComponent(zip + ', USA');
+    const res = await _nominatimFetch(`https://nominatim.openstreetmap.org/search?q=${enc}&format=json&limit=1&countrycodes=us`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || data.length === 0) return null;
+    const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    _freeApiCache(cacheKey, result);
+    return result;
+  } catch (e) {
+    console.warn('[v2FreeAPI] ZIP centroid failed:', e.message);
+    return null;
+  }
+}
+
+// ── OVERPASS COMPETITOR CARD ──────────────────────────────────────────────────
+/**
+ * Render a live competitor list from OpenStreetMap Overpass API.
+ * Injects a card into the Competition tab panel.
+ */
+function v2RenderOverpassCard(businesses, industry, zip) {
+  const existing = document.getElementById('v2-overpass-card');
+  if (existing) existing.remove();
+
+  const panel = document.getElementById('v2-panel-competition');
+  if (!panel) return;
+
+  const ind = (typeof V2_INDUSTRIES !== 'undefined' ? V2_INDUSTRIES : []).find(i => i.val === industry) || {};
+  const card = document.createElement('div');
+  card.id = 'v2-overpass-card';
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+
+  if (!businesses || businesses.length === 0) {
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="v2-label">🗺️ OpenStreetMap — Nearby ${ind.label || 'Businesses'}</div>
+        <div style="font-size:10px;color:var(--v2-t3)">ZIP ${zip} · Overpass API</div>
+      </div>
+      <div style="font-size:12px;color:var(--v2-t3);padding:12px;background:var(--v2-s3);border-radius:8px">
+        No businesses found in OpenStreetMap for this area — OSM coverage varies by region.
+        This does not mean the area is competitor-free; supplement with Google Maps research.
+      </div>`;
+  } else {
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="v2-label">🗺️ OpenStreetMap — ${businesses.length} ${ind.label || 'Business'} Nearby</div>
+        <div style="font-size:10px;color:var(--v2-t3)">ZIP ${zip} · Live from Overpass API</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${businesses.slice(0, 10).map(b => `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:9px 12px;background:var(--v2-s3);border-radius:8px;font-size:12px">
+            <div>
+              <div style="font-weight:600;color:var(--v2-t1)">${b.name !== 'Unnamed' ? b.name : '(unnamed)'}</div>
+              ${b.address ? `<div style="color:var(--v2-t3);margin-top:1px">${b.address}</div>` : ''}
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;margin-left:10px">
+              ${b.phone ? `<a href="tel:${b.phone}" style="font-size:10px;color:var(--v2-a1)">${b.phone}</a>` : ''}
+              ${b.website ? `<a href="${b.website}" target="_blank" style="font-size:10px;color:var(--v2-a1)">🌐</a>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:10px;color:var(--v2-t3);margin-top:8px">
+        Source: OpenStreetMap contributors · Data freshness varies · ${businesses.length > 10 ? `Showing 10 of ${businesses.length}` : `${businesses.length} total`}
+      </div>`;
+  }
+
+  panel.appendChild(card);
+}
+
+// ── BLS WAGE BENCHMARK CARD ───────────────────────────────────────────────────
+/**
+ * Render a BLS employment/wage benchmark card in the Financials tab.
+ */
+function v2RenderBLSWageCard(blsData, industryVal) {
+  const existing = document.getElementById('v2-bls-card');
+  if (existing) existing.remove();
+
+  const panel = document.getElementById('v2-panel-financials');
+  if (!panel || !blsData) return;
+
+  const series = blsData?.Results?.series?.[0];
+  if (!series || !series.data || series.data.length === 0) return;
+
+  // Get last 4 data points for a mini trend
+  const recent = [...series.data]
+    .sort((a, b) => b.year - a.year || b.period.localeCompare(a.period))
+    .slice(0, 4);
+
+  const latest = recent[0];
+  const prev   = recent[recent.length - 1];
+  const latestVal  = parseFloat(latest?.value);
+  const prevVal    = parseFloat(prev?.value);
+  const changePct  = prevVal ? (((latestVal - prevVal) / prevVal) * 100).toFixed(1) : null;
+  const changeColor = changePct > 0 ? 'var(--v2-green)' : 'var(--v2-red)';
+
+  const indLabel = (typeof V2_INDUSTRIES !== 'undefined' ? V2_INDUSTRIES : []).find(i => i.val === industryVal)?.label || industryVal;
+
+  const card = document.createElement('div');
+  card.id = 'v2-bls-card';
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">📋 Bureau of Labor Statistics — ${indLabel} Employment</div>
+      <div style="font-size:10px;color:var(--v2-t3)">BLS Public Data API · Series ${series.seriesID}</div>
+    </div>
+    <div class="v2-kpi-grid">
+      <div class="v2-kpi">
+        <div class="v2-kpi-ico">👷</div>
+        <div class="v2-kpi-val">${latestVal ? Math.round(latestVal).toLocaleString() + 'K' : 'N/A'}</div>
+        <div class="v2-kpi-lbl">US Employees (${latest.periodName} ${latest.year})</div>
+      </div>
+      ${changePct !== null ? `
+      <div class="v2-kpi">
+        <div class="v2-kpi-ico">${parseFloat(changePct) > 0 ? '📈' : '📉'}</div>
+        <div class="v2-kpi-val" style="color:${changeColor}">${changePct > 0 ? '+' : ''}${changePct}%</div>
+        <div class="v2-kpi-lbl">vs ${prev.periodName} ${prev.year}</div>
+      </div>` : ''}
+    </div>
+    <div style="font-size:10px;color:var(--v2-t3);margin-top:8px">
+      National employment count for this industry sector · Indicates market size and labor pool availability
+    </div>`;
+
+  panel.appendChild(card);
+}
+
+// ── WIZARD ZIP STATS PREVIEW ──────────────────────────────────────────────────
+/**
+ * Shows a mini Census ACS demographics preview directly in the wizard Location
+ * step after a valid ZIP is entered — before the user runs the full analysis.
+ */
+async function v2ShowWizardZIPStats(zip) {
+  const statsEl = document.getElementById('wiz-zip-stats');
+  if (!statsEl) return;
+  if (!zip || !/^\d{5}$/.test(zip)) { statsEl.innerHTML = ''; return; }
+
+  statsEl.innerHTML = '<div style="font-size:11px;color:var(--v2-t3);padding:8px 0">⏳ Fetching live demographics…</div>';
+
+  try {
+    const data = await v2FetchCensusACS(zip);
+    if (!data) { statsEl.innerHTML = ''; return; }
+
+    const fmt  = n => n ? n.toLocaleString() : '—';
+    const fmtD = n => n ? '$' + n.toLocaleString() : '—';
+    const under18Pct = data.total_population && data.population_under_18
+      ? ((data.population_under_18 / data.total_population) * 100).toFixed(1)
+      : null;
+
+    statsEl.innerHTML = `
+      <div style="margin-top:10px;padding:12px 14px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.18);border-radius:10px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--v2-a1);margin-bottom:10px">
+          🏛️ Live Census Data — ZIP ${zip}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="font-size:12px"><span style="color:var(--v2-t3)">Population</span><br><strong style="color:var(--v2-t1)">${fmt(data.total_population)}</strong></div>
+          <div style="font-size:12px"><span style="color:var(--v2-t3)">Median Income</span><br><strong style="color:var(--v2-t1)">${fmtD(data.median_income)}</strong></div>
+          <div style="font-size:12px"><span style="color:var(--v2-t3)">Households</span><br><strong style="color:var(--v2-t1)">${fmt(data.total_households)}</strong></div>
+          <div style="font-size:12px"><span style="color:var(--v2-t3)">Median Rent</span><br><strong style="color:var(--v2-t1)">${fmtD(data.median_gross_rent)}</strong></div>
+          ${under18Pct ? `<div style="font-size:12px"><span style="color:var(--v2-t3)">Under-18</span><br><strong style="color:var(--v2-t1)">${under18Pct}% of pop.</strong></div>` : ''}
+          ${data.labor_force ? `<div style="font-size:12px"><span style="color:var(--v2-t3)">Labor Force</span><br><strong style="color:var(--v2-t1)">${fmt(data.labor_force)}</strong></div>` : ''}
+        </div>
+        <div style="font-size:9px;color:var(--v2-t3);margin-top:8px">US Census ACS 5-Year Estimates · 2022</div>
+      </div>`;
+  } catch (e) {
+    statsEl.innerHTML = '';
+  }
+}
+
 // ── POST-ANALYSIS ENRICHMENT TRIGGER ─────────────────────────────────────────
 /**
  * Called after analysis completes. Enriches dashboard with live free API data.
@@ -596,7 +806,7 @@ async function v2EnrichDashboardWithFreeAPIs() {
   try {
     const census = await v2FetchCensusACS(zip);
     if (census) {
-      v2RenderCensusCard(zip);
+      await v2RenderCensusCard(zip);
       activeSources.push('US Census ACS');
     }
   } catch {}
@@ -605,8 +815,34 @@ async function v2EnrichDashboardWithFreeAPIs() {
   try {
     const fred = await v2FetchFREDIndicators();
     if (fred && Object.keys(fred).length > 0) {
-      v2RenderFREDCard();
+      await v2RenderFREDCard();
       activeSources.push('FRED (Fed Reserve)');
+    }
+  } catch {}
+
+  // Always: BLS wage data (if industry is mapped)
+  try {
+    const bls = await v2FetchBLSWages(industry);
+    if (bls?.Results?.series?.length) {
+      v2RenderBLSWageCard(bls, industry);
+      activeSources.push('BLS Public Data');
+    }
+  } catch {}
+
+  // Always: Overpass nearby competitor businesses
+  try {
+    // Use geocoded lat/lng if available, otherwise get ZIP centroid
+    let lat = V2.wizard?.data?._lat || run._lat;
+    let lng = V2.wizard?.data?._lng || run._lng;
+    if (!lat || !lng) {
+      const centroid = await v2GetZIPCentroid(zip);
+      if (centroid) { lat = centroid.lat; lng = centroid.lng; }
+    }
+    if (lat && lng) {
+      const radius = parseFloat(run.radius || V2.wizard?.data?.radius || '5');
+      const businesses = await v2FindNearbyBusinesses(lat, lng, industry, radius);
+      v2RenderOverpassCard(businesses, industry, zip);
+      if (businesses.length > 0) activeSources.push('OpenStreetMap (OSM)');
     }
   } catch {}
 
@@ -615,7 +851,7 @@ async function v2EnrichDashboardWithFreeAPIs() {
     try {
       const nppes = await v2FetchOpenFDAFacilities(zip, 'physician');
       if (nppes && nppes.length > 0) {
-        v2RenderNPPESCard(zip);
+        await v2RenderNPPESCard(zip);
         activeSources.push('CMS NPPES Registry');
       }
     } catch {}
@@ -625,33 +861,21 @@ async function v2EnrichDashboardWithFreeAPIs() {
   if (activeSources.length > 0) v2RenderFreeAPIBadge(activeSources);
 }
 
-// ── UTILITY ───────────────────────────────────────────────────────────────────
-function _stateNameToAbbr(stateName) {
-  const map = {
-    'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
-    'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
-    'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA',
-    'Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
-    'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO',
-    'Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ',
-    'New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH',
-    'Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC',
-    'South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT',
-    'Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY',
-    'District of Columbia':'DC',
-  };
-  return map[stateName] || stateName?.slice(0,2).toUpperCase() || '';
-}
-
 // ── Hook into pipeline completion to auto-enrich ──────────────────────────────
+// Guard: only one enrichment run at a time — prevents double cards when
+// v2LaunchShowcase calls both v2GoTo('dashboard') + v2RenderDashboard(run)
+let _v2EnrichPending = false;
 (function _v2PatchDashboardForAPIs() {
   if (typeof v2RenderDashboard !== 'function') return;
   const _origRender = v2RenderDashboard;
   v2RenderDashboard = function(run) {
     _origRender(run);
-    // Enrich after a tick so dashboard renders first
-    if (!run?._demoMode) {
-      setTimeout(v2EnrichDashboardWithFreeAPIs, 800);
+    // Always enrich — demo uses pre-seeded cache (no real HTTP calls needed)
+    if (!_v2EnrichPending) {
+      _v2EnrichPending = true;
+      setTimeout(() => {
+        v2EnrichDashboardWithFreeAPIs().finally(() => { _v2EnrichPending = false; });
+      }, 900);
     }
   };
 })();
