@@ -31,13 +31,20 @@
       <span class="v2-nav-link" id="gnav-landing" onclick="v2GoTo('landing')">Home</span>
       <span class="v2-nav-link" id="gnav-dashboard" onclick="v2GoTo('dashboard')">Dashboard</span>
       <span class="v2-nav-link" id="gnav-portfolio" onclick="v2GoTo('portfolio')">Portfolio</span>
-      <span class="v2-nav-link" id="gnav-classic" onclick="v2GoTo('traditional')">Classic View</span>
     </div>
     <div class="v2-nav-right">
       <span class="v2-tag">AI</span>
-      <button class="v2-btn ghost sm icon-only" id="v2-theme-btn" onclick="v2ToggleTheme()" title="Toggle light/dark mode">☀️</button>
-      <button class="v2-btn ghost sm" onclick="v2StartTour()" title="Quick tour">🗺</button>
-      <button class="v2-btn ghost sm" onclick="v2ShowApiKey()">🔑 API Key</button>
+      <!-- Settings dropdown -->
+      <div class="v2-settings-wrap" id="v2-settings-wrap">
+        <button class="v2-btn ghost sm" id="v2-settings-btn" onclick="v2ToggleSettingsMenu()" title="Settings">⚙ Settings</button>
+        <div class="v2-settings-menu" id="v2-settings-menu">
+          <button class="v2-settings-item" id="v2-theme-btn" onclick="v2ToggleTheme();v2CloseSettingsMenu()"><span class="v2-theme-ico">🌗</span> Toggle Theme</button>
+          <button class="v2-settings-item" onclick="v2StartTour();v2CloseSettingsMenu()">🗺 Take Tour</button>
+          <button class="v2-settings-item" onclick="v2ShowApiKey();v2CloseSettingsMenu()">🔑 API Key</button>
+          <div class="v2-settings-divider"></div>
+          <button class="v2-settings-item" onclick="v2GoTo('traditional');v2CloseSettingsMenu()">🔬 Classic View</button>
+        </div>
+      </div>
       <button class="v2-btn ghost sm" id="v2-chat-toggle-btn" onclick="v2ToggleChat()">💬 AI Answers</button>
       <button class="v2-btn primary sm" onclick="v2GoTo('wizard')">+ New Analysis</button>
     </div>
@@ -135,10 +142,6 @@
         <span class="v2-screen-bar-link active" id="sbar-dashboard">Dashboard</span>
         <span class="v2-screen-bar-link" onclick="v2GoTo('traditional')">Advanced View</span>
       </div>
-      <div class="v2-screen-bar-right">
-        <button class="v2-btn ghost sm" onclick="v2ShowApiKey()">🔑 API Key</button>
-        <button class="v2-btn primary sm" onclick="v2GoTo('wizard')">+ New Analysis</button>
-      </div>
     </div>
     <div class="v2-dash-layout">
       <div id="v2-agent-sidenav"></div>
@@ -153,10 +156,6 @@
         <span class="v2-screen-bar-link active">Portfolio</span>
         <span class="v2-screen-bar-link" onclick="v2GoTo('dashboard')">Dashboard</span>
         <span class="v2-screen-bar-link" onclick="v2GoTo('traditional')">Advanced View</span>
-      </div>
-      <div class="v2-screen-bar-right">
-        <button class="v2-btn ghost sm" onclick="v2ShowApiKey()">🔑 API Key</button>
-        <button class="v2-btn primary sm" onclick="v2GoTo('wizard')">+ New Analysis</button>
       </div>
     </div>
     <div class="v2-port-wrap" id="v2-port-wrap"></div>

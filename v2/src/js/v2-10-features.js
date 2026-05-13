@@ -18,7 +18,11 @@ function v2SetTheme(mode) {
   document.documentElement.setAttribute('data-theme', mode);
   localStorage.setItem('v2_theme', mode);
   const btn = document.getElementById('v2-theme-btn');
-  if (btn) btn.textContent = mode === 'light' ? '🌙' : '☀️';
+  if (btn) {
+    const ico = btn.querySelector('.v2-theme-ico');
+    if (ico) ico.textContent = mode === 'light' ? '🌙' : '☀️';
+    else btn.textContent = mode === 'light' ? '🌙' : '☀️';
+  }
 }
 
 function v2ToggleTheme() {

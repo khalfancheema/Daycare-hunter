@@ -74,7 +74,7 @@ function v2HookPipeline() {
     if (typeof origSetProgress === 'function') origSetProgress(p, t);
     const fill = document.getElementById('v2-progress-fill');
     const lbl  = document.getElementById('v2-progress-label');
-    if (fill) fill.style.width = p + '%';
+    if (fill) fill.style.transform = `scaleX(${p / 100})`;
     if (lbl)  lbl.textContent = t || '';
   };
 
@@ -83,6 +83,37 @@ function v2HookPipeline() {
   window.showOut = function(id) {
     if (typeof origShowOut === 'function') origShowOut(id);
     v2OnAgentComplete(id);
+  };
+
+  // Patch showErr — render partial dashboard when pipeline fails/stops mid-run
+  const origShowErr = window.showErr;
+  window.showErr = function(msg) {
+    if (typeof origShowErr === 'function') origShowErr(msg);
+    // Only trigger partial render if we're on the copilot screen and have some results
+    if (V2.screen !== 'copilot') return;
+    if (_v2PipelineCompleted) return;
+    const hasResults = typeof R !== 'undefined' && Object.keys(R).length > 0;
+    if (!hasResults) return;
+
+    // Mark all still-pending agents as error/skipped
+    setTimeout(() => {
+      V2_AGENTS.forEach(a => {
+        const row = document.getElementById(`v2-ar-${a.id}`);
+        if (row && !row.classList.contains('done') && !row.classList.contains('error')) {
+          v2UpdateAgentRow(a.id, 'error');
+        }
+      });
+      // Show partial results CTA in chat
+      const agentsDone = V2_AGENTS.filter(a => {
+        const r = document.getElementById(`v2-ar-${a.id}`);
+        return r?.classList.contains('done');
+      }).length;
+      if (agentsDone > 0 && !_v2PipelineCompleted) {
+        v2ChatMsg('ai', `⚠️ <strong>Pipeline stopped after ${agentsDone} agent${agentsDone>1?'s':''}.</strong> Partial results are available.<br><br>
+          <button class="v2-btn primary sm" onclick="v2GoToDashboard()" style="margin-top:6px">View Partial Dashboard →</button>`);
+        v2EnableChatInput();
+      }
+    }, 600);
   };
 }
 

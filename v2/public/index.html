@@ -810,7 +810,7 @@ select option{background:var(--surface2)}
 .v2-screen-bar-links { display: flex; gap: 2px; }
 .v2-screen-bar-link {
   padding: 5px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
-  color: var(--v2-t2); cursor: pointer; transition: all .15s;
+  color: var(--v2-t2); cursor: pointer; transition: color .15s, background .15s;
 }
 .v2-screen-bar-link:hover { color: var(--v2-t1); background: var(--v2-s3); }
 .v2-screen-bar-link.active { color: var(--v2-t1); background: var(--v2-s3); }
@@ -823,7 +823,7 @@ select option{background:var(--surface2)}
 .v2-nav-links { display: flex; gap: 6px; }
 .v2-nav-link {
   padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
-  color: var(--v2-t2); cursor: pointer; transition: all .15s;
+  color: var(--v2-t2); cursor: pointer; transition: color .15s, background .15s, border-color .15s;
   border: 1px solid transparent;
 }
 .v2-nav-link:hover { color: var(--v2-t1); background: var(--v2-s3); }
@@ -839,25 +839,42 @@ select option{background:var(--surface2)}
   #v2-global-nav .v2-tag { display: none; }
 }
 
+/* ── CUSTOM EASING CURVES (Emil Kowalski) ─────────────────────────── */
+:root {
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 /* ── BUTTONS ──────────────────────────────────────────────────────── */
 .v2-btn {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 600;
-  cursor: pointer; transition: all .15s; border: 1px solid var(--v2-border2);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, box-shadow .15s, transform 140ms var(--ease-out), filter .15s, opacity .15s;
+  border: 1px solid var(--v2-border2);
   background: var(--v2-s3); color: var(--v2-t1); font-family: var(--v2-font);
 }
-.v2-btn:hover { background: var(--v2-s4); border-color: var(--v2-a1); transform: translateY(-1px); }
-.v2-btn:active { transform: translateY(0); }
+@media (hover: hover) and (pointer: fine) {
+  .v2-btn:hover { background: var(--v2-s4); border-color: var(--v2-a1); }
+}
+.v2-btn:active { transform: scale(0.97); }
 .v2-btn.primary {
   background: var(--v2-grad); border-color: transparent; color: #fff;
   box-shadow: 0 0 20px rgba(99,102,241,0.35);
 }
-.v2-btn.primary:hover { box-shadow: 0 0 30px rgba(99,102,241,0.55); filter: brightness(1.08); }
+@media (hover: hover) and (pointer: fine) {
+  .v2-btn.primary:hover { box-shadow: 0 0 30px rgba(99,102,241,0.55); filter: brightness(1.08); }
+}
 .v2-btn.ghost { background: transparent; border-color: var(--v2-border2); color: var(--v2-t2); }
-.v2-btn.ghost:hover { color: var(--v2-t1); border-color: var(--v2-a1); background: var(--v2-s2); }
+@media (hover: hover) and (pointer: fine) {
+  .v2-btn.ghost:hover { color: var(--v2-t1); border-color: var(--v2-a1); background: var(--v2-s2); }
+}
 .v2-btn.sm { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
 .v2-btn.danger { border-color: rgba(239,68,68,.3); color: var(--v2-red); }
-.v2-btn.danger:hover { background: rgba(239,68,68,.1); }
+@media (hover: hover) and (pointer: fine) {
+  .v2-btn.danger:hover { background: rgba(239,68,68,.1); }
+}
 .v2-btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
 
 /* ── CARDS ────────────────────────────────────────────────────────── */
@@ -913,7 +930,9 @@ select option{background:var(--surface2)}
   border-radius: var(--v2-r); padding: 20px;
   transition: border-color .2s, transform .2s;
 }
-.v2-feature-card:hover { border-color: var(--v2-border2); transform: translateY(-2px); }
+@media (hover: hover) and (pointer: fine) {
+  .v2-feature-card:hover { border-color: var(--v2-border2); transform: translateY(-2px); }
+}
 .v2-feature-ico { font-size: 26px; margin-bottom: 10px; }
 .v2-feature-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
 .v2-feature-desc { font-size: 12px; color: var(--v2-t2); line-height: 1.5; }
@@ -933,10 +952,14 @@ select option{background:var(--surface2)}
 
 /* ── WIZARD SCREEN ────────────────────────────────────────────────── */
 #screen-wizard {
-  align-items: center; justify-content: center;
+  align-items: center;
+  /* no justify-content:center — clips top when content taller than viewport */
   background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(99,102,241,0.10) 0%, transparent 70%), var(--v2-bg);
 }
-.v2-wizard-wrap { width: 100%; max-width: 620px; padding: 40px 24px; }
+.v2-wizard-wrap {
+  width: 100%; max-width: 620px; padding: 40px 24px;
+  margin-top: auto; margin-bottom: auto; /* vertical centering when content fits */
+}
 .v2-wizard-header { text-align: center; margin-bottom: 40px; }
 .v2-wizard-title { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; }
 .v2-wizard-sub { font-size: 14px; color: var(--v2-t2); }
@@ -947,7 +970,7 @@ select option{background:var(--surface2)}
   width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
   justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0;
   background: var(--v2-s3); border: 1.5px solid var(--v2-border2); color: var(--v2-t3);
-  transition: all .3s;
+  transition: border-color .2s, background .2s, color .2s;
 }
 .v2-step-dot.active { background: var(--v2-a1); border-color: var(--v2-a1); color: #fff; }
 .v2-step-dot.done { background: var(--v2-green); border-color: var(--v2-green); color: #fff; }
@@ -976,20 +999,25 @@ select option{background:var(--surface2)}
 .v2-input::placeholder { color: var(--v2-t3); }
 
 .v2-grid-choose { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.v2-grid-choose--tight { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 4px; }
 .v2-choose-item {
-  padding: 14px 16px; border-radius: 10px; cursor: pointer;
+  padding: 12px 14px; border-radius: 10px; cursor: pointer;
   border: 1.5px solid var(--v2-border); background: var(--v2-s3);
-  transition: all .15s; display: flex; align-items: center; gap: 10px;
+  transition: border-color .15s, background .15s, transform 140ms var(--ease-out); display: flex; align-items: flex-start; gap: 10px;
+  min-height: 48px;
 }
 .v2-choose-item:hover { border-color: var(--v2-a1); background: var(--v2-s4); }
 .v2-choose-item.selected { border-color: var(--v2-a1); background: rgba(99,102,241,.12); }
-.v2-choose-item .ico { font-size: 20px; flex-shrink: 0; }
-.v2-choose-item .lbl { font-size: 13px; font-weight: 600; }
+.v2-choose-item .ico { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.v2-choose-item .lbl {
+  font-size: 12px; font-weight: 600; line-height: 1.35;
+  word-break: break-word; overflow-wrap: break-word;
+}
 
 .v2-budget-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
 .v2-budget-item {
   padding: 14px; border-radius: 10px; cursor: pointer;
-  border: 1.5px solid var(--v2-border); background: var(--v2-s3); transition: all .15s;
+  border: 1.5px solid var(--v2-border); background: var(--v2-s3); transition: border-color .15s, background .15s;
 }
 .v2-budget-item:hover { border-color: var(--v2-a1); }
 .v2-budget-item.selected { border-color: var(--v2-a1); background: rgba(99,102,241,.12); }
@@ -1032,6 +1060,14 @@ select option{background:var(--surface2)}
 #v2-chat-widget.collapsed .v2-cwgt-panel { display: none; }
 #v2-chat-widget:not(.collapsed) { box-shadow: 0 12px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,102,241,0.25); }
 
+/* Collapsed pill shape */
+#v2-chat-widget.collapsed {
+  width: auto;
+  border-radius: 999px;
+  border: 1px solid var(--v2-border2);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.2);
+}
+
 .v2-cwgt-toggle {
   display: flex; align-items: center; gap: 8px;
   padding: 12px 16px; cursor: pointer;
@@ -1040,6 +1076,16 @@ select option{background:var(--surface2)}
   user-select: none;
   transition: background .15s;
 }
+/* Smaller pill toggle when collapsed */
+#v2-chat-widget.collapsed .v2-cwgt-toggle {
+  padding: 9px 14px;
+  border-bottom: none;
+  border-radius: 999px;
+  background: var(--v2-s3);
+}
+#v2-chat-widget.collapsed .v2-cwgt-toggle:hover { background: var(--v2-s4); }
+#v2-chat-widget.collapsed .v2-cwgt-context { display: none; }
+#v2-chat-widget.collapsed .v2-cwgt-badge { display: none; }
 .v2-cwgt-toggle:hover { background: var(--v2-s4); }
 .v2-cwgt-ico { font-size: 16px; }
 .v2-cwgt-label { font-size: 13px; font-weight: 700; color: var(--v2-t1); }
@@ -1084,8 +1130,15 @@ select option{background:var(--surface2)}
 .v2-chat-title { font-size: 16px; font-weight: 700; }
 .v2-chat-sub { font-size: 12px; color: var(--v2-t2); margin-top: 3px; }
 
-.v2-msg { display: flex; gap: 12px; animation: v2msgIn .3s ease; }
-@keyframes v2msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.v2-msg {
+  display: flex; gap: 12px;
+  opacity: 1; transform: translateY(0);
+  transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
 .v2-msg.user { flex-direction: row-reverse; }
 .v2-msg-avatar {
   width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
@@ -1136,7 +1189,7 @@ select option{background:var(--surface2)}
 
 .v2-pipeline-progress { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--v2-border); }
 .v2-progress-bar-track { height: 4px; background: var(--v2-s4); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
-.v2-progress-bar-fill { height: 100%; background: var(--v2-grad); border-radius: 4px; transition: width .5s ease; width: 0%; }
+.v2-progress-bar-fill { height: 100%; background: var(--v2-grad); border-radius: 4px; transform: scaleX(0); transform-origin: left; transition: transform .4s var(--ease-out); width: 100%; }
 .v2-progress-label { font-size: 12px; color: var(--v2-t2); }
 
 /* ── DASHBOARD SCREEN ─────────────────────────────────────────────── */
@@ -1216,7 +1269,7 @@ select option{background:var(--surface2)}
 .v2-score-ring-wrap { position: relative; width: 160px; height: 160px; margin: 0 auto 16px; }
 .v2-score-ring-wrap svg { transform: rotate(-90deg); }
 .v2-score-ring-bg { fill: none; stroke: var(--v2-s4); stroke-width: 10; }
-.v2-score-ring-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1); }
+.v2-score-ring-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 0.8s var(--ease-out); }
 .v2-score-num {
   position: absolute; inset: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
@@ -1334,7 +1387,7 @@ select option{background:var(--surface2)}
 .v2-dash-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--v2-s2); border: 1px solid var(--v2-border); border-radius: 12px; padding: 4px; }
 .v2-dash-tab {
   padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 600;
-  cursor: pointer; color: var(--v2-t2); transition: all .15s; flex: 1; text-align: center;
+  cursor: pointer; color: var(--v2-t2); transition: color .15s, background .15s; flex: 1; text-align: center;
 }
 .v2-dash-tab.active { background: var(--v2-s4); color: var(--v2-t1); }
 .v2-dash-panel { display: none; }
@@ -1366,9 +1419,11 @@ select option{background:var(--surface2)}
 .v2-port-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 18px; }
 .v2-port-card {
   background: var(--v2-s2); border: 1px solid var(--v2-border); border-radius: 16px;
-  padding: 20px; cursor: pointer; transition: all .2s;
+  padding: 20px; cursor: pointer; transition: border-color .2s, transform .2s var(--ease-out), box-shadow .2s;
 }
-.v2-port-card:hover { border-color: var(--v2-a1); transform: translateY(-3px); box-shadow: 0 8px 30px rgba(99,102,241,.12); }
+@media (hover: hover) and (pointer: fine) {
+  .v2-port-card:hover { border-color: var(--v2-a1); transform: translateY(-3px); box-shadow: 0 8px 30px rgba(99,102,241,.12); }
+}
 .v2-port-card-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
 .v2-port-ico { font-size: 28px; margin-bottom: 6px; }
 .v2-port-name { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
@@ -1404,12 +1459,12 @@ select option{background:var(--surface2)}
   background: var(--v2-s1); border: 1px solid var(--v2-border2);
   border-radius: 20px; width: min(720px, calc(100vw - 48px));
   max-height: 85vh; overflow-y: auto; padding: 32px;
-  animation: v2modalIn .25s ease;
+  animation: v2modalIn .22s var(--ease-out);
 }
-@keyframes v2modalIn { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+@keyframes v2modalIn { from{opacity:0;transform:scale(0.96)} to{opacity:1;transform:scale(1)} }
 .v2-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
 .v2-modal-title { font-size: 20px; font-weight: 700; }
-.v2-modal-close { width: 32px; height: 32px; border-radius: 8px; background: var(--v2-s3); border: none; cursor: pointer; color: var(--v2-t2); font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.v2-modal-close { width: 32px; height: 32px; border-radius: 8px; background: var(--v2-s3); border: none; cursor: pointer; color: var(--v2-t2); font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background .15s, color .15s; }
 .v2-modal-close:hover { background: var(--v2-s4); color: var(--v2-t1); }
 
 /* Investor package */
@@ -1453,7 +1508,7 @@ select option{background:var(--surface2)}
 .v2-provider-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 16px; }
 .v2-provider-item {
   padding: 12px 14px; border-radius: 10px; cursor: pointer;
-  border: 1.5px solid var(--v2-border); background: var(--v2-s3); transition: all .15s;
+  border: 1.5px solid var(--v2-border); background: var(--v2-s3); transition: border-color .15s, background .15s, transform 140ms var(--ease-out);
 }
 .v2-provider-item.selected { border-color: var(--v2-a1); background: rgba(99,102,241,.1); }
 .v2-provider-name { font-size: 13px; font-weight: 700; }
@@ -1491,6 +1546,7 @@ select option{background:var(--surface2)}
   .v2-port-wrap { padding: 20px 16px; }
   .v2-budget-grid { grid-template-columns: 1fr; }
   .v2-grid-choose { grid-template-columns: repeat(2,1fr); }
+  .v2-grid-choose--tight { grid-template-columns: repeat(2,1fr); }
   .v2-metrics-row { grid-template-columns: 1fr; }
   .v2-dash-tabs { flex-wrap: wrap; }
 }
@@ -1609,9 +1665,11 @@ body.v2-traditional #v2-trad-back { display: flex !important; }
 .v2-agent-card {
   background: var(--v2-s3); border: 1px solid var(--v2-border);
   border-radius: 12px; padding: 14px 16px; cursor: pointer;
-  transition: all .2s; display: flex; flex-direction: column; gap: 8px;
+  transition: border-color .2s, transform .2s var(--ease-out), box-shadow .2s; display: flex; flex-direction: column; gap: 8px;
 }
-.v2-agent-card:hover { border-color: var(--v2-a1); transform: translateY(-2px); }
+@media (hover: hover) and (pointer: fine) {
+  .v2-agent-card:hover { border-color: var(--v2-a1); transform: translateY(-2px); }
+}
 .v2-agent-card.done    { border-color: rgba(34,197,94,.25); }
 .v2-agent-card.error   { border-color: rgba(239,68,68,.25); }
 .v2-agent-card.running { border-color: rgba(99,102,241,.4); }
@@ -1757,7 +1815,7 @@ body.v2-traditional #v2-trad-back { display: flex !important; }
 .v2-tool-btn {
   padding: 8px 16px; background: var(--v2-s3); border: 1px solid var(--v2-border2);
   border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--v2-t2);
-  cursor: pointer; transition: all .15s; font-family: var(--v2-font);
+  cursor: pointer; transition: background .15s, border-color .15s, color .15s; font-family: var(--v2-font);
 }
 .v2-tool-btn:hover {
   background: var(--v2-s4); color: var(--v2-t1); border-color: var(--v2-a1);
@@ -1833,7 +1891,7 @@ html, body { overflow-x: hidden; }
 .v2-onboard-dots { display: flex; gap: 8px; justify-content: center; padding: 12px 0 4px; }
 .v2-onboard-dot {
   width: 8px; height: 8px; border-radius: 50%;
-  background: var(--v2-s4); transition: all .2s;
+  background: var(--v2-s4); transition: background .2s, border-color .2s;
 }
 .v2-onboard-dot.active { background: var(--v2-a1); width: 24px; border-radius: 4px; }
 .v2-onboard-dot.done   { background: var(--v2-green); }
@@ -1842,7 +1900,7 @@ html, body { overflow-x: hidden; }
 }
 .v2-onboard-prov {
   background: var(--v2-s3); border: 1px solid var(--v2-border2);
-  border-radius: 10px; padding: 12px; text-align: center; cursor: pointer; transition: all .15s;
+  border-radius: 10px; padding: 12px; text-align: center; cursor: pointer; transition: background .15s, border-color .15s, transform 140ms var(--ease-out);
 }
 .v2-onboard-prov:hover { border-color: var(--v2-a1); background: var(--v2-s4); }
 .v2-onboard-prov.selected { border-color: var(--v2-a1); background: rgba(99,102,241,.12); }
@@ -1898,7 +1956,7 @@ html, body { overflow-x: hidden; }
 .v2-dag-node {
   display: flex; align-items: center; gap: 7px;
   background: var(--v2-s3); border: 1px solid var(--v2-border);
-  border-radius: 8px; padding: 7px 10px; cursor: pointer; transition: all .15s;
+  border-radius: 8px; padding: 7px 10px; cursor: pointer; transition: background .15s, border-color .15s, transform 140ms var(--ease-out);
   font-size: 12px;
 }
 .v2-dag-node:hover { border-color: var(--v2-a1); background: var(--v2-s4); transform: translateY(-1px); }
@@ -1945,7 +2003,7 @@ html, body { overflow-x: hidden; }
   padding: 5px 10px; border-radius: 6px;
   background: rgba(239,68,68,.12); color: var(--v2-red);
   border: 1px solid rgba(239,68,68,.3); cursor: pointer;
-  transition: all .15s; font-family: var(--v2-font);
+  transition: background .15s, border-color .15s, color .15s; font-family: var(--v2-font);
 }
 .v2-agent-rerun-btn:hover { background: rgba(239,68,68,.22); }
 
@@ -2169,7 +2227,7 @@ html, body { overflow-x: hidden; }
 /* ── Financial deep-dive ──────────────────────────────────────────────── */
 .v2-fin-controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; padding: 14px; background: var(--v2-s3); border-radius: 10px; }
 .v2-fin-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-.v2-fin-tab { background: var(--v2-s2); border: 1px solid var(--v2-border); border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: var(--v2-t2); cursor: pointer; transition: all .15s; }
+.v2-fin-tab { background: var(--v2-s2); border: 1px solid var(--v2-border); border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: var(--v2-t2); cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
 .v2-fin-tab:hover  { border-color: var(--v2-a1); color: var(--v2-a1); }
 .v2-fin-tab.active { background: rgba(99,102,241,.15); border-color: var(--v2-a1); color: var(--v2-a1); }
 .v2-fin-slider-wrap { display: flex; flex-direction: column; gap: 6px; }
@@ -2382,7 +2440,7 @@ html, body { overflow-x: hidden; }
 .v2-loc-tab {
   flex: 1; padding: 10px 16px; font-size: 13px; font-weight: 600;
   cursor: pointer; border: none; background: var(--v2-s3);
-  color: var(--v2-t2); transition: all .15s; font-family: var(--v2-font);
+  color: var(--v2-t2); transition: background .15s, border-color .15s, color .15s; font-family: var(--v2-font);
 }
 .v2-loc-tab:first-child { border-right: 1px solid var(--v2-border2); }
 .v2-loc-tab.active { background: rgba(99,102,241,.15); color: var(--v2-a1); }
@@ -2408,8 +2466,11 @@ html, body { overflow-x: hidden; }
 .v2-ind-category-label {
   font-size: 10px; font-weight: 700; letter-spacing: .08em;
   text-transform: uppercase; color: var(--v2-t3);
-  padding: 4px 0 2px; margin-top: 12px;
+  padding: 4px 0 4px; margin-top: 14px;
+  border-top: 1px solid var(--v2-border);
 }
+.v2-ind-category-label:first-child,
+div > .v2-ind-category-label:first-of-type { margin-top: 0; border-top: none; }
 
 /* ══════════════════════════════════════════════════════════════════
    QA FIXES
@@ -2494,9 +2555,11 @@ html, body { overflow-x: hidden; }
   width: min(320px, 85vw); height: 100%;
   background: var(--v2-s1); border-left: 1px solid var(--v2-border2);
   display: flex; flex-direction: column;
-  animation: v2slideIn .22s ease;
+  animation: none;
+  transform: translateX(0);
+  transition: transform .22s var(--ease-out);
 }
-@keyframes v2slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+/* v2slideIn replaced with CSS transition on .v2-mobile-nav */
 
 .v2-mobile-nav-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -2515,6 +2578,143 @@ html, body { overflow-x: hidden; }
   color: var(--v2-t1); cursor: pointer; transition: background .15s;
 }
 .v2-mobile-nav-link:hover { background: var(--v2-s3); }
+
+/* ── DASHBOARD CARD STAGGER (Emil: elements should cascade in) ─────── */
+.v2-card {
+  animation: v2cardIn 280ms var(--ease-out) both;
+}
+@keyframes v2cardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.v2-card:nth-child(1) { animation-delay: 0ms; }
+.v2-card:nth-child(2) { animation-delay: 40ms; }
+.v2-card:nth-child(3) { animation-delay: 80ms; }
+.v2-card:nth-child(4) { animation-delay: 120ms; }
+.v2-card:nth-child(5) { animation-delay: 160ms; }
+.v2-card:nth-child(6) { animation-delay: 200ms; }
+.v2-card:nth-child(n+7) { animation-delay: 240ms; }
+
+/* ── PRESSABLE ELEMENTS: active scale ──────────────────────────────── */
+.v2-choose-item:active,
+.v2-budget-item:active,
+.v2-port-card:active,
+.v2-fin-tab:active {
+  transform: scale(0.98);
+  transition-duration: 100ms;
+}
+
+/* ── prefers-reduced-motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .v2-card { animation: none; }
+  .v2-msg  { transition: opacity 150ms; }
+  .v2-btn, .v2-choose-item, .v2-budget-item { transition-duration: 0ms; }
+  .v2-score-ring-fill { transition-duration: 0ms; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   DESIGN POLISH — from critique
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── SINGLE CARD SPEC: hover state ──────────────────────────────────── */
+@media (hover: hover) and (pointer: fine) {
+  .v2-card:hover {
+    border-color: var(--v2-border2);
+    transition: border-color .18s var(--ease-out);
+  }
+}
+
+/* ── SETTINGS DROPDOWN ──────────────────────────────────────────────── */
+.v2-settings-wrap { position: relative; }
+.v2-settings-menu {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--v2-s1); border: 1px solid var(--v2-border2);
+  border-radius: 12px; padding: 6px; min-width: 186px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  display: none; flex-direction: column; gap: 2px; z-index: 400;
+}
+.v2-settings-menu.open { display: flex; }
+.v2-settings-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 13px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  color: var(--v2-t1); cursor: pointer; background: none; border: none;
+  font-family: var(--v2-font); transition: background .12s; width: 100%; text-align: left;
+}
+@media (hover: hover) and (pointer: fine) {
+  .v2-settings-item:hover { background: var(--v2-s3); }
+}
+.v2-settings-divider { height: 1px; background: var(--v2-border); margin: 4px 2px; }
+
+/* ── DASHBOARD ACTION OVERFLOW MENU ─────────────────────────────────── */
+.v2-more-wrap { position: relative; }
+.v2-more-menu {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--v2-s1); border: 1px solid var(--v2-border2);
+  border-radius: 12px; padding: 6px; min-width: 200px;
+  max-height: 420px; overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  display: none; flex-direction: column; gap: 2px; z-index: 400;
+}
+.v2-more-menu.open { display: flex; }
+.v2-more-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 13px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  color: var(--v2-t1); cursor: pointer; background: none; border: none;
+  font-family: var(--v2-font); transition: background .12s; width: 100%; text-align: left;
+}
+@media (hover: hover) and (pointer: fine) {
+  .v2-more-item:hover { background: var(--v2-s3); }
+}
+.v2-more-divider { height: 1px; background: var(--v2-border); margin: 4px 2px; }
+
+/* ── TAB BAR: scrollable with right-fade ────────────────────────────── */
+.v2-dash-tabs-wrap {
+  position: relative; margin-bottom: 20px;
+}
+.v2-dash-tabs-wrap::after {
+  content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 52px;
+  background: linear-gradient(to right, transparent, var(--v2-s2));
+  border-radius: 0 12px 12px 0; pointer-events: none;
+}
+/* override existing margin-bottom on .v2-dash-tabs since wrapper handles it */
+.v2-dash-tabs-wrap .v2-dash-tabs {
+  margin-bottom: 0;
+  overflow-x: auto; flex-wrap: nowrap;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.v2-dash-tabs-wrap .v2-dash-tabs::-webkit-scrollbar { display: none; }
+.v2-dash-tabs-wrap .v2-dash-tab { flex: 0 0 auto; white-space: nowrap; }
+
+/* ── WIZARD SEGMENTED PROGRESS BAR ──────────────────────────────────── */
+/* Replace dot-based steps bar with clean segments + labels */
+.v2-steps-bar {
+  /* override existing layout — was flex + gap:0 */
+  display: block !important;
+  margin-bottom: 32px;
+}
+.v2-seg-bar-track {
+  display: flex; gap: 4px; margin-bottom: 10px;
+}
+.v2-seg {
+  flex: 1; height: 4px; border-radius: 4px;
+  background: var(--v2-s4);
+  transition: background .3s var(--ease-out);
+}
+.v2-seg.done   { background: var(--v2-green); }
+.v2-seg.active { background: var(--v2-a1); }
+.v2-seg-labels { display: flex; }
+.v2-seg-label {
+  flex: 1; font-size: 11px; font-weight: 600; text-align: center;
+  color: var(--v2-t3); text-transform: uppercase; letter-spacing: .06em;
+  transition: color .3s var(--ease-out);
+}
+.v2-seg-label.active { color: var(--v2-a1); }
+.v2-seg-label.done   { color: var(--v2-green); }
+
+/* ── METRIC STANDARDIZATION ──────────────────────────────────────────── */
+/* KPI cards already have ico/val/lbl — ensure consistent sizing */
+.v2-kpi-val { font-size: 26px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; margin-bottom: 4px; }
+.v2-kpi-lbl { font-size: 11px; color: var(--v2-t2); font-weight: 500; line-height: 1.3; }
 
 </style>
 </head>
@@ -2552,14 +2752,41 @@ html, body { overflow-x: hidden; }
     <input id="customUrlInput" placeholder="API endpoint URL (e.g. http://localhost:11434/v1/chat/completions)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:12px;width:100%">
   </div>
   <div id="localGuidePanel" class="local-guide-panel" style="display:none">
-    <div class="local-guide-title">🆓 Run Locally for Free with Ollama</div>
-    <div class="local-guide-steps">
-      <div class="local-guide-step"><div class="lg-num">1</div><div><strong>Install Ollama</strong><br><code>curl -fsSL https://ollama.com/install.sh | sh</code><br><em style="color:var(--muted);font-size:11px">Mac: brew install ollama &nbsp;·&nbsp; Windows: download from ollama.com</em></div></div>
-      <div class="local-guide-step"><div class="lg-num">2</div><div><strong>Pull a model</strong><br><code>ollama pull llama3</code>&nbsp;&nbsp;&nbsp;<em style="color:var(--muted);font-size:11px">or: mistral, phi3, gemma2</em></div></div>
-      <div class="local-guide-step"><div class="lg-num">3</div><div><strong>Start the server</strong><br><code>ollama serve</code>&nbsp;&nbsp;&nbsp;<em style="color:var(--muted);font-size:11px">Runs at http://localhost:11434</em></div></div>
-      <div class="local-guide-step"><div class="lg-num">4</div><div><strong>Configure this app</strong><br>URL: <code>http://localhost:11434/v1/chat/completions</code><br>Model: <code>llama3</code> (or whichever you pulled)<br>API Key: <code>ollama</code> (any value works)</div></div>
+    <!-- Ollama quick-connect -->
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #334155;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="font-size:20px;line-height:1">🦙</div>
+      <div style="flex:1;min-width:140px">
+        <div style="font-size:12px;font-weight:700;color:#e2e8f0">Run 100% locally with Ollama</div>
+        <div id="cl-ollama-status" style="font-size:11px;color:#94a3b8;margin-top:2px">● detecting…</div>
+      </div>
+      <select id="cl-ollama-model-sel" style="background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:5px 8px;border-radius:6px;font-size:12px;max-width:160px">
+        <option value="llama3">llama3</option>
+      </select>
+      <button id="cl-ollama-btn" onclick="_applyOllamaPresetClassic()" disabled
+        style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;opacity:0.5">Use Ollama →</button>
     </div>
-    <div class="local-guide-note">⚡ Llama 3 8B runs on a MacBook Pro M2 in ~8-12s per agent. Full pipeline takes ~5-10 min locally. JSON output quality may vary — enable demo mode first to preview expected output shapes.</div>
+    <!-- OpenRouter quick-connect -->
+    <div style="background:linear-gradient(135deg,#1a0a2e,#1a1230);border:1px solid #4c1d95;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div style="font-size:20px;line-height:1;margin-top:2px">🌐</div>
+      <div style="flex:1;min-width:180px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:700;color:#e2e8f0">Free cloud models via OpenRouter</span>
+          <a href="https://openrouter.ai/keys" target="_blank" style="font-size:10px;color:#a78bfa;text-decoration:none;border:1px solid #4c1d95;border-radius:4px;padding:1px 6px">Get free key →</a>
+        </div>
+        <div id="cl-or-status" style="font-size:11px;color:#94a3b8;margin-bottom:8px">● loading models…</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="cl-or-key-input" type="password" placeholder="sk-or-v1-…" autocomplete="off"
+            oninput="_orKeyInputClassic()"
+            style="background:#0f172a;border:1px solid #4c1d95;color:#e2e8f0;padding:5px 10px;border-radius:6px;font-size:12px;width:155px;outline:none" />
+          <select id="cl-or-model-sel" style="background:#0f172a;border:1px solid #4c1d95;color:#e2e8f0;padding:5px 8px;border-radius:6px;font-size:12px;max-width:180px">
+            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B</option>
+          </select>
+          <button id="cl-or-btn" onclick="_applyOpenRouterPresetClassic()" disabled
+            style="background:linear-gradient(135deg,#7c3aed,#4c1d95);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;opacity:0.5">Use OpenRouter →</button>
+        </div>
+      </div>
+    </div>
+    <div class="local-guide-note" style="margin-top:6px">⚡ Llama 3 8B runs ~8-12s/agent locally. For best JSON quality use Llama 3.3 70B (via OpenRouter free) or gemma2 (Ollama). Full 17-agent pipeline takes ~5-10 min locally.</div>
   </div>
   <div style="display:flex;gap:8px">
     <input type="password" id="apiKey" placeholder="sk-ant-... / sk-... / AIza..." style="flex:1" autocomplete="off" />
@@ -2586,6 +2813,8 @@ html, body { overflow-x: hidden; }
         <option value="senior_care">🏥 Senior Care / Assisted Living</option>
         <option value="tutoring">📚 Tutoring / Learning Center</option>
         <option value="urgent_care">🩺 Urgent Care Clinic</option>
+        <option value="medical_practice">🏥 Medical Practice</option>
+        <option value="optometry">👁️ Optometry Practice</option>
         <option value="coffee_shop">☕ Coffee Shop / Café</option>
         <option value="barbershop">✂️ Barbershop / Salon</option>
         <option value="coworking">🖥️ Co-Working Space</option>
@@ -2685,6 +2914,8 @@ html, body { overflow-x: hidden; }
         <option value="senior_care">🏥 Senior Care / Assisted Living</option>
         <option value="tutoring">📚 Tutoring / Learning Center</option>
         <option value="urgent_care">🩺 Urgent Care Clinic</option>
+        <option value="medical_practice">🏥 Medical Practice</option>
+        <option value="optometry">👁️ Optometry Practice</option>
         <option value="coffee_shop">☕ Coffee Shop / Café</option>
         <option value="barbershop">✂️ Barbershop / Salon</option>
         <option value="coworking">🖥️ Co-Working Space</option>
@@ -3263,7 +3494,7 @@ const INDUSTRIES = {
     tiers:['Infant–Pre-K','Infant–Kindergarten','Toddler–Pre-K'],
     compliance:'DECAL licensing, staff-to-child ratios, 35 sqft/child indoor, 75 sqft/child outdoor, food safety, background checks, CDA credentials',
     grants:'Georgia CAPS subsidy, USDA CACFP reimbursement, DECAL Quality Rated incentives, USDA Rural Development grants, local childcare coalitions',
-    competitors:'Primrose Schools, KinderCare, Bright Horizons, local independent centers',
+    competitors:'Primrose Schools, KinderCare, Bright Horizons, Goddard School, Learning Care Group, local independent centers, home daycares, faith-based childcare, Head Start programs, subsidized centers, childcare co-ops, employer-sponsored centers',
     financials:'tuition by age group (infant/toddler/preschool/pre-K), staff ratios, CACFP reimbursement, CAPS subsidy income, director salary',
     staffing:'licensed lead teachers (CDA credential), assistant teachers, director, cook',
     real_estate:'2,500–6,000 sqft, playground space (75 sqft/child outdoor), commercial kitchen, multiple classrooms, ADA-compliant restrooms',
@@ -3412,6 +3643,23 @@ const INDUSTRIES = {
     revenue_unit:'revenue per patient visit (blended payer mix)',
     price_label_primary:'Rev/Visit (blended)', price_label_secondary:'Monthly Panel Revenue',
   },
+  optometry: {
+    label:'Optometry Practice', emoji:'👁️',
+    unit:'optometry practice', units:'optometry practices',
+    capacity_label:'Exam Lanes', capacity_default:4, budget_default:350000,
+    regulatory:'State board of optometry licensure (OD), DEA registration (if prescribing therapeutic agents), CMS Medicare/Medicaid enrollment, HIPAA, OSHA, contact lens Rx compliance (FTC)',
+    regulatory_url:'aoa.org / state optometry board',
+    tiers_label:'Practice Scope',
+    tiers:['Medical Optometry (primary eye care)','Optometry + Optical Retail (frames/CL)','Full-Service (eye care + optical + vision therapy)'],
+    compliance:'state OD license (all providers), CMS NPI/PTAN enrollment, HIPAA Privacy & Security, OSHA bloodborne pathogen plan, ADA, FTC contact lens Rx release rule, ophthalmic device FDA compliance, optical lab permit (if in-house finishing)',
+    grants:'HRSA rural health grants, SBA 7(a) loans, state vision care access programs, Lions Club International vision grants, VSP Vision Care community grants, SCORE mentorship',
+    competitors:'Independent ODs, MyEyeDr, Visionworks, America\'s Best Contacts & Eyeglasses, LensCrafters, Walmart Vision Center, Costco Optical, 1-800-CONTACTS (online)',
+    financials:'comprehensive eye exam revenue ($100–$250), contact lens fitting fees, optical frame/lens retail margin (60–70%), contact lens product sales, vision therapy packages, medical billing (Medicare Part B for medical eye care), insurance plan participation (VSP, EyeMed, Davis Vision)',
+    staffing:'optometrist (OD), licensed optician, optometric technician/assistant, front desk/insurance coordinator, optical sales associate',
+    real_estate:'1,200–3,000 sqft, strip mall or medical office, 2–4 dedicated exam lanes, optical dispensary showroom (600–1,200 sqft frame displays), contact lens fitting station, pre-testing area (auto-refractor, OCT), ADA restrooms, 10+ parking',
+    revenue_unit:'revenue per patient encounter (exam + optical capture rate)',
+    price_label_primary:'Rev/Exam + Capture', price_label_secondary:'Optical Retail/mo',
+  },
 };
 
 // ── PER-INDUSTRY UI TEXT ─────────────────────────────────────
@@ -3433,6 +3681,7 @@ const IND_UI = {
   barbershop:  { dem:'Population Density · Household Income · Spend',  comp:"Sport Clips · Great Clips · Floyd's 99",       fin:'Rev/Chair/Day · Service Mix · Retail Products',         grant1:'SBA Microloan',    grant2:'Minority Biz Dev'  },
   coworking:        { dem:'Remote Workers · Business Density · Income',     comp:'WeWork · Regus · Industrious · Spaces',        fin:'Monthly Desk Rev · Private Offices · Day Passes',       grant1:'EDA / SBA 7(a)',  grant2:'Innovation Hub'    },
   medical_practice: { dem:'Population · Insurance Coverage · Physician Density · ACS', comp:'Hospital Groups · CVS MinuteClinic · Amazon Clinic', fin:'Rev/Visit · Payer Mix · Panel Revenue · DPC Model', grant1:'HRSA Health Center', grant2:'Rural Health Grants' },
+  optometry:        { dem:'Population · Vision Insurance Coverage · Age Demographics', comp:'MyEyeDr · Visionworks · LensCrafters · Walmart Vision', fin:'Rev/Exam · Optical Capture Rate · Contact Lens Revenue', grant1:'VSP Community Grants', grant2:'HRSA Rural Health' },
 };
 
 // ── MULTI-PROVIDER CONFIG ────────────────────────────────────
@@ -3699,7 +3948,17 @@ CRITICAL — DATA INTEGRITY (strictly enforced):
 - If you found real data from a search, state the source. If you could not find it, return null/"N/A".
 - It is far better to return null than to return fabricated data.`;
   for (let attempt = 1; attempt <= 3; attempt++) {
-    if (attempt > 1) await new Promise(r => setTimeout(r, attempt * 1500));
+    // Bail immediately if pipeline was stopped
+    if (window._v2AbortCtrl?.signal?.aborted || window.stopRequested) throw new Error('Pipeline stopped');
+    if (attempt > 1) {
+      // Abort-aware retry delay — resolves immediately if stop is clicked
+      await new Promise(resolve => {
+        const t = setTimeout(resolve, attempt * 1500);
+        const sig = window._v2AbortCtrl?.signal;
+        if (sig) sig.addEventListener('abort', () => { clearTimeout(t); resolve(); }, { once: true });
+      });
+    }
+    if (window._v2AbortCtrl?.signal?.aborted || window.stopRequested) throw new Error('Pipeline stopped');
     try {
       const raw = await claude(strictSystem, user + (attempt > 1 ? '\n\nRemember: respond with ONLY the JSON object, nothing else.' : ''));
       const d = parseJSON(raw);
@@ -3720,7 +3979,11 @@ async function claude(system, user) {
   const url = p.url_custom ? customUrl() : (typeof p.url==='function' ? p.url(k) : p.url);
   const headers = p.headers(k);
   const body = p.buildBody(system, user, model());
-  const res=await fetch(url,{method:'POST',headers,body:JSON.stringify(body)});
+  // Use v2 abort controller if present (allows stop button to cancel mid-flight)
+  const signal = window._v2AbortCtrl?.signal;
+  const fetchOpts = { method:'POST', headers, body:JSON.stringify(body) };
+  if (signal && !signal.aborted) fetchOpts.signal = signal;
+  const res=await fetch(url, fetchOpts);
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'HTTP '+res.status)}
   const d=await res.json();
   if(d.error) throw new Error(d.error.message);
@@ -4516,9 +4779,20 @@ SEARCH QUERIES TO EXECUTE:
 - Google: "${ind.unit} [city name] waitlist"
 - Google: "${ind.unit} tuition [city name] [state]"
 
-For each city, find the ACTUAL names and addresses of competitors.
+For each city, find the ACTUAL names and addresses of ALL competitor types — include ALL of the following, not just premium chains:
+- Premium chains (Primrose, KinderCare, Bright Horizons, Goddard)
+- Independent licensed centers (private, non-franchise)
+- Home-based / family daycares (licensed, typically 6–12 children)
+- Faith-based / church-run childcare programs
+- Non-profit childcare centers
+- Head Start / Early Head Start programs (federally subsidized)
+- Subsidized / CCAP-accepting centers (lower income brackets)
+- Employer-sponsored or campus-based centers
+- Childcare co-ops (parent-run or community-run)
+- After-school and school-age care programs (SACC)
+
 Include gap_score_explanation (cite specific numbers and sources).
-Note accreditation status, QRIS rating, and whether center is chain/independent/non-profit/faith-based/employer-sponsored.
+Note accreditation status, QRIS rating, provider_type (Premium/Budget/Subsidized/Home-based/Faith-based/Non-profit), and whether center accepts CCAP/CAPS subsidies.
 
 Return ONLY this JSON:
 {
@@ -4569,22 +4843,67 @@ Return ONLY this JSON:
           "google_maps_url": "https://maps.google.com/?q=KinderCare+City+A+GA",
           "yelp_url": "", "winnie_url": "",
           "notes": "90 capacity, currently enrolling, 3-star QRIS"
+        },
+        {
+          "name": "Mary's Home Daycare", "address": "789 Elm St, City A, GA",
+          "rating": 4.7, "review_count": 28, "type": "Home-based", "provider_type": "Home-based/Budget", "nonprofit": false,
+          "capacity_est": 8, "monthly_rate_est": 950,
+          "accreditation": "None", "qris_stars": 2,
+          "accepts_subsidy": true, "waitlist_weeks": 0, "currently_enrolling": true,
+          "google_maps_url": "", "yelp_url": "", "winnie_url": "",
+          "notes": "Licensed home daycare, 8 capacity, CAPS-accepting, flexible hours, $950/mo"
+        },
+        {
+          "name": "Grace Church Early Learning", "address": "101 Oak Rd, City A, GA",
+          "rating": 4.5, "review_count": 45, "type": "Faith-based", "provider_type": "Faith-based/Budget", "nonprofit": true,
+          "capacity_est": 40, "monthly_rate_est": 850,
+          "accreditation": "None", "qris_stars": 3,
+          "accepts_subsidy": true, "waitlist_weeks": 2, "currently_enrolling": true,
+          "google_maps_url": "", "yelp_url": "", "winnie_url": "",
+          "notes": "Church-run, 40 capacity, CAPS-accepting, $850/mo — direct competition for budget-conscious families"
         }
       ]
     }
   ],
   "top_chains": [
     {
-      "name": "Competitor A", "locations_in_area": 4,
+      "name": "Competitor A (Premium)", "locations_in_area": 4,
       "monthly_tuition_range": "$1,600–$2,100", "rating": 4.1,
-      "type": "Chain", "nonprofit": false, "market_share_pct": 22,
-      "naeyc_accredited": true, "employer_partnerships": true,
+      "type": "Chain", "provider_type": "Premium", "nonprofit": false, "market_share_pct": 22,
+      "accepts_subsidy": false, "naeyc_accredited": true, "employer_partnerships": true,
       "strengths": "Brand recognition, employer subsidies, NAEYC accreditation",
       "weaknesses": "Premium pricing, rigid curriculum, long waitlists"
+    },
+    {
+      "name": "Local Home Daycare Network", "locations_in_area": 12,
+      "monthly_tuition_range": "$800–$1,200", "rating": 4.3,
+      "type": "Home-based", "provider_type": "Home-based/Budget", "nonprofit": false, "market_share_pct": 15,
+      "accepts_subsidy": true, "naeyc_accredited": false, "employer_partnerships": false,
+      "strengths": "Low cost, flexible hours, personalized care, subsidy-friendly",
+      "weaknesses": "Small capacity (6–12), limited structured curriculum, licensing varies"
+    },
+    {
+      "name": "First Baptist Childcare Center", "locations_in_area": 2,
+      "monthly_tuition_range": "$700–$1,000", "rating": 4.5,
+      "type": "Faith-based", "provider_type": "Faith-based/Budget", "nonprofit": true, "market_share_pct": 8,
+      "accepts_subsidy": true, "naeyc_accredited": false, "employer_partnerships": false,
+      "strengths": "Community trust, low cost, faith-based values, CAPS-accepting",
+      "weaknesses": "Limited capacity, may have religious enrollment preference"
+    },
+    {
+      "name": "Head Start Program — [County]", "locations_in_area": 3,
+      "monthly_tuition_range": "$0 (income-qualified)", "rating": 4.0,
+      "type": "Government/Non-profit", "provider_type": "Subsidized", "nonprofit": true, "market_share_pct": 10,
+      "accepts_subsidy": true, "naeyc_accredited": false, "employer_partnerships": false,
+      "strengths": "Free for qualifying families, comprehensive services (health, nutrition, family support)",
+      "weaknesses": "Income-limited, part-day only in many sites, waitlist for slots"
     }
   ],
+  "home_daycares_estimated": 20,
+  "faith_based_count": 4,
+  "subsidized_seats_total": 180,
   "competitive_intensity_score": 6,
-  "market_structure_note": "Fragmented market — 4 chains (55% market share) + 6 independents + 1 non-profit Head Start program"
+  "market_structure_note": "Fragmented market — 4 chains (35% share) + 8 independents + 12 home daycares + 2 faith-based + 1 Head Start program"
 }
 
 Replace ALL example values with real search data for ZIP ${zip()}.
@@ -9494,10 +9813,12 @@ function togglePhasePanel() {
 // Max capacity by industry; min budget by industry
 const _capMax = { daycare:300, gas_station:32, laundromat:100, car_wash:20,
                   restaurant:500, gym:5000, indoor_play:2000, dry_cleaning:2000,
-                  senior_care:50, tutoring:200, urgent_care:20, coffee_shop:150, barbershop:30, coworking:500 };
+                  senior_care:50, tutoring:200, urgent_care:20, coffee_shop:150, barbershop:30, coworking:500,
+                  medical_practice:20, optometry:12 };
 const _budMin = { daycare:150000, gas_station:500000, laundromat:100000, car_wash:300000,
                   restaurant:100000, gym:150000, indoor_play:200000, dry_cleaning:100000,
-                  senior_care:600000, tutoring:80000, urgent_care:400000, coffee_shop:100000, barbershop:60000, coworking:200000 };
+                  senior_care:600000, tutoring:80000, urgent_care:400000, coffee_shop:100000, barbershop:60000, coworking:200000,
+                  medical_practice:200000, optometry:150000 };
 
 const _tipText = {
   zip:      'Must be a valid 5-digit US ZIP code (e.g. 30097)',
@@ -11515,7 +11836,12 @@ function _showLocalGuide() {
   const panel = $('localGuidePanel');
   if (!panel) return;
   const prov = provider ? provider() : ($('providerSelect')?.value || '');
-  panel.style.display = prov === 'openai_compat' ? 'block' : 'none';
+  const show = prov === 'openai_compat';
+  panel.style.display = show ? 'block' : 'none';
+  if (show) {
+    _detectOllamaModelsClassic();
+    _detectOpenRouterModelsClassic();
+  }
 }
 
 // Patch onProviderChange to also show/hide the guide
@@ -11528,6 +11854,145 @@ function _showLocalGuide() {
     };
   });
 })();
+
+// ── Classic View: Ollama ──────────────────────────────────
+
+async function _detectOllamaModelsClassic() {
+  const btn    = document.getElementById('cl-ollama-btn');
+  const status = document.getElementById('cl-ollama-status');
+  const sel    = document.getElementById('cl-ollama-model-sel');
+  try {
+    const r = await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(1500) });
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    const models = (data.models || []).map(m => m.name);
+    if (models.length) {
+      if (sel) {
+        sel.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
+        const saved = localStorage.getItem('v2_model') || '';
+        if (models.includes(saved)) sel.value = saved;
+      }
+      if (btn) { btn.disabled = false; btn.title = `Ollama running · ${models.length} model(s)`; }
+      if (status) status.innerHTML = `<span style="color:#22c55e">● running</span> · ${models.length} model(s)`;
+    } else {
+      throw new Error('no models');
+    }
+  } catch {
+    if (status) status.innerHTML = `<span style="color:#ef4444">● not detected</span> · <a href="https://ollama.com" target="_blank" style="color:inherit">install ollama.com</a>`;
+  }
+}
+
+function _applyOllamaPresetClassic() {
+  const sel = document.getElementById('cl-ollama-model-sel');
+  const model = sel?.value || 'llama3';
+  const url = 'http://localhost:11434/v1/chat/completions';
+
+  const provEl   = document.getElementById('providerSelect');
+  const urlEl    = document.getElementById('customUrlInput');
+  const modelEl  = document.getElementById('modelInput');
+  const keyEl    = document.getElementById('apiKey');
+
+  if (provEl)  provEl.value  = 'openai_compat';
+  if (urlEl)   urlEl.value   = url;
+  if (modelEl) modelEl.value = model;
+  if (keyEl)   keyEl.value   = 'ollama';
+
+  localStorage.setItem('v2_provider',   'openai_compat');
+  localStorage.setItem('v2_custom_url', url);
+  localStorage.setItem('v2_model',      model);
+  localStorage.setItem('v2_apikey',     'ollama');
+
+  if (typeof onProviderChange === 'function') onProviderChange();
+
+  // Visual feedback
+  const btn = document.getElementById('cl-ollama-btn');
+  if (btn) { const orig = btn.textContent; btn.textContent = '✓ Applied!'; setTimeout(() => btn.textContent = orig, 1800); }
+}
+
+// ── Classic View: OpenRouter ──────────────────────────────
+
+const _CL_OR_DEFAULTS = [
+  { id: 'meta-llama/llama-3.3-70b-instruct:free',    name: 'Llama 3.3 70B' },
+  { id: 'nousresearch/hermes-3-llama-3.1-405b:free', name: 'Hermes 3 405B' },
+  { id: 'nvidia/nemotron-3-super-120b-a12b:free',    name: 'Nemotron 120B' },
+  { id: 'openai/gpt-oss-120b:free',                  name: 'GPT-OSS 120B' },
+  { id: 'google/gemma-4-31b-it:free',                name: 'Gemma 4 31B' },
+  { id: 'qwen/qwen3-coder:free',                     name: 'Qwen3 Coder' },
+  { id: 'meta-llama/llama-3.2-3b-instruct:free',     name: 'Llama 3.2 3B (fast)' },
+];
+
+async function _detectOpenRouterModelsClassic() {
+  const sel    = document.getElementById('cl-or-model-sel');
+  const status = document.getElementById('cl-or-status');
+  const btn    = document.getElementById('cl-or-btn');
+  const ki     = document.getElementById('cl-or-key-input');
+  if (!sel) return;
+
+  const savedKey   = localStorage.getItem('v2_or_apikey') || '';
+  const savedModel = localStorage.getItem('v2_or_model') || _CL_OR_DEFAULTS[0].id;
+  if (ki) ki.value = savedKey;
+
+  sel.innerHTML = _CL_OR_DEFAULTS.map(m =>
+    `<option value="${m.id}"${m.id === savedModel ? ' selected' : ''}>${m.name}</option>`
+  ).join('');
+  if (savedKey && btn) btn.disabled = false;
+
+  try {
+    const r = await fetch('https://openrouter.ai/api/v1/models', { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    const free = (d.data || [])
+      .filter(m => m.pricing?.prompt === '0' && m.pricing?.completion === '0' && m.id.endsWith(':free'))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (free.length) {
+      sel.innerHTML = free.map(m =>
+        `<option value="${m.id}"${m.id === savedModel ? ' selected' : ''}>${m.name} (${m.id.split('/')[0]})</option>`
+      ).join('');
+      if (status) status.innerHTML = `<span style="color:#22c55e">● ${free.length} free models available</span>`;
+    }
+  } catch {
+    if (status) status.innerHTML = `<span style="color:#94a3b8">● ${_CL_OR_DEFAULTS.length} curated free models</span>`;
+  }
+}
+
+function _orKeyInputClassic() {
+  const ki  = document.getElementById('cl-or-key-input');
+  const btn = document.getElementById('cl-or-btn');
+  if (btn) btn.disabled = !(ki?.value.trim());
+}
+
+function _applyOpenRouterPresetClassic() {
+  const ki    = document.getElementById('cl-or-key-input');
+  const sel   = document.getElementById('cl-or-model-sel');
+  const key   = ki?.value.trim() || '';
+  const model = sel?.value || _CL_OR_DEFAULTS[0].id;
+  if (!key) { alert('⚠️ Enter your OpenRouter API key first'); return; }
+
+  const url = 'https://openrouter.ai/api/v1/chat/completions';
+
+  const provEl   = document.getElementById('providerSelect');
+  const urlEl    = document.getElementById('customUrlInput');
+  const modelEl  = document.getElementById('modelInput');
+  const keyEl    = document.getElementById('apiKey');
+
+  if (provEl)  provEl.value  = 'openai_compat';
+  if (urlEl)   urlEl.value   = url;
+  if (modelEl) modelEl.value = model;
+  if (keyEl)   keyEl.value   = key;
+
+  localStorage.setItem('v2_provider',   'openai_compat');
+  localStorage.setItem('v2_custom_url', url);
+  localStorage.setItem('v2_model',      model);
+  localStorage.setItem('v2_apikey',     key);
+  localStorage.setItem('v2_or_apikey',  key);
+  localStorage.setItem('v2_or_model',   model);
+
+  if (typeof onProviderChange === 'function') onProviderChange();
+
+  // Visual feedback
+  const btn = document.getElementById('cl-or-btn');
+  if (btn) { const orig = btn.textContent; btn.textContent = '✓ Applied!'; setTimeout(() => btn.textContent = orig, 1800); }
+}
 
 // ── Data Freshness Badge ──────────────────────────────────
 /**
@@ -11936,6 +12401,38 @@ function v2GoTo(screen) {
   if (screen === 'wizard' && typeof v2CheckWizardDraft === 'function') v2CheckWizardDraft();
 }
 
+// ── SETTINGS DROPDOWN ─────────────────────────────────────────────────────
+function v2ToggleSettingsMenu() {
+  const menu = document.getElementById('v2-settings-menu');
+  if (!menu) return;
+  const isOpen = menu.classList.toggle('open');
+  // Close more menus when settings opens
+  document.querySelectorAll('.v2-more-menu.open').forEach(m => m.classList.remove('open'));
+}
+function v2CloseSettingsMenu() {
+  const menu = document.getElementById('v2-settings-menu');
+  if (menu) menu.classList.remove('open');
+}
+
+// ── MORE / OVERFLOW DROPDOWN ───────────────────────────────────────────────
+function v2ToggleMoreMenu(btn) {
+  const wrap = btn?.closest('.v2-more-wrap');
+  const menu = wrap?.querySelector('.v2-more-menu');
+  if (!menu) return;
+  const isOpen = menu.classList.toggle('open');
+  // Close settings when more opens
+  if (isOpen) document.getElementById('v2-settings-menu')?.classList.remove('open');
+}
+function v2CloseMoreMenus() {
+  document.querySelectorAll('.v2-more-menu.open').forEach(m => m.classList.remove('open'));
+}
+
+// Close all dropdowns on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#v2-settings-wrap')) v2CloseSettingsMenu();
+  if (!e.target.closest('.v2-more-wrap')) v2CloseMoreMenus();
+}, true);
+
 function v2ToggleMobileNav() {
   const nav = document.getElementById('v2-mobile-nav');
   const btn = document.getElementById('v2-ham-btn');
@@ -11968,10 +12465,54 @@ function v2Toast(msg, ms = 2800) {
 function v2ShowDetail()  { v2GoTo('traditional'); }
 function v2HideDetail()  { v2GoTo('dashboard'); }
 
+// Global abort controller — created fresh each pipeline run, aborted on stop
+window._v2AbortCtrl = new AbortController();
+
 function v2StopPipeline() {
+  // 1. Signal pipeline loop to exit at next checkpoint
   stopRequested = true;
+  running = false;
+
+  // 2. Abort any in-flight API fetch immediately
+  if (window._v2AbortCtrl) {
+    window._v2AbortCtrl.abort();
+    window._v2AbortCtrl = new AbortController(); // fresh for next run
+  }
+
+  // 3. Visual feedback
   const btn = document.getElementById('v2-copilot-stop');
-  if (btn) { btn.textContent = 'Stopping…'; btn.disabled = true; }
+  if (btn) { btn.textContent = '⬛ Stopped'; btn.disabled = true; }
+
+  // 4. Reset classic pipeline UI state
+  const runBtn = document.getElementById('runBtn');
+  if (runBtn) runBtn.disabled = false;
+  const stopBtn = document.getElementById('stopBtn');
+  if (stopBtn) { stopBtn.style.display = 'none'; stopBtn.disabled = false; stopBtn.textContent = '⬛ Stop'; }
+  const orchStatus = document.getElementById('orchStatus');
+  if (orchStatus) orchStatus.textContent = 'stopped';
+
+  // 5. Navigate to partial dashboard if results exist, else back to wizard
+  // Give pipeline ~800ms to bail out of current agent before reading R
+  setTimeout(() => {
+    if (btn) btn.disabled = false;
+    const hasResults = typeof R !== 'undefined' && Object.keys(R).length > 0;
+    if (hasResults) {
+      // Mark all still-pending agents as skipped
+      if (typeof V2_AGENTS !== 'undefined') {
+        V2_AGENTS.forEach(a => {
+          const row = document.getElementById(`v2-ar-${a.id}`);
+          if (row && !row.classList.contains('done') && !row.classList.contains('error')) {
+            if (typeof v2UpdateAgentRow === 'function') v2UpdateAgentRow(a.id, 'error');
+          }
+        });
+      }
+      v2Toast('⬛ Stopped — showing partial results');
+      if (typeof v2GoToDashboard === 'function') v2GoToDashboard();
+    } else {
+      v2GoTo('wizard');
+      v2Toast('⬛ Analysis stopped — no results yet');
+    }
+  }, 800);
 }
 
 function v2ShowApiKey() {
@@ -12276,7 +12817,11 @@ const V2_WIZARD_STEPS = [
 ];
 
 const V2_INDUSTRIES = [
-  { val:'daycare',          emoji:'🏫', label:'Daycare / Childcare',            category:'Family' },
+  { val:'daycare',          emoji:'🏫', label:'Daycare / Childcare (Premium)',   category:'Family' },
+  { val:'daycare_home',     emoji:'🏠', label:'Home Daycare (Family)',           category:'Family' },
+  { val:'daycare_faith',    emoji:'⛪', label:'Faith-Based Childcare',           category:'Family' },
+  { val:'daycare_subsidy',  emoji:'🎓', label:'Subsidized / CCAP Center',        category:'Family' },
+  { val:'daycare_aftersch', emoji:'🎒', label:'After-School Care',               category:'Family' },
   { val:'gas_station',      emoji:'⛽', label:'Gas Station / C-Store',          category:'Automotive' },
   { val:'laundromat',       emoji:'🫧', label:'Laundromat',                     category:'Services' },
   { val:'car_wash',         emoji:'🚗', label:'Car Wash',                       category:'Automotive' },
@@ -12288,6 +12833,7 @@ const V2_INDUSTRIES = [
   { val:'tutoring',         emoji:'📚', label:'Tutoring / Learning Center',     category:'Education' },
   { val:'urgent_care',      emoji:'🩺', label:'Urgent Care Clinic',             category:'Healthcare' },
   { val:'medical_practice', emoji:'🏥', label:'Medical Practice',               category:'Healthcare' },
+  { val:'optometry',        emoji:'👁️', label:'Optometry Practice',             category:'Healthcare' },
   { val:'coffee_shop',      emoji:'☕', label:'Coffee Shop / Café',             category:'Food & Beverage' },
   { val:'barbershop',       emoji:'✂️', label:'Barbershop / Salon',             category:'Services' },
   { val:'coworking',        emoji:'🖥️', label:'Co-Working Space',              category:'Professional' },
@@ -12301,6 +12847,20 @@ const V2_BUDGETS = [
   { val:'custom',  label:'Custom',  desc:'Enter your own amount' },
 ];
 
+const V2_US_STATES = [
+  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
+  'HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
+  'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
+  'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC',
+];
+
+/** Combine split address fields into a single geocodable string. */
+function v2WizBuildAddress() {
+  const d = V2.wizard.data;
+  return [d.street, d.city, d.state].filter(Boolean).join(', ');
+}
+
 function v2InitWizard() {
   v2WizRenderStepsBar();
   v2WizRenderStep();
@@ -12309,16 +12869,18 @@ function v2InitWizard() {
 function v2WizRenderStepsBar() {
   const bar = document.getElementById('v2-steps-bar');
   if (!bar) return;
-  bar.innerHTML = V2_WIZARD_STEPS.map((s, i) => {
-    const cur = V2.wizard.step;
+  const cur = V2.wizard.step;
+  const segments = V2_WIZARD_STEPS.map((s, i) => {
     const cls = i < cur ? 'done' : i === cur ? 'active' : '';
-    const lineCls = i < cur ? 'done' : '';
-    return `
-      <div class="v2-step-item">
-        <div class="v2-step-dot ${cls}">${i < cur ? '✓' : i + 1}</div>
-        ${i < V2_WIZARD_STEPS.length - 1 ? `<div class="v2-step-line ${lineCls}"></div>` : ''}
-      </div>`;
+    return `<div class="v2-seg ${cls}"></div>`;
   }).join('');
+  const labels = V2_WIZARD_STEPS.map((s, i) => {
+    const cls = i < cur ? 'done' : i === cur ? 'active' : '';
+    return `<div class="v2-seg-label ${cls}">${s.label}</div>`;
+  }).join('');
+  bar.innerHTML = `
+    <div class="v2-seg-bar-track">${segments}</div>
+    <div class="v2-seg-labels">${labels}</div>`;
 }
 
 function v2WizRenderStep() {
@@ -12329,10 +12891,18 @@ function v2WizRenderStep() {
 
   let body = '';
   if (s.id === 'industry') {
-    body = `<div class="v2-grid-choose">${V2_INDUSTRIES.map(ind => `
-      <div class="v2-choose-item${d.industry===ind.val?' selected':''}" onclick="v2WizPickIndustry('${ind.val}')">
-        <span class="ico">${ind.emoji}</span><span class="lbl">${ind.label}</span>
-      </div>`).join('')}</div>`;
+    // Group by category
+    const cats = [...new Set(V2_INDUSTRIES.map(i => i.category))];
+    const grouped = cats.map(cat => {
+      const items = V2_INDUSTRIES.filter(i => i.category === cat);
+      return `
+        <div class="v2-ind-category-label">${cat}</div>
+        <div class="v2-grid-choose v2-grid-choose--tight">${items.map(ind => `
+          <div class="v2-choose-item${d.industry===ind.val?' selected':''}" onclick="v2WizPickIndustry('${ind.val}')">
+            <span class="ico">${ind.emoji}</span><span class="lbl">${ind.label}</span>
+          </div>`).join('')}</div>`;
+    }).join('');
+    body = `<div>${grouped}</div>`;
 
   } else if (s.id === 'location') {
     const locMode = d.locMode || 'zip';
@@ -12352,14 +12922,30 @@ function v2WizRenderStep() {
         <div id="wiz-zip-stats"></div>
       </div>
 
-      <!-- Address input -->
+      <!-- Address input (split: street / city / state) -->
       <div class="v2-field" id="wiz-loc-addr-row" style="display:${locMode==='address'?'block':'none'}">
-        <label>Street Address</label>
+        <label>Street Number &amp; Name</label>
         <div style="position:relative">
-          <input class="v2-input" id="wiz-address" type="text" placeholder="e.g. 123 Main St, Atlanta, GA"
-            value="${d.address||''}"
-            oninput="V2.wizard.data.address=this.value;v2GeoSearchDebounced(this.value)" />
+          <input class="v2-input" id="wiz-street" type="text" placeholder="e.g. 123 Main St"
+            value="${d.street||''}"
+            oninput="V2.wizard.data.street=this.value;v2GeoSearchDebounced(v2WizBuildAddress())" />
           <div id="wiz-geo-spinner" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:none;font-size:13px">⏳</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 88px;gap:8px;margin-top:8px">
+          <div>
+            <label style="font-size:11px;color:var(--v2-t2);margin-bottom:4px;display:block">City</label>
+            <input class="v2-input" id="wiz-city" type="text" placeholder="e.g. Atlanta"
+              value="${d.city||''}"
+              oninput="V2.wizard.data.city=this.value;v2GeoSearchDebounced(v2WizBuildAddress())" />
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--v2-t2);margin-bottom:4px;display:block">State</label>
+            <select class="v2-input" id="wiz-state" style="padding-left:6px"
+              onchange="V2.wizard.data.state=this.value;v2GeoSearchDebounced(v2WizBuildAddress())">
+              <option value="">—</option>
+              ${V2_US_STATES.map(st=>`<option value="${st}"${(d.state||''===st)?'selected':''}>${st}</option>`).join('')}
+            </select>
+          </div>
         </div>
         <div id="wiz-geo-suggestions" style="margin-top:4px"></div>
         <div id="wiz-geo-result" style="font-size:12px;color:var(--v2-green);margin-top:4px;min-height:16px">
@@ -12462,6 +13048,38 @@ function v2WizRenderStep() {
   const next = document.getElementById('v2-wiz-next');
   if (back) back.style.visibility = V2.wizard.step === 0 ? 'hidden' : 'visible';
   if (next) next.textContent = s.id === 'confirm' ? '🚀 Launch Analysis' : 'Continue →';
+
+  // Auto-detect user location when location step first renders (ZIP mode only)
+  if (s.id === 'location' && !V2.wizard.data.zip && !V2.wizard.data._ipDetected) {
+    V2.wizard.data._ipDetected = true; // run once
+    if (typeof v2DetectUserLocation === 'function') {
+      v2DetectUserLocation().then(loc => {
+        if (!loc || V2.wizard.data.zip) return; // user already typed something
+        const d = V2.wizard.data;
+        const mode = d.locMode || 'zip';
+        if (loc.zip && mode === 'zip') {
+          d.zip = loc.zip;
+          d.city = loc.city || '';
+          d.state = loc.region || '';
+          const zipEl = document.getElementById('wiz-zip');
+          if (zipEl) zipEl.value = loc.zip;
+          const preview = document.getElementById('wiz-zip-preview');
+          if (preview) preview.textContent = `📍 Detected: ${loc.city}, ${loc.region} ${loc.zip}`;
+          if (typeof v2ShowWizardZIPStats === 'function') v2ShowWizardZIPStats(loc.zip);
+          if (typeof v2LookupZIP === 'function') v2LookupZIP(loc.zip);
+        } else if (loc.city && mode === 'address') {
+          d.city  = loc.city   || '';
+          d.state = loc.region || '';
+          const cityEl  = document.getElementById('wiz-city');
+          const stateEl = document.getElementById('wiz-state');
+          if (cityEl)  cityEl.value  = loc.city;
+          if (stateEl) stateEl.value = (loc.region || '').slice(0, 2).toUpperCase();
+          const resultEl = document.getElementById('wiz-geo-result');
+          if (resultEl) resultEl.textContent = `📍 Detected: ${loc.city}, ${loc.region}`;
+        }
+      }).catch(() => {});
+    }
+  }
 }
 
 function v2WizPickIndustry(val) {
@@ -12541,7 +13159,9 @@ function v2LaunchPipeline() {
   if (radEl) radEl.value = d.radius || '40';
   if (capEl) capEl.value = d.capacity || '75';
   if (budEl) budEl.value = budget;
-  if (indEl) { indEl.value = d.industry || 'daycare'; if (typeof onIndustryChange === 'function') onIndustryChange(); }
+  // Map non-premium childcare subtypes back to 'daycare' for v1 pipeline compatibility
+  const industryVal = ['daycare_home','daycare_faith','daycare_subsidy','daycare_aftersch'].includes(d.industry) ? 'daycare' : (d.industry || 'daycare');
+  if (indEl) { indEl.value = industryVal; if (typeof onIndustryChange === 'function') onIndustryChange(); }
 
   // Sync API key
   v2SyncToV1Dom();
@@ -12587,6 +13207,8 @@ function v2LaunchPipeline() {
   // Run the pipeline
   setTimeout(() => {
     stopRequested = false;
+    // Fresh abort controller for this run — allows stop button to kill in-flight fetches
+    window._v2AbortCtrl = new AbortController();
     const stopBtn = document.getElementById('v2-copilot-stop');
     if (stopBtn) { stopBtn.textContent = '⬛ Stop'; stopBtn.disabled = false; }
     runPipeline();
@@ -12670,7 +13292,7 @@ function v2HookPipeline() {
     if (typeof origSetProgress === 'function') origSetProgress(p, t);
     const fill = document.getElementById('v2-progress-fill');
     const lbl  = document.getElementById('v2-progress-label');
-    if (fill) fill.style.width = p + '%';
+    if (fill) fill.style.transform = `scaleX(${p / 100})`;
     if (lbl)  lbl.textContent = t || '';
   };
 
@@ -12679,6 +13301,37 @@ function v2HookPipeline() {
   window.showOut = function(id) {
     if (typeof origShowOut === 'function') origShowOut(id);
     v2OnAgentComplete(id);
+  };
+
+  // Patch showErr — render partial dashboard when pipeline fails/stops mid-run
+  const origShowErr = window.showErr;
+  window.showErr = function(msg) {
+    if (typeof origShowErr === 'function') origShowErr(msg);
+    // Only trigger partial render if we're on the copilot screen and have some results
+    if (V2.screen !== 'copilot') return;
+    if (_v2PipelineCompleted) return;
+    const hasResults = typeof R !== 'undefined' && Object.keys(R).length > 0;
+    if (!hasResults) return;
+
+    // Mark all still-pending agents as error/skipped
+    setTimeout(() => {
+      V2_AGENTS.forEach(a => {
+        const row = document.getElementById(`v2-ar-${a.id}`);
+        if (row && !row.classList.contains('done') && !row.classList.contains('error')) {
+          v2UpdateAgentRow(a.id, 'error');
+        }
+      });
+      // Show partial results CTA in chat
+      const agentsDone = V2_AGENTS.filter(a => {
+        const r = document.getElementById(`v2-ar-${a.id}`);
+        return r?.classList.contains('done');
+      }).length;
+      if (agentsDone > 0 && !_v2PipelineCompleted) {
+        v2ChatMsg('ai', `⚠️ <strong>Pipeline stopped after ${agentsDone} agent${agentsDone>1?'s':''}.</strong> Partial results are available.<br><br>
+          <button class="v2-btn primary sm" onclick="v2GoToDashboard()" style="margin-top:6px">View Partial Dashboard →</button>`);
+        v2EnableChatInput();
+      }
+    }, 600);
   };
 }
 
@@ -13522,17 +14175,26 @@ function v2RenderDashboard(run) {
         <div class="v2-dash-meta">ZIP ${run.zip} · ${run.radius} mi radius · $${parseInt(run.budget||0).toLocaleString()} budget · ${new Date(run.ts||Date.now()).toLocaleDateString()}</div>
       </div>
       <div class="v2-dash-actions">
-        <button class="v2-btn ghost sm" onclick="v2ShowExecution()" title="18-month Gantt + milestone tracker">🗓 Execution Plan</button>
-        <button class="v2-btn ghost sm" onclick="v2ShowInvestor()" title="Investor deck + pitch summary">📑 Investor Pack</button>
         <button class="v2-btn ghost sm" onclick="v2ExportAll()" title="Export full pipeline as JSON">⬇ Export</button>
-        <button class="v2-btn ghost sm" onclick="v2PrintDashboard()" title="Print / Save as PDF">🖨 Print</button>
         <button class="v2-btn ghost sm" onclick="v2ShareReport()" title="Copy shareable link">🔗 Share</button>
-        ${typeof v2GeneratePDFReport === 'function' ? `<button class="v2-btn ghost sm" onclick="v2GeneratePDFReport()" title="Formatted PDF report">📄 PDF</button>` : ''}
-        ${typeof v2ExportSlides === 'function' ? `<button class="v2-btn ghost sm" onclick="v2ExportSlides()" title="12-slide pitch deck">📊 Slides</button>` : ''}
-        ${typeof v2ShowREditor === 'function' ? `<button class="v2-btn ghost sm" onclick="v2ShowREditor()" title="Edit raw data & recalculate">🔧 Edit Data</button>` : ''}
-        ${typeof v2ShowZIPCompare === 'function' ? `<button class="v2-btn ghost sm" onclick="v2ShowZIPCompare()" title="Compare two ZIP codes">📍 ZIP Compare</button>` : ''}
-        <button class="v2-btn ghost sm" onclick="v2GoTo('traditional')" title="All raw agent outputs + advanced tools">🔬 Advanced View</button>
         <button class="v2-btn primary sm" onclick="v2SaveCurrentRun()">💾 Save Run</button>
+        <div class="v2-more-wrap">
+          <button class="v2-btn ghost sm" onclick="v2ToggleMoreMenu(this)" title="More actions">··· More</button>
+          <div class="v2-more-menu">
+            <button class="v2-more-item" onclick="v2ShowExecution();v2CloseMoreMenus()">🗓 Execution Plan</button>
+            <button class="v2-more-item" onclick="v2ShowInvestor();v2CloseMoreMenus()">📑 Investor Pack</button>
+            <button class="v2-more-item" onclick="v2PrintDashboard();v2CloseMoreMenus()">🖨 Print</button>
+            ${typeof v2GeneratePDFReport === 'function' ? `<button class="v2-more-item" onclick="v2GeneratePDFReport();v2CloseMoreMenus()">📄 PDF Report</button>` : ''}
+            ${typeof v2ExportSlides === 'function' ? `<button class="v2-more-item" onclick="v2ExportSlides();v2CloseMoreMenus()">📊 Slides</button>` : ''}
+            ${typeof v2ShowREditor === 'function' ? `<button class="v2-more-item" onclick="v2ShowREditor();v2CloseMoreMenus()">🔧 Edit Data</button>` : ''}
+            ${typeof v2ShowZIPCompare === 'function' ? `<button class="v2-more-item" onclick="v2ShowZIPCompare();v2CloseMoreMenus()">📍 ZIP Compare</button>` : ''}
+            <button class="v2-more-item" onclick="v2GoTo('traditional');v2CloseMoreMenus()">🔬 Advanced View</button>
+            <div class="v2-more-divider"></div>
+            <button class="v2-more-item" onclick="v2ExportDashboardHTML?.();v2CloseMoreMenus()">📥 Export HTML</button>
+            <button class="v2-more-item" onclick="v2ExportSBAPackage?.();v2CloseMoreMenus()">📋 SBA Package</button>
+            <button class="v2-more-item" onclick="v2SaveSearch?.();v2CloseMoreMenus()">🔖 Save Search</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -13570,21 +14232,23 @@ function v2RenderDashboard(run) {
 
     ${v2RenderScoreBreakdown(score)}
 
-    <div class="v2-dash-tabs" id="v2-dash-tabs">
-      <div class="v2-dash-tab active" onclick="v2DashTab('executive',this)">📋 Executive</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('financials',this)">💰 Financials</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('market',this)">🗺️ Market</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('competition',this)">🔍 Competition</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('risks',this)">⚠️ Risks</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('plan',this)">✅ Action Plan</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('grants',this)">💵 Grants</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('agents',this)">🤖 All Agents</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('dag',this)">🕸 Agent Flow</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('heatmap',this)">🗺 Heat Map</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('whatif',this)">🎲 What-If</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('benchmark',this)">📊 Benchmark</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('correlation',this)">🔗 Score Drivers</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('audit',this)">🔬 Audit Trail</div>
+    <div class="v2-dash-tabs-wrap">
+      <div class="v2-dash-tabs" id="v2-dash-tabs">
+        <div class="v2-dash-tab active" onclick="v2DashTab('executive',this)">📋 Executive</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('financials',this)">💰 Financials</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('market',this)">🗺️ Market</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('competition',this)">🔍 Competition</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('risks',this)">⚠️ Risks</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('plan',this)">✅ Action Plan</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('grants',this)">💵 Grants</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('agents',this)">🤖 All Agents</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('dag',this)">🕸 Agent Flow</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('heatmap',this)">🗺 Heat Map</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('whatif',this)">🎲 What-If</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('benchmark',this)">📊 Benchmark</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('correlation',this)">🔗 Score Drivers</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('audit',this)">🔬 Audit Trail</div>
+      </div>
     </div>
 
     <div class="v2-dash-panel active" id="v2-panel-executive">${v2RenderExecutive()}</div>
@@ -14787,7 +15451,11 @@ function v2SetTheme(mode) {
   document.documentElement.setAttribute('data-theme', mode);
   localStorage.setItem('v2_theme', mode);
   const btn = document.getElementById('v2-theme-btn');
-  if (btn) btn.textContent = mode === 'light' ? '🌙' : '☀️';
+  if (btn) {
+    const ico = btn.querySelector('.v2-theme-ico');
+    if (ico) ico.textContent = mode === 'light' ? '🌙' : '☀️';
+    else btn.textContent = mode === 'light' ? '🌙' : '☀️';
+  }
 }
 
 function v2ToggleTheme() {
@@ -18751,16 +19419,7 @@ function v2CloseModal(id) {
       riskPanel.insertAdjacentHTML('beforeend', v2RenderRiskScored());
     }
 
-    // 7. Enhance header with export/save buttons
-    const dashHeader = wrap.querySelector('.v2-dash-header');
-    if (dashHeader && !dashHeader.querySelector('.v2-export-dashboard-btn')) {
-      dashHeader.insertAdjacentHTML('beforeend', `
-        <div class="v2-dash-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-          <button class="v2-btn ghost sm v2-export-dashboard-btn" onclick="v2ExportDashboardHTML()">📥 Export HTML</button>
-          <button class="v2-btn ghost sm" onclick="v2ExportSBAPackage()">📋 SBA Package</button>
-          <button class="v2-btn ghost sm" onclick="v2SaveSearch()">🔖 Save Search</button>
-        </div>`);
-    }
+    // 7. Export/save buttons now live in the ··· More overflow menu (v2-06-dashboard.js)
   };
 })();
 
@@ -19806,6 +20465,21 @@ function getDemoData(agentNum, industry) {
           top_complaint_themes: ['Understaffed','High turnover','Mediocre curriculum'],
           sample_complaints: ['3 different teachers in 6 months', 'Feels like a warehouse, not a school'],
           differentiation_opportunity: 'Low-ratio classrooms and NAEYC accreditation' },
+        { name: "Mary's Family Daycare", type: 'Home-based', avg_rating: 4.8, review_count_est: 18, monthly_primary_rate: 950,
+          monthly_secondary_rate: 850, strengths: ['Personalized care (6 children max)', 'Flexible hours 6am-7pm', 'Accepts CAPS subsidy', 'High parent trust'], weaknesses: ['No structured curriculum', 'Single provider = closure risk', 'Limited capacity'],
+          differentiator: 'Lowest cost option in market — direct competition for budget-conscious families and subsidy recipients.',
+          accepts_subsidy: true, capacity_est: 6
+        },
+        { name: 'Grace Community Church Childcare', type: 'Faith-based Non-profit', avg_rating: 4.5, review_count_est: 62, monthly_primary_rate: 875,
+          monthly_secondary_rate: 775, strengths: ['Community trust & long-standing reputation', 'CAPS-accepting', 'Sliding scale pricing', 'Strong volunteer support'], weaknesses: ['Limited hours (7am-6pm)', 'Older facility', 'No NAEYC accreditation'],
+          differentiator: 'Faith-based mission draws strong community loyalty; pricing 50% below premium centers creates distinct market segment.',
+          accepts_subsidy: true, capacity_est: 48
+        },
+        { name: 'Gwinnett Head Start Program', type: 'Government/Non-profit', avg_rating: 4.1, review_count_est: 95, monthly_primary_rate: 0,
+          monthly_secondary_rate: 0, strengths: ['Free for income-qualified families', 'Comprehensive wraparound services', 'Federal quality standards'], weaknesses: ['Income-restricted eligibility', 'Part-day program only (typically 3.5hrs)', 'Competitive for slots'],
+          differentiator: 'Serves lowest-income bracket — not direct revenue competition, but captures 8-12% of potential market through income qualification.',
+          accepts_subsidy: true, capacity_est: 120
+        },
       ],
       pain_point_analysis: [
         { pain: 'Rigid pick-up/drop-off windows (no flexibility for working parents)', frequency_pct: 68, your_solution: 'Flexible 7am–7pm hours with 30-min grace windows', marketing_angle: 'Built for the real working parent' },
@@ -20113,8 +20787,15 @@ async function v2GeoSearchDebounced(text) {
 
       // Auto-select if perfect ZIP match
       if (res.zip) {
-        V2.wizard.data.zip = res.zip;
+        V2.wizard.data.zip    = res.zip;
+        V2.wizard.data.city   = res.city  || V2.wizard.data.city  || '';
+        V2.wizard.data.state  = res.state_abbr || res.state || V2.wizard.data.state || '';
         V2.wizard.data.zipLabel = `${res.city}, ${res.state_abbr || res.state} ${res.zip}`;
+        // Populate split address fields
+        const cityEl  = document.getElementById('wiz-city');
+        const stateEl = document.getElementById('wiz-state');
+        if (cityEl  && !cityEl.value)  cityEl.value  = V2.wizard.data.city;
+        if (stateEl && !stateEl.value) stateEl.value = V2.wizard.data.state;
         if (resultEl) {
           resultEl.innerHTML = `✅ ${res.city}, ${res.state_abbr || res.state} · ZIP <strong>${res.zip}</strong> · Verified via ${res.source === 'nominatim' ? 'OpenStreetMap' : 'US Census'}`;
           resultEl.style.color = 'var(--v2-green)';
@@ -20140,10 +20821,15 @@ async function v2GeoSearchDebounced(text) {
 function v2GeoPickSuggestion(candidate) {
   V2.wizard.data.zip      = candidate.zip || V2.wizard.data.zip;
   V2.wizard.data.address  = candidate.display_name;
+  V2.wizard.data.city     = candidate.city  || V2.wizard.data.city  || '';
+  V2.wizard.data.state    = candidate.state_abbr || candidate.state || V2.wizard.data.state || '';
   V2.wizard.data.zipLabel = `${candidate.city}, ${candidate.state} ${candidate.zip}`;
 
-  const addrInput = document.getElementById('wiz-address');
-  if (addrInput) addrInput.value = candidate.display_name;
+  // Populate split address fields
+  const cityEl  = document.getElementById('wiz-city');
+  const stateEl = document.getElementById('wiz-state');
+  if (cityEl)  cityEl.value  = V2.wizard.data.city;
+  if (stateEl) stateEl.value = V2.wizard.data.state;
 
   const resultEl  = document.getElementById('wiz-geo-result');
   if (resultEl) {
@@ -20280,6 +20966,7 @@ function _industryToOSMTags(industry) {
     coffee_shop:      ['"amenity"="cafe"'],
     barbershop:       ['"shop"="hairdresser"', '"shop"="barber"'],
     coworking:        ['"amenity"="coworking_space"', '"office"="coworking"'],
+    optometry:        ['"healthcare"="optometrist"', '"amenity"="optometrist"', '"healthcare:speciality"="ophthalmology"'],
   };
   return map[industry] || ['"amenity"="office"'];
 }
@@ -20321,6 +21008,7 @@ async function v2FetchBLSWages(industryVal) {
     gym:              ['CES7139910001'],  // Fitness & recreational sports centers
     medical_practice: ['CES6562110001'],  // Offices of physicians
     urgent_care:      ['CES6562111001'],  // Offices of physicians (general)
+    optometry:        ['CES6562140001'],  // Offices of optometrists
     coffee_shop:      ['CES7072200001'],  // Limited-service restaurants (proxy)
   };
 
@@ -20810,8 +21498,8 @@ async function v2EnrichDashboardWithFreeAPIs() {
     }
   } catch {}
 
-  // Medical practice: NPPES competitor data
-  if (industry === 'medical_practice') {
+  // Medical/optometry: NPPES competitor data
+  if (industry === 'medical_practice' || industry === 'optometry' || industry === 'urgent_care') {
     try {
       const nppes = await v2FetchOpenFDAFacilities(zip, 'physician');
       if (nppes && nppes.length > 0) {
@@ -20821,9 +21509,1122 @@ async function v2EnrichDashboardWithFreeAPIs() {
     } catch {}
   }
 
+  // ── NEW APIs ──────────────────────────────────────────────────────────────
+
+  // 1. Census ZIP Business Patterns — real establishment counts
+  try {
+    const zbp = await v2FetchZBP(zip, industry);
+    if (zbp) {
+      v2RenderZBPCard(zbp, industry);
+      activeSources.push('Census Business Patterns');
+    }
+  } catch {}
+
+  // 2. Open-Meteo climate — for revenue-seasonal industries
+  if (_CLIMATE_RELEVANT.has(industry)) {
+    try {
+      let lat = V2.wizard?.data?._lat || run._lat;
+      let lng = V2.wizard?.data?._lng || run._lng;
+      if (!lat || !lng) {
+        const c = await v2GetZIPCentroid(zip);
+        if (c) { lat = c.lat; lng = c.lng; }
+      }
+      if (lat && lng) {
+        const climate = await v2FetchClimate(lat, lng);
+        if (climate) {
+          v2RenderClimateCard(climate, industry);
+          activeSources.push('Open-Meteo Climate');
+        }
+      }
+    } catch {}
+  }
+
+  // 3. CDC PLACES — health/insurance data for healthcare industries
+  if (_CDC_RELEVANT.has(industry)) {
+    try {
+      const city     = V2.wizard?.data?.city  || run.city  || '';
+      const stateAbbr = V2.wizard?.data?.state || run.state || '';
+      if (city && stateAbbr) {
+        const cdc = await v2FetchCDCPlaces(city, stateAbbr);
+        if (cdc) {
+          v2RenderCDCCard(cdc);
+          activeSources.push('CDC PLACES');
+        }
+      }
+    } catch {}
+  }
+
+  // 4. SBA loan data — lender appetite validation
+  try {
+    const sba = await v2FetchSBALoans(zip, industry);
+    if (sba) {
+      v2RenderSBACard(sba, industry, zip);
+      activeSources.push('SBA Loan Data');
+    }
+  } catch {}
+
+  // 5. EPA Envirofacts — environmental risk for relevant industries
+  if (_EPA_RELEVANT.has(industry)) {
+    try {
+      const epa = await v2FetchEPAEnvironmental(zip);
+      if (epa) {
+        v2RenderEPACard(epa, zip);
+        activeSources.push('EPA Envirofacts');
+      }
+    } catch {}
+  }
+
+  // 6. USAspending — federal grants placed in target ZIP
+  try {
+    const spend = await v2FetchUSAspending(zip);
+    if (spend) {
+      v2RenderUSAspendingCard(spend, zip);
+      activeSources.push('USAspending.gov');
+    }
+  } catch {}
+
+  // 7. SEC EDGAR — public chain competitor filings
+  try {
+    const chains = await v2FetchSECChains(industry);
+    if (chains) {
+      v2RenderSECCard(chains, industry);
+      activeSources.push('SEC EDGAR');
+    }
+  } catch {}
+
+  // 8. World Bank — US macro indicators (runs once per session, cached)
+  try {
+    const macro = await v2FetchWorldBankMacro();
+    if (macro) {
+      v2RenderWorldBankCard(macro);
+      activeSources.push('World Bank');
+    }
+  } catch {}
+
+  // 9. EIA Energy — commercial electricity rate for this state
+  if (_EIA_RELEVANT.has(industry)) {
+    try {
+      const stateAbbr = V2.wizard?.data?.state || run.state || '';
+      if (stateAbbr) {
+        const eia = await v2FetchEIAEnergy(stateAbbr);
+        if (eia) {
+          v2RenderEIACard(eia, industry);
+          activeSources.push('EIA (Energy)');
+        }
+      }
+    } catch {}
+  }
+
+  // 10. Overpass POI density — foot traffic anchors near site
+  try {
+    let lat = V2.wizard?.data?._lat || run._lat;
+    let lng = V2.wizard?.data?._lng || run._lng;
+    if (!lat || !lng) {
+      const centroid = await v2GetZIPCentroid(zip);
+      if (centroid) { lat = centroid.lat; lng = centroid.lng; }
+    }
+    if (lat && lng) {
+      const radius = Math.min(parseFloat(run.radius || V2.wizard?.data?.radius || '3'), 3);
+      const pois = await v2FetchNearbyPOIs(lat, lng, radius);
+      if (pois) {
+        v2RenderPOIDensityCard(pois, industry, zip);
+        activeSources.push('OSM POI Density');
+      }
+    }
+  } catch {}
+
   // Render badge showing active sources
   if (activeSources.length > 0) v2RenderFreeAPIBadge(activeSources);
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// NEW ENRICHMENT APIS (no key required)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── 1. CENSUS ZIP BUSINESS PATTERNS ──────────────────────────────────────────
+// NAICS codes by industry — used to query establishment counts in a ZIP
+const _ZBP_NAICS = {
+  daycare:          '624410',
+  gas_station:      '447110',
+  laundromat:       '812310',
+  car_wash:         '811192',
+  restaurant:       '722511',
+  gym:              '713940',
+  indoor_play:      '713990',
+  dry_cleaning:     '812320',
+  senior_care:      '623110',
+  tutoring:         '611691',
+  urgent_care:      '621111',
+  medical_practice: '621111',
+  coffee_shop:      '722515',
+  barbershop:       '812111',
+  coworking:        '531120',
+  optometry:        '621320',
+};
+
+async function v2FetchZBP(zip, industry) {
+  const naics = _ZBP_NAICS[industry];
+  if (!naics || !zip) return null;
+  const cacheKey = `zbp:${zip}:${naics}`;
+  const cached = _freeApiCache(cacheKey);
+  if (cached) return cached;
+  try {
+    const url = `https://api.census.gov/data/2021/zbp?get=ESTAB,EMP,PAYANN&for=zipcode:${zip}&NAICS2017=${naics}`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!r.ok) throw new Error('ZBP HTTP ' + r.status);
+    const rows = await r.json();
+    // rows[0] = headers, rows[1] = data
+    if (!rows || rows.length < 2) return null;
+    const [headers, values] = rows;
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = values[i]);
+    const result = {
+      establishments: parseInt(obj.ESTAB) || 0,
+      employees:      parseInt(obj.EMP)   || 0,
+      payroll_k:      parseInt(obj.PAYANN)|| 0,
+      naics,
+      zip,
+    };
+    _freeApiCache(cacheKey, result);
+    return result;
+  } catch (e) {
+    console.warn('[v2FreeAPI] ZBP failed:', e.message);
+    return null;
+  }
+}
+
+// ── 2. IPINFO.IO — AUTO-DETECT USER LOCATION ──────────────────────────────────
+async function v2DetectUserLocation() {
+  const cacheKey = 'ipinfo:location';
+  const cached = _freeApiCache(cacheKey);
+  if (cached) return cached;
+  try {
+    const r = await fetch('https://ipinfo.io/json', { signal: AbortSignal.timeout(3000) });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    const [lat, lng] = (d.loc || '').split(',').map(Number);
+    const result = {
+      city:    d.city    || '',
+      region:  d.region  || '',
+      zip:     d.postal  || '',
+      country: d.country || '',
+      lat, lng,
+    };
+    _freeApiCache(cacheKey, result);
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+// ── 3. OPEN-METEO — CLIMATE / SEASONALITY DATA ────────────────────────────────
+async function v2FetchClimate(lat, lng) {
+  if (!lat || !lng) return null;
+  const key = `climate:${lat.toFixed(2)}:${lng.toFixed(2)}`;
+  const cached = _freeApiCache(key);
+  if (cached) return cached;
+  try {
+    const url = `https://climate-api.open-meteo.com/v1/climate?latitude=${lat}&longitude=${lng}`
+      + `&start_date=2000-01-01&end_date=2019-12-31`
+      + `&monthly=temperature_2m_mean,precipitation_sum`
+      + `&models=MRI_AGCM3_2_S`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error('climate HTTP ' + r.status);
+    const d = await r.json();
+    // monthly arrays — 12 values averaged across the time range
+    const temps  = d.monthly?.temperature_2m_mean || [];
+    const precip = d.monthly?.precipitation_sum   || [];
+    // Compute season summary
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months = monthNames.map((name, i) => ({
+      name,
+      temp_c:  temps[i]  ?? null,
+      temp_f:  temps[i]  != null ? Math.round(temps[i] * 9/5 + 32) : null,
+      precip:  precip[i] ?? null,
+    }));
+    const avgTemp   = temps.length  ? (temps.reduce((a,b)=>a+b,0) / temps.length).toFixed(1)  : null;
+    const totalPrec = precip.length ? precip.reduce((a,b)=>a+b,0).toFixed(0)                  : null;
+    const peakWet   = precip.length ? monthNames[precip.indexOf(Math.max(...precip))]          : null;
+    const result = { months, avgTemp_c: avgTemp, totalPrecip_mm: totalPrec, peakWetMonth: peakWet };
+    _freeApiCache(key, result);
+    return result;
+  } catch (e) {
+    console.warn('[v2FreeAPI] Open-Meteo failed:', e.message);
+    return null;
+  }
+}
+
+// Industries where climate materially affects revenue / operations
+const _CLIMATE_RELEVANT = new Set([
+  'car_wash','gas_station','restaurant','coffee_shop','gym','laundromat',
+]);
+
+// ── 4. CDC PLACES — LOCAL HEALTH / INSURANCE DATA ────────────────────────────
+async function v2FetchCDCPlaces(city, stateAbbr) {
+  if (!city || !stateAbbr) return null;
+  const key = `cdc:${stateAbbr}:${city.toLowerCase()}`;
+  const cached = _freeApiCache(key);
+  if (cached) return cached;
+  try {
+    const enc = encodeURIComponent(city);
+    const url = `https://chronicdata.cdc.gov/resource/cwsq-ngmh.json`
+      + `?StateAbbr=${stateAbbr}&PlaceName=${enc}&$limit=200`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(7000) });
+    if (!r.ok) throw new Error('CDC HTTP ' + r.status);
+    const rows = await r.json();
+    if (!rows || rows.length === 0) return null;
+    // Extract key measures — insurance, diabetes, obesity, physical inactivity
+    const pick = (measure) => {
+      const row = rows.find(r => r.measureid === measure && r.datavaluetypeid === 'CrdPrv');
+      return row ? parseFloat(row.data_value) : null;
+    };
+    const result = {
+      no_insurance_pct:      pick('ACCESS2'),   // % adults without health insurance
+      diabetes_pct:          pick('DIABETES'),
+      obesity_pct:           pick('OBESITY'),
+      physical_inactivity:   pick('LPA'),
+      checkup_pct:           pick('CHECKUP'),   // % had routine checkup past year
+      city, stateAbbr,
+    };
+    _freeApiCache(key, result);
+    return result;
+  } catch (e) {
+    console.warn('[v2FreeAPI] CDC PLACES failed:', e.message);
+    return null;
+  }
+}
+
+const _CDC_RELEVANT = new Set([
+  'medical_practice','urgent_care','optometry','gym','senior_care',
+]);
+
+// ── 5. SBA LOAN DATA ─────────────────────────────────────────────────────────
+// Uses SBA FOIA 7(a) public dataset (2010-present). Queries by ZIP prefix.
+const _SBA_NAICS = _ZBP_NAICS; // same codes work
+
+async function v2FetchSBALoans(zip, industry) {
+  if (!zip || !industry) return null;
+  const naics = _SBA_NAICS[industry];
+  if (!naics) return null;
+  const key = `sba:${zip}:${naics}`;
+  const cached = _freeApiCache(key);
+  if (cached) return cached;
+  try {
+    // SBA CKAN API — 7(a) loans FOIA dataset
+    const url = `https://data.sba.gov/api/3/action/datastore_search_sql?sql=`
+      + encodeURIComponent(
+          `SELECT "BorrZip","GrossApproval","JobsSupported","ApprovalDate","BorrName" `
+          + `FROM "9e5c3673-30c1-4f9c-a3ef-5abf12f4f6e8" `
+          + `WHERE "BorrZip" LIKE '${zip.slice(0,3)}%' AND "NAICSCode" LIKE '${naics.slice(0,4)}%' `
+          + `ORDER BY "ApprovalDate" DESC LIMIT 20`
+        );
+    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error('SBA HTTP ' + r.status);
+    const d = await r.json();
+    const records = d?.result?.records || [];
+    if (!records.length) return null;
+    const totalAmount = records.reduce((s, row) => s + (parseFloat(row.GrossApproval)||0), 0);
+    const avgAmount   = totalAmount / records.length;
+    const result = {
+      count:        records.length,
+      total_amount: totalAmount,
+      avg_amount:   avgAmount,
+      recent:       records.slice(0, 5),
+      naics,
+    };
+    _freeApiCache(key, result);
+    return result;
+  } catch (e) {
+    console.warn('[v2FreeAPI] SBA loans failed:', e.message);
+    return null;
+  }
+}
+
+// ── 6. EPA ENVIROFACTS — ENVIRONMENTAL RISK ───────────────────────────────────
+const _EPA_RELEVANT = new Set(['gas_station','dry_cleaning','laundromat','car_wash','medical_practice','urgent_care','optometry']);
+
+async function v2FetchEPAEnvironmental(zip) {
+  if (!zip) return null;
+  const key = `epa:${zip}`;
+  const cached = _freeApiCache(key);
+  if (cached) return cached;
+  try {
+    // TRI (Toxic Release Inventory) facilities by ZIP
+    const url = `https://data.epa.gov/efservice/tri_facility/zip_code/${zip}/json`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!r.ok) throw new Error('EPA HTTP ' + r.status);
+    const facilities = await r.json();
+    if (!Array.isArray(facilities)) return null;
+    const result = {
+      tri_count:    facilities.length,
+      facilities:   facilities.slice(0, 8).map(f => ({
+        name:     f.FACILITY_NAME || f.FRS_FACILITY_ID,
+        address:  [f.STREET_ADDRESS, f.CITY_NAME, f.STATE_ABBR].filter(Boolean).join(', '),
+        industry: f.INDUSTRY_SECTOR_CODE,
+      })),
+    };
+    _freeApiCache(key, result);
+    return result;
+  } catch (e) {
+    console.warn('[v2FreeAPI] EPA Envirofacts failed:', e.message);
+    return null;
+  }
+}
+
+// ── RENDER: ZBP Market Saturation Card ───────────────────────────────────────
+function v2RenderZBPCard(zbp, industry) {
+  const existing = document.getElementById('v2-zbp-card');
+  if (existing) existing.remove();
+  const panel = document.getElementById('v2-panel-competition');
+  if (!panel || !zbp) return;
+
+  const indLabel = (typeof V2_INDUSTRIES !== 'undefined' ? V2_INDUSTRIES : [])
+    .find(i => i.val === industry)?.label || industry;
+  const avgSalary = zbp.employees && zbp.payroll_k
+    ? '$' + Math.round((zbp.payroll_k * 1000) / zbp.employees).toLocaleString()
+    : '—';
+  const satColor = zbp.establishments <= 3 ? 'var(--v2-green)' : zbp.establishments <= 8 ? 'var(--v2-amber)' : 'var(--v2-red)';
+  const satLabel = zbp.establishments <= 3 ? 'Low saturation' : zbp.establishments <= 8 ? 'Moderate saturation' : 'High saturation';
+
+  const card = document.createElement('div');
+  card.id = 'v2-zbp-card';
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">🏛️ Census Business Patterns — ${indLabel} in ZIP ${zbp.zip}</div>
+      <div style="font-size:10px;color:var(--v2-t3)">US Census ZBP 2021 · NAICS ${zbp.naics}</div>
+    </div>
+    <div class="v2-kpi-grid">
+      <div class="v2-kpi">
+        <div class="v2-kpi-ico">🏢</div>
+        <div class="v2-kpi-val" style="color:${satColor}">${zbp.establishments}</div>
+        <div class="v2-kpi-lbl">Registered Establishments</div>
+      </div>
+      <div class="v2-kpi">
+        <div class="v2-kpi-ico">👷</div>
+        <div class="v2-kpi-val">${zbp.employees > 0 ? zbp.employees.toLocaleString() : '< 5'}</div>
+        <div class="v2-kpi-lbl">Employees in ZIP</div>
+      </div>
+      <div class="v2-kpi">
+        <div class="v2-kpi-ico">💵</div>
+        <div class="v2-kpi-val">${avgSalary}</div>
+        <div class="v2-kpi-lbl">Avg Annual Wage</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;padding:8px 12px;background:var(--v2-s3);border-radius:8px;font-size:12px;display:flex;align-items:center;gap:8px">
+      <span style="color:${satColor};font-size:16px">●</span>
+      <span><strong>${satLabel}</strong> — ${zbp.establishments} ${indLabel.toLowerCase()} establishments registered in this ZIP per IRS/Census data</span>
+    </div>
+    <div style="font-size:10px;color:var(--v2-t3);margin-top:8px">
+      Source: US Census Bureau ZIP Code Business Patterns · 2021 Annual Survey · Government-verified establishment counts
+    </div>`;
+  panel.insertBefore(card, panel.firstChild);
+}
+
+// ── RENDER: Climate Seasonality Card ─────────────────────────────────────────
+function v2RenderClimateCard(climate, industry) {
+  const existing = document.getElementById('v2-climate-card');
+  if (existing) existing.remove();
+  const panel = document.getElementById('v2-panel-financials');
+  if (!panel || !climate) return;
+
+  const { months, avgTemp_c, totalPrecip_mm, peakWetMonth } = climate;
+  const avgTempF = avgTemp_c != null ? Math.round(+avgTemp_c * 9/5 + 32) : '—';
+
+  // Revenue impact message by industry
+  const impactMap = {
+    car_wash:    `Car washes lose ~30–40% revenue in peak rain months. Peak wet month (${peakWetMonth}) may reduce throughput.`,
+    gas_station: `Fuel volume drops ~15% in extreme cold months. Plan for seasonal C-store revenue offsets.`,
+    restaurant:  `Outdoor dining viable during mild months. Peak precipitation (${peakWetMonth}) affects patio covers.`,
+    coffee_shop: `Hot beverage demand spikes in cold months — plan inventory and staffing accordingly.`,
+    gym:         `Gym sign-ups peak in January and drop mid-summer. Budget for 20–30% revenue seasonality.`,
+    laundromat:  `Wet months drive 10–15% higher laundromat traffic. Plan utility costs accordingly.`,
+  };
+  const impact = impactMap[industry] || 'Factor seasonal patterns into monthly revenue projections.';
+
+  // Simple bar chart using CSS widths
+  const maxPrec = Math.max(...months.map(m => m.precip || 0), 1);
+  const bars = months.map(m => {
+    const w = m.precip != null ? Math.round((m.precip / maxPrec) * 100) : 0;
+    const tempStr = m.temp_f != null ? `${m.temp_f}°F` : '—';
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;color:var(--v2-t3)">
+      <div style="width:100%;height:${Math.max(w*0.5,2)}px;background:rgba(99,102,241,0.5);border-radius:2px 2px 0 0;min-height:2px"></div>
+      <div>${m.name}</div><div style="color:var(--v2-t2)">${tempStr}</div>
+    </div>`;
+  }).join('');
+
+  const card = document.createElement('div');
+  card.id = 'v2-climate-card';
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">🌤️ Climate &amp; Seasonality — 20-Year Average</div>
+      <div style="font-size:10px;color:var(--v2-t3)">Open-Meteo · Historical Climate API</div>
+    </div>
+    <div class="v2-kpi-grid" style="margin-bottom:14px">
+      <div class="v2-kpi"><div class="v2-kpi-ico">🌡️</div><div class="v2-kpi-val">${avgTempF}°F</div><div class="v2-kpi-lbl">Mean Annual Temp</div></div>
+      <div class="v2-kpi"><div class="v2-kpi-ico">🌧️</div><div class="v2-kpi-val">${totalPrecip_mm ? Math.round(+totalPrecip_mm/25.4)+'"' : '—'}</div><div class="v2-kpi-lbl">Annual Rainfall</div></div>
+      <div class="v2-kpi"><div class="v2-kpi-ico">☔</div><div class="v2-kpi-val">${peakWetMonth || '—'}</div><div class="v2-kpi-lbl">Wettest Month</div></div>
+    </div>
+    <div style="display:flex;align-items:flex-end;gap:2px;height:60px;margin-bottom:4px">${bars}</div>
+    <div style="font-size:11px;color:var(--v2-t2);margin-top:10px;padding:8px 12px;background:var(--v2-s3);border-radius:8px">
+      💡 <strong>Revenue Impact:</strong> ${impact}
+    </div>`;
+  panel.appendChild(card);
+}
+
+// ── RENDER: CDC PLACES Health Data Card ──────────────────────────────────────
+function v2RenderCDCCard(cdc) {
+  const existing = document.getElementById('v2-cdc-card');
+  if (existing) existing.remove();
+  const panel = document.getElementById('v2-panel-market');
+  if (!panel || !cdc) return;
+
+  const fmt = v => v != null ? v.toFixed(1) + '%' : '—';
+  const insuredPct = cdc.no_insurance_pct != null ? (100 - cdc.no_insurance_pct).toFixed(1) + '%' : '—';
+  const insColor = cdc.no_insurance_pct != null
+    ? (cdc.no_insurance_pct < 10 ? 'var(--v2-green)' : cdc.no_insurance_pct < 20 ? 'var(--v2-amber)' : 'var(--v2-red)')
+    : 'var(--v2-t2)';
+
+  const card = document.createElement('div');
+  card.id = 'v2-cdc-card';
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">🏥 CDC PLACES — Local Health Indicators · ${cdc.city}, ${cdc.stateAbbr}</div>
+      <div style="font-size:10px;color:var(--v2-t3)">CDC PLACES 2023 · Socrata API</div>
+    </div>
+    <div class="v2-kpi-grid">
+      <div class="v2-kpi">
+        <div class="v2-kpi-ico">🛡️</div>
+        <div class="v2-kpi-val" style="color:${insColor}">${insuredPct}</div>
+        <div class="v2-kpi-lbl">Population Insured</div>
+      </div>
+      ${cdc.diabetes_pct != null ? `<div class="v2-kpi"><div class="v2-kpi-ico">🩸</div><div class="v2-kpi-val">${fmt(cdc.diabetes_pct)}</div><div class="v2-kpi-lbl">Diabetes Prevalence</div></div>` : ''}
+      ${cdc.obesity_pct != null ? `<div class="v2-kpi"><div class="v2-kpi-ico">⚖️</div><div class="v2-kpi-val">${fmt(cdc.obesity_pct)}</div><div class="v2-kpi-lbl">Obesity Rate</div></div>` : ''}
+      ${cdc.checkup_pct != null ? `<div class="v2-kpi"><div class="v2-kpi-ico">📋</div><div class="v2-kpi-val">${fmt(cdc.checkup_pct)}</div><div class="v2-kpi-lbl">Annual Checkup Rate</div></div>` : ''}
+    </div>
+    <div style="font-size:10px;color:var(--v2-t3);margin-top:8px">
+      Source: CDC PLACES Local Health Data · city-level chronic disease and prevention indicators
+    </div>`;
+  panel.appendChild(card);
+}
+
+// ── RENDER: SBA Loan Activity Card ────────────────────────────────────────────
+function v2RenderSBACard(sba, industry, zip) {
+  const existing = document.getElementById('v2-sba-card');
+  if (existing) existing.remove();
+  const panel = document.getElementById('v2-panel-financials');
+  if (!panel || !sba) return;
+
+  const fmtM = n => n >= 1000000 ? '$' + (n/1000000).toFixed(1) + 'M' : '$' + Math.round(n/1000) + 'K';
+  const indLabel = (typeof V2_INDUSTRIES !== 'undefined' ? V2_INDUSTRIES : [])
+    .find(i => i.val === industry)?.label || industry;
+
+  const recentRows = (sba.recent || []).map(r => `
+    <div style="display:flex;justify-content:space-between;padding:7px 10px;background:var(--v2-s3);border-radius:7px;font-size:11px">
+      <span style="color:var(--v2-t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.BorrName || '—'}</span>
+      <span style="color:var(--v2-green);font-weight:600;margin-left:10px;flex-shrink:0">${fmtM(parseFloat(r.GrossApproval)||0)}</span>
+    </div>`).join('');
+
+  const card = document.createElement('div');
+  card.id = 'v2-sba-card';
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">💼 SBA 7(a) Loan Activity — ${indLabel} near ZIP ${zip}</div>
+      <div style="font-size:10px;color:var(--v2-t3)">SBA FOIA Public Data · NAICS ${sba.naics}</div>
+    </div>
+    <div class="v2-kpi-grid" style="margin-bottom:14px">
+      <div class="v2-kpi"><div class="v2-kpi-ico">✅</div><div class="v2-kpi-val">${sba.count}</div><div class="v2-kpi-lbl">Recent Loans Found</div></div>
+      <div class="v2-kpi"><div class="v2-kpi-ico">💰</div><div class="v2-kpi-val">${fmtM(sba.avg_amount)}</div><div class="v2-kpi-lbl">Avg Loan Amount</div></div>
+      <div class="v2-kpi"><div class="v2-kpi-ico">📊</div><div class="v2-kpi-val">${fmtM(sba.total_amount)}</div><div class="v2-kpi-lbl">Total Capital Deployed</div></div>
+    </div>
+    ${recentRows ? `<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">${recentRows}</div>` : ''}
+    <div style="font-size:10px;color:var(--v2-t3)">
+      Lender appetite indicator — banks in this area have funded ${sba.count} ${indLabel.toLowerCase()} businesses. Strong signal for SBA loan eligibility.
+    </div>`;
+  panel.appendChild(card);
+}
+
+// ── RENDER: EPA Environmental Risk Card ───────────────────────────────────────
+function v2RenderEPACard(epa, zip) {
+  const existing = document.getElementById('v2-epa-card');
+  if (existing) existing.remove();
+  const panel = document.getElementById('v2-panel-risks');
+  if (!panel || !epa) return;
+
+  const riskColor = epa.tri_count === 0 ? 'var(--v2-green)' : epa.tri_count <= 3 ? 'var(--v2-amber)' : 'var(--v2-red)';
+  const riskLabel = epa.tri_count === 0 ? 'No TRI sites detected — low environmental risk'
+    : epa.tri_count <= 3 ? `${epa.tri_count} TRI site(s) — moderate risk, investigate before leasing`
+    : `${epa.tri_count} TRI sites — elevated risk, obtain Phase I ESA before committing`;
+
+  const facilityRows = (epa.facilities || []).map(f => `
+    <div style="padding:7px 10px;background:var(--v2-s3);border-radius:7px;font-size:11px">
+      <div style="font-weight:600;color:var(--v2-t1)">${f.name}</div>
+      <div style="color:var(--v2-t3);margin-top:1px">${f.address}</div>
+    </div>`).join('');
+
+  const card = document.createElement('div');
+  card.id = 'v2-epa-card';
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">⚠️ EPA Envirofacts — Environmental Risk · ZIP ${zip}</div>
+      <div style="font-size:10px;color:var(--v2-t3)">EPA TRI Database · No key required</div>
+    </div>
+    <div style="padding:10px 14px;background:var(--v2-s3);border-radius:8px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+      <span style="color:${riskColor};font-size:20px">●</span>
+      <span style="font-size:13px;color:var(--v2-t1)">${riskLabel}</span>
+    </div>
+    ${facilityRows ? `<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">${facilityRows}</div>` : ''}
+    <div style="font-size:10px;color:var(--v2-t3)">
+      TRI = EPA Toxic Release Inventory · Covers industrial facilities that release toxic chemicals · Relevant for gas stations (UST leaks), dry cleaners (PERC), and medical waste generators.
+    </div>`;
+  panel.appendChild(card);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BATCH 2 — USAspending · SEC EDGAR · World Bank
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── USASPENDING — Federal Grants by ZIP ───────────────────────────────────────
+async function v2FetchUSAspending(zip) {
+  if (!zip) return null;
+  const key = `usaspend:${zip}`;
+  const cached = _freeApiCache(key);
+  if (cached) return cached;
+  try {
+    const r = await fetch('https://api.usaspending.gov/api/v2/search/spending_by_award/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(10000),
+      body: JSON.stringify({
+        filters: {
+          award_type_codes: ['02', '03', '04', '05'],   // grants & cooperative agreements
+          place_of_performance_zip5: zip,
+        },
+        fields: ['Award ID', 'Recipient Name', 'Award Amount', 'Awarding Agency', 'Award Type', 'Description', 'Start Date'],
+        limit: 10,
+        page: 1,
+        sort: 'Award Amount',
+        order: 'desc',
+      }),
+    });
+    if (!r.ok) throw new Error('USAspending HTTP ' + r.status);
+    const d = await r.json();
+    const results = d.results || [];
+    if (!results.length) return null;
+    const totalAmount = results.reduce((s, a) => s + (parseFloat(a['Award Amount']) || 0), 0);
+    const byAgency = {};
+    results.forEach(a => {
+      const ag = a['Awarding Agency'] || 'Unknown';
+      byAgency[ag] = (byAgency[ag] || 0) + (parseFloat(a['Award Amount']) || 0);
+    });
+    const topAgencies = Object.entries(byAgency)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([name, amt]) => ({ name, amt }));
+    const result = { count: results.length, total: totalAmount, topAgencies, recent: results.slice(0, 6), zip };
+    _freeApiCache(key, result);
+    return result;
+  } catch (e) {
+    console.warn('[v2FreeAPI] USAspending failed:', e.message);
+    return null;
+  }
+}
+
+function v2RenderUSAspendingCard(data, zip) {
+  const existing = document.getElementById('v2-usaspend-card');
+  if (existing) existing.remove();
+  const panel = document.getElementById('v2-panel-grants');
+  if (!panel || !data) return;
+
+  const fmtM = n => n >= 1e9 ? '$' + (n / 1e9).toFixed(1) + 'B'
+                  : n >= 1e6 ? '$' + (n / 1e6).toFixed(1) + 'M'
+                  : '$' + Math.round(n / 1000) + 'K';
+
+  const agencyRows = data.topAgencies.map(a => `
+    <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--v2-s3);border-radius:7px;font-size:11px">
+      <span style="color:var(--v2-t2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</span>
+      <span style="color:var(--v2-green);font-weight:600;margin-left:8px;flex-shrink:0">${fmtM(a.amt)}</span>
+    </div>`).join('');
+
+  const recentRows = data.recent.map(a => `
+    <div style="padding:8px 10px;background:var(--v2-s3);border-radius:8px;font-size:11px;margin-bottom:4px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span style="color:var(--v2-t1);font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a['Recipient Name'] || '—'}</span>
+        <span style="color:var(--v2-green);font-weight:700;margin-left:8px;flex-shrink:0">${fmtM(parseFloat(a['Award Amount']) || 0)}</span>
+      </div>
+      <div style="color:var(--v2-t3);margin-top:2px">${a['Awarding Agency'] || ''} · ${a['Award Type'] || ''} · ${(a['Start Date'] || '').slice(0, 7)}</div>
+      ${a['Description'] ? `<div style="color:var(--v2-t3);margin-top:2px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a['Description'].slice(0,100)}</div>` : ''}
+    </div>`).join('');
+
+  const card = document.createElement('div');
+  card.id = 'v2-usaspend-card';
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">🏛️ USAspending.gov — Federal Grants · ZIP ${zip}</div>
+      <div style="font-size:10px;color:var(--v2-t3)">US Treasury open data · No key</div>
+    </div>
+    <div class="v2-kpi-grid" style="margin-bottom:14px">
+      <div class="v2-kpi"><div class="v2-kpi-ico">📋</div><div class="v2-kpi-val">${data.count}+</div><div class="v2-kpi-lbl">Recent Awards Found</div></div>
+      <div class="v2-kpi"><div class="v2-kpi-ico">💰</div><div class="v2-kpi-val">${fmtM(data.total)}</div><div class="v2-kpi-lbl">Total Federal Dollars</div></div>
+    </div>
+    ${data.topAgencies.length ? `
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--v2-t3);margin-bottom:6px">Top Funding Agencies</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">${agencyRows}</div>` : ''}
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--v2-t3);margin-bottom:6px">Recent Awards</div>
+    ${recentRows}
+    <div style="font-size:10px;color:var(--v2-t3);margin-top:8px">
+      Grants &amp; cooperative agreements placed in ZIP ${zip} · Source: USAspending.gov FOIA data · Awards shown are in your target area, not industry-filtered
+    </div>`;
+  panel.insertBefore(card, panel.firstChild);
+}
+
+// ── SEC EDGAR — Public Chain Competitor Filings ───────────────────────────────
+// CIKs are zero-padded 10-digit strings as EDGAR expects
+const _SEC_CHAINS = {
+  daycare:          [{ name: 'Bright Horizons Family Solutions', cik: '0001097362' }],
+  gas_station:      [{ name: 'Murphy USA Inc',                   cik: '0001573516' },
+                     { name: 'Sunoco LP',                         cik: '0001373670' }],
+  car_wash:         [{ name: 'Mister Car Wash Inc',              cik: '0001801170' }],
+  restaurant:       [{ name: "McDonald's Corporation",           cik: '0000063908' },
+                     { name: 'Darden Restaurants Inc',           cik: '0000940944' },
+                     { name: 'Yum! Brands Inc',                  cik: '0001041514' }],
+  gym:              [{ name: 'Planet Fitness Inc',               cik: '0001616862' },
+                     { name: 'Life Time Group Holdings',         cik: '0001822844' }],
+  indoor_play:      [{ name: 'Bowlero Corp',                     cik: '0001805928' }],
+  senior_care:      [{ name: 'Brookdale Senior Living Inc',      cik: '0001332349' }],
+  tutoring:         [{ name: 'Stride Inc',                       cik: '0001157408' }],
+  coffee_shop:      [{ name: 'Starbucks Corporation',            cik: '0000829224' },
+                     { name: 'Dutch Bros Inc',                    cik: '0001819989' }],
+  coworking:        [{ name: 'WeWork Inc',                       cik: '0001813756' }],
+  optometry:        [{ name: 'National Vision Holdings Inc',     cik: '0001699709' }],
+  medical_practice: [{ name: 'Privia Health Group Inc',          cik: '0001737901' }],
+  urgent_care:      [{ name: 'Acadia Healthcare Co Inc',         cik: '0001520597' }],
+};
+
+async function v2FetchSECChains(industry) {
+  const chains = _SEC_CHAINS[industry];
+  if (!chains || !chains.length) return null;
+  const key = `sec:${industry}`;
+  const cached = _freeApiCache(key);
+  if (cached) return cached;
+
+  const results = await Promise.allSettled(chains.map(async chain => {
+    const url = `https://data.sec.gov/submissions/CIK${chain.cik}.json`;
+    const r = await fetch(url, {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': 'BusinessHunterApp/2.0 contact@businesshunter.app' },
+    });
+    if (!r.ok) throw new Error('SEC HTTP ' + r.status);
+    const d = await r.json();
+    // Get most recent 10-K filing date
+    const forms   = d.filings?.recent?.form      || [];
+    const dates   = d.filings?.recent?.filingDate || [];
+    const idx10K  = forms.findIndex(f => f === '10-K');
+    const last10K = idx10K >= 0 ? dates[idx10K] : null;
+    return {
+      name:       d.name,
+      cik:        chain.cik,
+      sic:        d.sic,
+      sicDesc:    d.sicDescription,
+      employees:  d.employees || null,
+      stateInc:   d.stateOfIncorporation,
+      last10K,
+      website:    d.website || null,
+    };
+  }));
+
+  const data = results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => r.value)
+    .filter(Boolean);
+
+  if (!data.length) return null;
+  _freeApiCache(key, data);
+  return data;
+}
+
+function v2RenderSECCard(chains, industry) {
+  const existing = document.getElementById('v2-sec-card');
+  if (existing) existing.remove();
+  const panel = document.getElementById('v2-panel-competition');
+  if (!panel || !chains || !chains.length) return;
+
+  const indLabel = (typeof V2_INDUSTRIES !== 'undefined' ? V2_INDUSTRIES : [])
+    .find(i => i.val === industry)?.label || industry;
+
+  const rows = chains.map(c => {
+    const empStr = c.employees ? c.employees.toLocaleString() + ' employees' : 'employees N/A';
+    const filedStr = c.last10K ? 'Last 10-K: ' + c.last10K : '';
+    return `
+      <div style="padding:12px 14px;background:var(--v2-s3);border-radius:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+          <div>
+            <div style="font-weight:600;color:var(--v2-t1);font-size:13px">${c.name}</div>
+            <div style="font-size:11px;color:var(--v2-t3);margin-top:2px">${c.sicDesc || ''} · SIC ${c.sic || '—'}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:12px;color:var(--v2-a1);font-weight:600">${empStr}</div>
+            <div style="font-size:10px;color:var(--v2-t3)">${filedStr}</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${c.cik}&type=10-K&dateb=&owner=include&count=5"
+             target="_blank" rel="noopener"
+             style="font-size:10px;color:var(--v2-a1);text-decoration:none;padding:3px 8px;border:1px solid var(--v2-a1);border-radius:4px">
+            📄 SEC Filings
+          </a>
+          ${c.website ? `<a href="${c.website}" target="_blank" rel="noopener" style="font-size:10px;color:var(--v2-t3);text-decoration:none;padding:3px 8px;border:1px solid var(--v2-s5,#334155);border-radius:4px">🌐 Website</a>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  const card = document.createElement('div');
+  card.id = 'v2-sec-card';
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">📈 SEC EDGAR — Public Chain Competitors · ${indLabel}</div>
+      <div style="font-size:10px;color:var(--v2-t3)">SEC EDGAR · 10-K filings · No key</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">${rows}</div>
+    <div style="font-size:10px;color:var(--v2-t3)">
+      Data from SEC EDGAR public submissions · Employee counts and SIC codes from most recent annual filing · Click "SEC Filings" to read 10-K reports
+    </div>`;
+  panel.appendChild(card);
+}
+
+// ── WORLD BANK — US Macro Indicators ─────────────────────────────────────────
+const _WB_INDICATORS = [
+  { code: 'NY.GDP.MKTP.KD.ZG', label: 'GDP Growth',       unit: '%',  ico: '📊', good: v => v > 2 },
+  { code: 'FP.CPI.TOTL.ZG',    label: 'CPI Inflation',    unit: '%',  ico: '💸', good: v => v < 3.5 },
+  { code: 'SL.UEM.TOTL.ZS',    label: 'Unemployment',     unit: '%',  ico: '👷', good: v => v < 5 },
+  { code: 'SL.EMP.SELF.ZS',    label: 'Self-Employment',  unit: '%',  ico: '🏪', good: () => true },
+  { code: 'FR.INR.LEND',       label: 'Lending Rate',     unit: '%',  ico: '🏦', good: v => v < 8 },
+];
+
+async function v2FetchWorldBankMacro() {
+  const key = 'worldbank:us:macro';
+  const cached = _freeApiCache(key);
+  if (cached) return cached;
+  try {
+    const results = await Promise.allSettled(_WB_INDICATORS.map(async ind => {
+      const url = `https://api.worldbank.org/v2/country/US/indicator/${ind.code}?format=json&mrv=3&per_page=3`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) throw new Error();
+      const d = await r.json();
+      const pts = (d[1] || []).filter(p => p.value != null);
+      if (!pts.length) return null;
+      return {
+        ...ind,
+        value:   parseFloat(pts[0].value.toFixed(2)),
+        year:    pts[0].date,
+        prev:    pts[1] ? parseFloat(pts[1].value.toFixed(2)) : null,
+        prevYear: pts[1]?.date || null,
+      };
+    }));
+    const data = results
+      .filter(r => r.status === 'fulfilled' && r.value)
+      .map(r => r.value);
+    if (!data.length) return null;
+    _freeApiCache(key, data);
+    return data;
+  } catch (e) {
+    console.warn('[v2FreeAPI] World Bank failed:', e.message);
+    return null;
+  }
+}
+
+function v2RenderWorldBankCard(indicators) {
+  const existing = document.getElementById('v2-worldbank-card');
+  if (existing) existing.remove();
+  const panel = document.getElementById('v2-panel-executive');
+  if (!panel || !indicators || !indicators.length) return;
+
+  const bullish = indicators.filter(i => i.good(i.value)).length;
+  const total   = indicators.length;
+  const sentiment = bullish >= 4 ? { label: 'Favorable', color: 'var(--v2-green)' }
+                  : bullish >= 2 ? { label: 'Mixed',     color: 'var(--v2-amber)' }
+                  :                { label: 'Cautious',   color: 'var(--v2-red)'   };
+
+  const kpis = indicators.map(ind => {
+    const delta    = ind.prev != null ? (ind.value - ind.prev).toFixed(2) : null;
+    const positive = delta > 0;
+    const isGood   = ind.good(ind.value);
+    const valColor = isGood ? 'var(--v2-green)' : 'var(--v2-amber)';
+    return `
+      <div class="v2-kpi">
+        <div class="v2-kpi-ico">${ind.ico}</div>
+        <div class="v2-kpi-val" style="color:${valColor}">${ind.value}${ind.unit}</div>
+        <div class="v2-kpi-lbl">${ind.label} (${ind.year})</div>
+        ${delta != null ? `<div style="font-size:10px;color:${positive ? 'var(--v2-green)' : 'var(--v2-red)'}">${positive ? '▲' : '▼'} ${Math.abs(delta)}${ind.unit} vs ${ind.prevYear}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  const card = document.createElement('div');
+  card.id = 'v2-worldbank-card';
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">🌐 World Bank — US Macro Environment</div>
+      <div style="font-size:10px;color:var(--v2-t3)">World Bank Open Data · No key</div>
+    </div>
+    <div style="padding:8px 14px;border-radius:8px;margin-bottom:14px;display:inline-flex;align-items:center;gap:8px;background:var(--v2-s3)">
+      <span style="color:${sentiment.color};font-size:16px">●</span>
+      <span style="font-size:13px;font-weight:600;color:${sentiment.color}">${sentiment.label} macro environment</span>
+      <span style="font-size:11px;color:var(--v2-t3)">${bullish}/${total} indicators positive</span>
+    </div>
+    <div class="v2-kpi-grid">${kpis}</div>
+    <div style="font-size:10px;color:var(--v2-t3);margin-top:10px">
+      Source: World Bank Open Data · US national indicators · Influences cost of capital, labor availability, and consumer spending capacity
+    </div>`;
+  panel.insertBefore(card, panel.firstChild);
+}
+
+// ── 9. EIA ENERGY — Commercial Electricity Prices by State ───────────────────
+/**
+ * Fetches commercial electricity price (cents/kWh) for a US state from EIA.
+ * Uses EIA's published DEMO_KEY — no signup required for basic queries.
+ * Returns { price_cents_kwh, state, period, residential, commercial }
+ */
+async function v2FetchEIAEnergy(stateAbbr) {
+  if (!stateAbbr || stateAbbr.length !== 2) return null;
+  const cacheKey = `eia:${stateAbbr.toUpperCase()}`;
+  const cached = _freeApiCache(cacheKey);
+  if (cached) return cached;
+  try {
+    const st = stateAbbr.toUpperCase();
+    // Fetch commercial + residential in parallel
+    const [comRes, resRes] = await Promise.all([
+      fetch(`https://api.eia.gov/v2/electricity/retail-sales/data?api_key=DEMO_KEY&facets[stateid][]=${st}&facets[sectorid][]=COM&frequency=annual&data[]=price&sort[0][column]=period&sort[0][direction]=desc&length=1`, { signal: AbortSignal.timeout(6000) }),
+      fetch(`https://api.eia.gov/v2/electricity/retail-sales/data?api_key=DEMO_KEY&facets[stateid][]=${st}&facets[sectorid][]=RES&frequency=annual&data[]=price&sort[0][column]=period&sort[0][direction]=desc&length=1`, { signal: AbortSignal.timeout(6000) }),
+    ]);
+    if (!comRes.ok) return null;
+    const comData = await comRes.json();
+    const resData = resRes.ok ? await resRes.json() : null;
+
+    const comRow = comData?.response?.data?.[0];
+    const resRow = resData?.response?.data?.[0];
+    if (!comRow) return null;
+
+    const result = {
+      state:              st,
+      period:             comRow.period,
+      commercial_cents:   parseFloat(comRow.price) || null,
+      residential_cents:  resRow ? parseFloat(resRow.price) || null : null,
+    };
+    _freeApiCache(cacheKey, result);
+    return result;
+  } catch (e) {
+    console.warn('[v2FreeAPI] EIA energy fetch failed:', e.message);
+    return null;
+  }
+}
+
+// Industries where energy cost is a material operating expense
+const _EIA_RELEVANT = new Set([
+  'laundromat','car_wash','gym','restaurant','coffee_shop','gas_station',
+  'indoor_play','dry_cleaning','coworking','urgent_care','medical_practice','optometry',
+]);
+
+function v2RenderEIACard(data, industry) {
+  const existing = document.getElementById('v2-eia-card');
+  if (existing) existing.remove();
+  const panel = document.getElementById('v2-panel-financials');
+  if (!panel || !data) return;
+
+  const com = data.commercial_cents;
+  const res = data.residential_cents;
+  const comLabel = com != null ? `${com.toFixed(1)}¢/kWh` : '—';
+  const resLabel = res != null ? `${res.toFixed(1)}¢/kWh` : '—';
+
+  // Benchmark: US avg commercial ~11¢/kWh. Color-code by cost level.
+  const US_AVG_COM = 11.0;
+  const comColor = com == null ? 'var(--v2-t2)'
+    : com < US_AVG_COM * 0.9  ? 'var(--v2-green)'
+    : com > US_AVG_COM * 1.15 ? 'var(--v2-red)'
+    : 'var(--v2-amber)';
+  const comVsAvg = com != null
+    ? (com < US_AVG_COM ? `${((1 - com/US_AVG_COM)*100).toFixed(0)}% below US avg` : `${((com/US_AVG_COM - 1)*100).toFixed(0)}% above US avg`)
+    : '';
+
+  // Energy cost impact by industry
+  const impactMap = {
+    laundromat:  `Laundromats spend 20–30% of revenue on electricity. At ${comLabel}, budget ~$2,800–4,200/mo per 40-machine setup.`,
+    car_wash:    `Tunnel car washes use 2–4 kWh per vehicle. At ${comLabel}, electricity runs ~$0.22–0.44/car.`,
+    gym:         `Gyms average 15–25 kWh/sq ft/year. At ${comLabel}, a 10,000 sq ft gym costs ~$1,800–3,700/mo in electricity.`,
+    restaurant:  `Restaurants spend 3–5% of revenue on electricity. At ${comLabel}, a full-service unit spends ~$1,500–3,500/mo.`,
+    coffee_shop: `A café's espresso machines + HVAC run ~2,000–4,000 kWh/mo. At ${comLabel}, that's ~$240–480/mo.`,
+    indoor_play: `FECs with arcades + HVAC average 8,000–15,000 kWh/mo. At ${comLabel}, ~$960–1,800/mo.`,
+    dry_cleaning:`Industrial steam presses use 3–5 kWh each. At ${comLabel}, energy is ~10–15% of operating cost.`,
+    coworking:   `Co-working spaces average 12–18 kWh/sq ft/yr. At ${comLabel}, a 5,000 sq ft space costs ~$600–1,100/mo.`,
+    urgent_care: `Medical facilities spend $2–3/sq ft/yr on electricity. A 3,000 sq ft clinic: ~$500–750/mo.`,
+    medical_practice: `A typical practice uses 25–35 kWh/sq ft/yr. At ${comLabel}, a 2,500 sq ft office: ~$580–900/mo.`,
+    optometry:   `Optometry offices average 20–30 kWh/sq ft/yr. Small 1,500 sq ft practice: ~$300–500/mo.`,
+    gas_station: `C-stores + fuel pumps use 10,000–20,000 kWh/mo. At ${comLabel}, electricity costs ~$1,200–2,400/mo.`,
+  };
+  const impact = impactMap[industry] || `At ${comLabel}, factor electricity into your monthly operating budget.`;
+
+  const card = document.createElement('div');
+  card.id = 'v2-eia-card';
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">⚡ EIA Electricity Prices — ${data.state} (${data.period})</div>
+      <div style="font-size:10px;color:var(--v2-t3)">US Energy Information Administration · DEMO_KEY · No signup</div>
+    </div>
+    <div class="v2-kpi-grid">
+      <div class="v2-kpi">
+        <div class="v2-kpi-ico">🏢</div>
+        <div class="v2-kpi-val" style="color:${comColor}">${comLabel}</div>
+        <div class="v2-kpi-lbl">Commercial Rate</div>
+        ${comVsAvg ? `<div style="font-size:10px;color:${comColor};margin-top:2px">${comVsAvg}</div>` : ''}
+      </div>
+      <div class="v2-kpi">
+        <div class="v2-kpi-ico">🏠</div>
+        <div class="v2-kpi-val">${resLabel}</div>
+        <div class="v2-kpi-lbl">Residential Rate</div>
+      </div>
+      <div class="v2-kpi">
+        <div class="v2-kpi-ico">📊</div>
+        <div class="v2-kpi-val">${US_AVG_COM.toFixed(1)}¢/kWh</div>
+        <div class="v2-kpi-lbl">US Avg Commercial</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;background:var(--v2-s3);border-radius:8px;font-size:12px;line-height:1.5;color:var(--v2-t2)">
+      💡 <strong>Industry Impact:</strong> ${impact}
+    </div>
+    <div style="font-size:10px;color:var(--v2-t3);margin-top:8px">
+      Source: US Energy Information Administration (EIA) Retail Electricity Sales · Annual survey data by state and sector
+    </div>`;
+  panel.appendChild(card);
+}
+
+// ── 10. OVERPASS — Foot Traffic Anchor POI Density ───────────────────────────
+/**
+ * Queries OpenStreetMap Overpass API for foot traffic generators near lat/lng.
+ * These are business anchors that drive walk-by traffic: grocery, pharmacy, etc.
+ * Returns { anchors: [{ type, name, count }], total }
+ */
+async function v2FetchNearbyPOIs(lat, lng, radiusMiles = 3) {
+  if (!lat || !lng) return null;
+  const radiusM = Math.min(Math.round(radiusMiles * 1609.34), 5000); // cap at 5km
+  const cacheKey = `poi:${lat.toFixed(3)},${lng.toFixed(3)},${radiusM}`;
+  const cached = _freeApiCache(cacheKey);
+  if (cached) return cached;
+
+  // Foot traffic anchor types
+  const queries = [
+    { type: 'Grocery / Supermarket', tag: '["shop"~"supermarket|grocery"]' },
+    { type: 'Pharmacy / Drug Store',  tag: '["amenity"~"pharmacy"]' },
+    { type: 'School / College',       tag: '["amenity"~"school|college|university"]' },
+    { type: 'Bank / ATM',             tag: '["amenity"~"bank|atm"]' },
+    { type: 'Fast Food',              tag: '["amenity"="fast_food"]' },
+    { type: 'Shopping Mall / Strip',  tag: '["shop"~"mall|department_store"]' },
+    { type: 'Gas Station',            tag: '["amenity"="fuel"]' },
+    { type: 'Medical / Hospital',     tag: '["amenity"~"hospital|clinic|doctors"]' },
+  ];
+
+  const overpassQL = `[out:json][timeout:20];(${
+    queries.map(q => `node${q.tag}(around:${radiusM},${lat},${lng});`).join('')
+  });out count;`;
+
+  // Also do a per-type count via union trick
+  const perTypeQL = `[out:json][timeout:25];${
+    queries.map((q, i) => `(node${q.tag}(around:${radiusM},${lat},${lng});)->.t${i};`).join('')
+  }${queries.map((q, i) => `.t${i} out count;`).join('')}`;
+
+  try {
+    const url = 'https://overpass-api.de/api/interpreter';
+    // Individual counts per type
+    const countPromises = queries.map(async (q) => {
+      const ql = `[out:json][timeout:15];(node${q.tag}(around:${radiusM},${lat},${lng});way${q.tag}(around:${radiusM},${lat},${lng}););out count;`;
+      try {
+        const r = await fetch(url, {
+          method: 'POST',
+          body: 'data=' + encodeURIComponent(ql),
+          signal: AbortSignal.timeout(12000),
+        });
+        if (!r.ok) return { ...q, count: 0 };
+        const d = await r.json();
+        return { ...q, count: d.elements?.[0]?.tags?.total ? parseInt(d.elements[0].tags.total) : 0 };
+      } catch { return { ...q, count: 0 }; }
+    });
+
+    const anchors = await Promise.all(countPromises);
+    const total = anchors.reduce((s, a) => s + a.count, 0);
+    const result = { anchors, total, radiusM, lat, lng };
+    _freeApiCache(cacheKey, result);
+    return result;
+  } catch (e) {
+    console.warn('[v2FreeAPI] Overpass POI failed:', e.message);
+    return null;
+  }
+}
+
+function v2RenderPOIDensityCard(data, industry, zip) {
+  const existing = document.getElementById('v2-poi-density-card');
+  if (existing) existing.remove();
+  const panel = document.getElementById('v2-panel-competition');
+  if (!panel || !data) return;
+
+  const radiusMi = (data.radiusM / 1609.34).toFixed(1);
+  const total = data.total;
+  const trafficColor = total >= 20 ? 'var(--v2-green)' : total >= 8 ? 'var(--v2-amber)' : 'var(--v2-red)';
+  const trafficLabel = total >= 20 ? 'High foot traffic area' : total >= 8 ? 'Moderate foot traffic' : 'Low foot traffic area';
+
+  // Only show anchors with count > 0, sorted desc
+  const visible = data.anchors.filter(a => a.count > 0).sort((a, b) => b.count - a.count);
+
+  const rows = visible.length > 0
+    ? visible.map(a => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--v2-border)">
+          <span style="font-size:12px;color:var(--v2-t2)">${a.type}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--v2-t1)">${a.count}</span>
+        </div>`).join('')
+    : '<div style="font-size:12px;color:var(--v2-t3);padding:8px 0">No major anchors found within radius — may indicate low foot traffic or data gap.</div>';
+
+  const card = document.createElement('div');
+  card.id = 'v2-poi-density-card';
+  card.className = 'v2-card';
+  card.style.cssText = 'padding:20px;margin-top:16px';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="v2-label">🗺️ Foot Traffic Anchors within ${radiusMi} mi</div>
+      <div style="font-size:10px;color:var(--v2-t3)">OpenStreetMap Overpass API · No key</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--v2-s3);border-radius:8px">
+      <span style="color:${trafficColor};font-size:20px">●</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:${trafficColor}">${trafficLabel}</div>
+        <div style="font-size:12px;color:var(--v2-t3)">${total} foot traffic anchors within ${radiusMi} miles</div>
+      </div>
+    </div>
+    <div style="margin-bottom:8px">${rows}</div>
+    <div style="font-size:11px;color:var(--v2-t2);background:var(--v2-s3);padding:8px 12px;border-radius:8px;margin-top:8px">
+      💡 High anchor density = more walk-by traffic. Proximity to groceries, pharmacies, and schools drives organic foot traffic for service businesses.
+    </div>
+    <div style="font-size:10px;color:var(--v2-t3);margin-top:8px">
+      Source: OpenStreetMap contributors via Overpass API · Open data, updated continuously · POI counts within ${radiusMi}-mile radius
+    </div>`;
+  panel.appendChild(card);
+}
+
+// ── Wire new APIs into enrichment ─────────────────────────────────────────────
+// Appended to v2EnrichDashboardWithFreeAPIs via separate call below
 
 // ── Hook into pipeline completion to auto-enrich ──────────────────────────────
 // Guard: only one enrichment run at a time — prevents double cards when
@@ -20878,13 +22679,20 @@ let _v2EnrichPending = false;
       <span class="v2-nav-link" id="gnav-landing" onclick="v2GoTo('landing')">Home</span>
       <span class="v2-nav-link" id="gnav-dashboard" onclick="v2GoTo('dashboard')">Dashboard</span>
       <span class="v2-nav-link" id="gnav-portfolio" onclick="v2GoTo('portfolio')">Portfolio</span>
-      <span class="v2-nav-link" id="gnav-classic" onclick="v2GoTo('traditional')">Classic View</span>
     </div>
     <div class="v2-nav-right">
       <span class="v2-tag">AI</span>
-      <button class="v2-btn ghost sm icon-only" id="v2-theme-btn" onclick="v2ToggleTheme()" title="Toggle light/dark mode">☀️</button>
-      <button class="v2-btn ghost sm" onclick="v2StartTour()" title="Quick tour">🗺</button>
-      <button class="v2-btn ghost sm" onclick="v2ShowApiKey()">🔑 API Key</button>
+      <!-- Settings dropdown -->
+      <div class="v2-settings-wrap" id="v2-settings-wrap">
+        <button class="v2-btn ghost sm" id="v2-settings-btn" onclick="v2ToggleSettingsMenu()" title="Settings">⚙ Settings</button>
+        <div class="v2-settings-menu" id="v2-settings-menu">
+          <button class="v2-settings-item" id="v2-theme-btn" onclick="v2ToggleTheme();v2CloseSettingsMenu()"><span class="v2-theme-ico">🌗</span> Toggle Theme</button>
+          <button class="v2-settings-item" onclick="v2StartTour();v2CloseSettingsMenu()">🗺 Take Tour</button>
+          <button class="v2-settings-item" onclick="v2ShowApiKey();v2CloseSettingsMenu()">🔑 API Key</button>
+          <div class="v2-settings-divider"></div>
+          <button class="v2-settings-item" onclick="v2GoTo('traditional');v2CloseSettingsMenu()">🔬 Classic View</button>
+        </div>
+      </div>
       <button class="v2-btn ghost sm" id="v2-chat-toggle-btn" onclick="v2ToggleChat()">💬 AI Answers</button>
       <button class="v2-btn primary sm" onclick="v2GoTo('wizard')">+ New Analysis</button>
     </div>
@@ -20982,10 +22790,6 @@ let _v2EnrichPending = false;
         <span class="v2-screen-bar-link active" id="sbar-dashboard">Dashboard</span>
         <span class="v2-screen-bar-link" onclick="v2GoTo('traditional')">Advanced View</span>
       </div>
-      <div class="v2-screen-bar-right">
-        <button class="v2-btn ghost sm" onclick="v2ShowApiKey()">🔑 API Key</button>
-        <button class="v2-btn primary sm" onclick="v2GoTo('wizard')">+ New Analysis</button>
-      </div>
     </div>
     <div class="v2-dash-layout">
       <div id="v2-agent-sidenav"></div>
@@ -21000,10 +22804,6 @@ let _v2EnrichPending = false;
         <span class="v2-screen-bar-link active">Portfolio</span>
         <span class="v2-screen-bar-link" onclick="v2GoTo('dashboard')">Dashboard</span>
         <span class="v2-screen-bar-link" onclick="v2GoTo('traditional')">Advanced View</span>
-      </div>
-      <div class="v2-screen-bar-right">
-        <button class="v2-btn ghost sm" onclick="v2ShowApiKey()">🔑 API Key</button>
-        <button class="v2-btn primary sm" onclick="v2GoTo('wizard')">+ New Analysis</button>
       </div>
     </div>
     <div class="v2-port-wrap" id="v2-port-wrap"></div>

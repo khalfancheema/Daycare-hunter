@@ -39,14 +39,41 @@
     <input id="customUrlInput" placeholder="API endpoint URL (e.g. http://localhost:11434/v1/chat/completions)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:12px;width:100%">
   </div>
   <div id="localGuidePanel" class="local-guide-panel" style="display:none">
-    <div class="local-guide-title">🆓 Run Locally for Free with Ollama</div>
-    <div class="local-guide-steps">
-      <div class="local-guide-step"><div class="lg-num">1</div><div><strong>Install Ollama</strong><br><code>curl -fsSL https://ollama.com/install.sh | sh</code><br><em style="color:var(--muted);font-size:11px">Mac: brew install ollama &nbsp;·&nbsp; Windows: download from ollama.com</em></div></div>
-      <div class="local-guide-step"><div class="lg-num">2</div><div><strong>Pull a model</strong><br><code>ollama pull llama3</code>&nbsp;&nbsp;&nbsp;<em style="color:var(--muted);font-size:11px">or: mistral, phi3, gemma2</em></div></div>
-      <div class="local-guide-step"><div class="lg-num">3</div><div><strong>Start the server</strong><br><code>ollama serve</code>&nbsp;&nbsp;&nbsp;<em style="color:var(--muted);font-size:11px">Runs at http://localhost:11434</em></div></div>
-      <div class="local-guide-step"><div class="lg-num">4</div><div><strong>Configure this app</strong><br>URL: <code>http://localhost:11434/v1/chat/completions</code><br>Model: <code>llama3</code> (or whichever you pulled)<br>API Key: <code>ollama</code> (any value works)</div></div>
+    <!-- Ollama quick-connect -->
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #334155;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="font-size:20px;line-height:1">🦙</div>
+      <div style="flex:1;min-width:140px">
+        <div style="font-size:12px;font-weight:700;color:#e2e8f0">Run 100% locally with Ollama</div>
+        <div id="cl-ollama-status" style="font-size:11px;color:#94a3b8;margin-top:2px">● detecting…</div>
+      </div>
+      <select id="cl-ollama-model-sel" style="background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:5px 8px;border-radius:6px;font-size:12px;max-width:160px">
+        <option value="llama3">llama3</option>
+      </select>
+      <button id="cl-ollama-btn" onclick="_applyOllamaPresetClassic()" disabled
+        style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;opacity:0.5">Use Ollama →</button>
     </div>
-    <div class="local-guide-note">⚡ Llama 3 8B runs on a MacBook Pro M2 in ~8-12s per agent. Full pipeline takes ~5-10 min locally. JSON output quality may vary — enable demo mode first to preview expected output shapes.</div>
+    <!-- OpenRouter quick-connect -->
+    <div style="background:linear-gradient(135deg,#1a0a2e,#1a1230);border:1px solid #4c1d95;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div style="font-size:20px;line-height:1;margin-top:2px">🌐</div>
+      <div style="flex:1;min-width:180px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:700;color:#e2e8f0">Free cloud models via OpenRouter</span>
+          <a href="https://openrouter.ai/keys" target="_blank" style="font-size:10px;color:#a78bfa;text-decoration:none;border:1px solid #4c1d95;border-radius:4px;padding:1px 6px">Get free key →</a>
+        </div>
+        <div id="cl-or-status" style="font-size:11px;color:#94a3b8;margin-bottom:8px">● loading models…</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="cl-or-key-input" type="password" placeholder="sk-or-v1-…" autocomplete="off"
+            oninput="_orKeyInputClassic()"
+            style="background:#0f172a;border:1px solid #4c1d95;color:#e2e8f0;padding:5px 10px;border-radius:6px;font-size:12px;width:155px;outline:none" />
+          <select id="cl-or-model-sel" style="background:#0f172a;border:1px solid #4c1d95;color:#e2e8f0;padding:5px 8px;border-radius:6px;font-size:12px;max-width:180px">
+            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B</option>
+          </select>
+          <button id="cl-or-btn" onclick="_applyOpenRouterPresetClassic()" disabled
+            style="background:linear-gradient(135deg,#7c3aed,#4c1d95);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;opacity:0.5">Use OpenRouter →</button>
+        </div>
+      </div>
+    </div>
+    <div class="local-guide-note" style="margin-top:6px">⚡ Llama 3 8B runs ~8-12s/agent locally. For best JSON quality use Llama 3.3 70B (via OpenRouter free) or gemma2 (Ollama). Full 17-agent pipeline takes ~5-10 min locally.</div>
   </div>
   <div style="display:flex;gap:8px">
     <input type="password" id="apiKey" placeholder="sk-ant-... / sk-... / AIza..." style="flex:1" autocomplete="off" />
@@ -73,6 +100,8 @@
         <option value="senior_care">🏥 Senior Care / Assisted Living</option>
         <option value="tutoring">📚 Tutoring / Learning Center</option>
         <option value="urgent_care">🩺 Urgent Care Clinic</option>
+        <option value="medical_practice">🏥 Medical Practice</option>
+        <option value="optometry">👁️ Optometry Practice</option>
         <option value="coffee_shop">☕ Coffee Shop / Café</option>
         <option value="barbershop">✂️ Barbershop / Salon</option>
         <option value="coworking">🖥️ Co-Working Space</option>
@@ -172,6 +201,8 @@
         <option value="senior_care">🏥 Senior Care / Assisted Living</option>
         <option value="tutoring">📚 Tutoring / Learning Center</option>
         <option value="urgent_care">🩺 Urgent Care Clinic</option>
+        <option value="medical_practice">🏥 Medical Practice</option>
+        <option value="optometry">👁️ Optometry Practice</option>
         <option value="coffee_shop">☕ Coffee Shop / Café</option>
         <option value="barbershop">✂️ Barbershop / Salon</option>
         <option value="coworking">🖥️ Co-Working Space</option>

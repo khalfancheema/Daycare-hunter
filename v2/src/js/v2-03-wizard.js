@@ -8,7 +8,11 @@ const V2_WIZARD_STEPS = [
 ];
 
 const V2_INDUSTRIES = [
-  { val:'daycare',          emoji:'🏫', label:'Daycare / Childcare',            category:'Family' },
+  { val:'daycare',          emoji:'🏫', label:'Daycare / Childcare (Premium)',   category:'Family' },
+  { val:'daycare_home',     emoji:'🏠', label:'Home Daycare (Family)',           category:'Family' },
+  { val:'daycare_faith',    emoji:'⛪', label:'Faith-Based Childcare',           category:'Family' },
+  { val:'daycare_subsidy',  emoji:'🎓', label:'Subsidized / CCAP Center',        category:'Family' },
+  { val:'daycare_aftersch', emoji:'🎒', label:'After-School Care',               category:'Family' },
   { val:'gas_station',      emoji:'⛽', label:'Gas Station / C-Store',          category:'Automotive' },
   { val:'laundromat',       emoji:'🫧', label:'Laundromat',                     category:'Services' },
   { val:'car_wash',         emoji:'🚗', label:'Car Wash',                       category:'Automotive' },
@@ -20,6 +24,7 @@ const V2_INDUSTRIES = [
   { val:'tutoring',         emoji:'📚', label:'Tutoring / Learning Center',     category:'Education' },
   { val:'urgent_care',      emoji:'🩺', label:'Urgent Care Clinic',             category:'Healthcare' },
   { val:'medical_practice', emoji:'🏥', label:'Medical Practice',               category:'Healthcare' },
+  { val:'optometry',        emoji:'👁️', label:'Optometry Practice',             category:'Healthcare' },
   { val:'coffee_shop',      emoji:'☕', label:'Coffee Shop / Café',             category:'Food & Beverage' },
   { val:'barbershop',       emoji:'✂️', label:'Barbershop / Salon',             category:'Services' },
   { val:'coworking',        emoji:'🖥️', label:'Co-Working Space',              category:'Professional' },
@@ -33,6 +38,20 @@ const V2_BUDGETS = [
   { val:'custom',  label:'Custom',  desc:'Enter your own amount' },
 ];
 
+const V2_US_STATES = [
+  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
+  'HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
+  'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
+  'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC',
+];
+
+/** Combine split address fields into a single geocodable string. */
+function v2WizBuildAddress() {
+  const d = V2.wizard.data;
+  return [d.street, d.city, d.state].filter(Boolean).join(', ');
+}
+
 function v2InitWizard() {
   v2WizRenderStepsBar();
   v2WizRenderStep();
@@ -41,16 +60,18 @@ function v2InitWizard() {
 function v2WizRenderStepsBar() {
   const bar = document.getElementById('v2-steps-bar');
   if (!bar) return;
-  bar.innerHTML = V2_WIZARD_STEPS.map((s, i) => {
-    const cur = V2.wizard.step;
+  const cur = V2.wizard.step;
+  const segments = V2_WIZARD_STEPS.map((s, i) => {
     const cls = i < cur ? 'done' : i === cur ? 'active' : '';
-    const lineCls = i < cur ? 'done' : '';
-    return `
-      <div class="v2-step-item">
-        <div class="v2-step-dot ${cls}">${i < cur ? '✓' : i + 1}</div>
-        ${i < V2_WIZARD_STEPS.length - 1 ? `<div class="v2-step-line ${lineCls}"></div>` : ''}
-      </div>`;
+    return `<div class="v2-seg ${cls}"></div>`;
   }).join('');
+  const labels = V2_WIZARD_STEPS.map((s, i) => {
+    const cls = i < cur ? 'done' : i === cur ? 'active' : '';
+    return `<div class="v2-seg-label ${cls}">${s.label}</div>`;
+  }).join('');
+  bar.innerHTML = `
+    <div class="v2-seg-bar-track">${segments}</div>
+    <div class="v2-seg-labels">${labels}</div>`;
 }
 
 function v2WizRenderStep() {
@@ -61,10 +82,18 @@ function v2WizRenderStep() {
 
   let body = '';
   if (s.id === 'industry') {
-    body = `<div class="v2-grid-choose">${V2_INDUSTRIES.map(ind => `
-      <div class="v2-choose-item${d.industry===ind.val?' selected':''}" onclick="v2WizPickIndustry('${ind.val}')">
-        <span class="ico">${ind.emoji}</span><span class="lbl">${ind.label}</span>
-      </div>`).join('')}</div>`;
+    // Group by category
+    const cats = [...new Set(V2_INDUSTRIES.map(i => i.category))];
+    const grouped = cats.map(cat => {
+      const items = V2_INDUSTRIES.filter(i => i.category === cat);
+      return `
+        <div class="v2-ind-category-label">${cat}</div>
+        <div class="v2-grid-choose v2-grid-choose--tight">${items.map(ind => `
+          <div class="v2-choose-item${d.industry===ind.val?' selected':''}" onclick="v2WizPickIndustry('${ind.val}')">
+            <span class="ico">${ind.emoji}</span><span class="lbl">${ind.label}</span>
+          </div>`).join('')}</div>`;
+    }).join('');
+    body = `<div>${grouped}</div>`;
 
   } else if (s.id === 'location') {
     const locMode = d.locMode || 'zip';
@@ -84,14 +113,30 @@ function v2WizRenderStep() {
         <div id="wiz-zip-stats"></div>
       </div>
 
-      <!-- Address input -->
+      <!-- Address input (split: street / city / state) -->
       <div class="v2-field" id="wiz-loc-addr-row" style="display:${locMode==='address'?'block':'none'}">
-        <label>Street Address</label>
+        <label>Street Number &amp; Name</label>
         <div style="position:relative">
-          <input class="v2-input" id="wiz-address" type="text" placeholder="e.g. 123 Main St, Atlanta, GA"
-            value="${d.address||''}"
-            oninput="V2.wizard.data.address=this.value;v2GeoSearchDebounced(this.value)" />
+          <input class="v2-input" id="wiz-street" type="text" placeholder="e.g. 123 Main St"
+            value="${d.street||''}"
+            oninput="V2.wizard.data.street=this.value;v2GeoSearchDebounced(v2WizBuildAddress())" />
           <div id="wiz-geo-spinner" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:none;font-size:13px">⏳</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 88px;gap:8px;margin-top:8px">
+          <div>
+            <label style="font-size:11px;color:var(--v2-t2);margin-bottom:4px;display:block">City</label>
+            <input class="v2-input" id="wiz-city" type="text" placeholder="e.g. Atlanta"
+              value="${d.city||''}"
+              oninput="V2.wizard.data.city=this.value;v2GeoSearchDebounced(v2WizBuildAddress())" />
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--v2-t2);margin-bottom:4px;display:block">State</label>
+            <select class="v2-input" id="wiz-state" style="padding-left:6px"
+              onchange="V2.wizard.data.state=this.value;v2GeoSearchDebounced(v2WizBuildAddress())">
+              <option value="">—</option>
+              ${V2_US_STATES.map(st=>`<option value="${st}"${(d.state||''===st)?'selected':''}>${st}</option>`).join('')}
+            </select>
+          </div>
         </div>
         <div id="wiz-geo-suggestions" style="margin-top:4px"></div>
         <div id="wiz-geo-result" style="font-size:12px;color:var(--v2-green);margin-top:4px;min-height:16px">
@@ -194,6 +239,38 @@ function v2WizRenderStep() {
   const next = document.getElementById('v2-wiz-next');
   if (back) back.style.visibility = V2.wizard.step === 0 ? 'hidden' : 'visible';
   if (next) next.textContent = s.id === 'confirm' ? '🚀 Launch Analysis' : 'Continue →';
+
+  // Auto-detect user location when location step first renders (ZIP mode only)
+  if (s.id === 'location' && !V2.wizard.data.zip && !V2.wizard.data._ipDetected) {
+    V2.wizard.data._ipDetected = true; // run once
+    if (typeof v2DetectUserLocation === 'function') {
+      v2DetectUserLocation().then(loc => {
+        if (!loc || V2.wizard.data.zip) return; // user already typed something
+        const d = V2.wizard.data;
+        const mode = d.locMode || 'zip';
+        if (loc.zip && mode === 'zip') {
+          d.zip = loc.zip;
+          d.city = loc.city || '';
+          d.state = loc.region || '';
+          const zipEl = document.getElementById('wiz-zip');
+          if (zipEl) zipEl.value = loc.zip;
+          const preview = document.getElementById('wiz-zip-preview');
+          if (preview) preview.textContent = `📍 Detected: ${loc.city}, ${loc.region} ${loc.zip}`;
+          if (typeof v2ShowWizardZIPStats === 'function') v2ShowWizardZIPStats(loc.zip);
+          if (typeof v2LookupZIP === 'function') v2LookupZIP(loc.zip);
+        } else if (loc.city && mode === 'address') {
+          d.city  = loc.city   || '';
+          d.state = loc.region || '';
+          const cityEl  = document.getElementById('wiz-city');
+          const stateEl = document.getElementById('wiz-state');
+          if (cityEl)  cityEl.value  = loc.city;
+          if (stateEl) stateEl.value = (loc.region || '').slice(0, 2).toUpperCase();
+          const resultEl = document.getElementById('wiz-geo-result');
+          if (resultEl) resultEl.textContent = `📍 Detected: ${loc.city}, ${loc.region}`;
+        }
+      }).catch(() => {});
+    }
+  }
 }
 
 function v2WizPickIndustry(val) {
@@ -273,7 +350,9 @@ function v2LaunchPipeline() {
   if (radEl) radEl.value = d.radius || '40';
   if (capEl) capEl.value = d.capacity || '75';
   if (budEl) budEl.value = budget;
-  if (indEl) { indEl.value = d.industry || 'daycare'; if (typeof onIndustryChange === 'function') onIndustryChange(); }
+  // Map non-premium childcare subtypes back to 'daycare' for v1 pipeline compatibility
+  const industryVal = ['daycare_home','daycare_faith','daycare_subsidy','daycare_aftersch'].includes(d.industry) ? 'daycare' : (d.industry || 'daycare');
+  if (indEl) { indEl.value = industryVal; if (typeof onIndustryChange === 'function') onIndustryChange(); }
 
   // Sync API key
   v2SyncToV1Dom();
@@ -319,6 +398,8 @@ function v2LaunchPipeline() {
   // Run the pipeline
   setTimeout(() => {
     stopRequested = false;
+    // Fresh abort controller for this run — allows stop button to kill in-flight fetches
+    window._v2AbortCtrl = new AbortController();
     const stopBtn = document.getElementById('v2-copilot-stop');
     if (stopBtn) { stopBtn.textContent = '⬛ Stop'; stopBtn.disabled = false; }
     runPipeline();

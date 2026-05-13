@@ -13,7 +13,7 @@ const INDUSTRIES = {
     tiers:['Infant–Pre-K','Infant–Kindergarten','Toddler–Pre-K'],
     compliance:'DECAL licensing, staff-to-child ratios, 35 sqft/child indoor, 75 sqft/child outdoor, food safety, background checks, CDA credentials',
     grants:'Georgia CAPS subsidy, USDA CACFP reimbursement, DECAL Quality Rated incentives, USDA Rural Development grants, local childcare coalitions',
-    competitors:'Primrose Schools, KinderCare, Bright Horizons, local independent centers',
+    competitors:'Primrose Schools, KinderCare, Bright Horizons, Goddard School, Learning Care Group, local independent centers, home daycares, faith-based childcare, Head Start programs, subsidized centers, childcare co-ops, employer-sponsored centers',
     financials:'tuition by age group (infant/toddler/preschool/pre-K), staff ratios, CACFP reimbursement, CAPS subsidy income, director salary',
     staffing:'licensed lead teachers (CDA credential), assistant teachers, director, cook',
     real_estate:'2,500–6,000 sqft, playground space (75 sqft/child outdoor), commercial kitchen, multiple classrooms, ADA-compliant restrooms',
@@ -162,6 +162,23 @@ const INDUSTRIES = {
     revenue_unit:'revenue per patient visit (blended payer mix)',
     price_label_primary:'Rev/Visit (blended)', price_label_secondary:'Monthly Panel Revenue',
   },
+  optometry: {
+    label:'Optometry Practice', emoji:'👁️',
+    unit:'optometry practice', units:'optometry practices',
+    capacity_label:'Exam Lanes', capacity_default:4, budget_default:350000,
+    regulatory:'State board of optometry licensure (OD), DEA registration (if prescribing therapeutic agents), CMS Medicare/Medicaid enrollment, HIPAA, OSHA, contact lens Rx compliance (FTC)',
+    regulatory_url:'aoa.org / state optometry board',
+    tiers_label:'Practice Scope',
+    tiers:['Medical Optometry (primary eye care)','Optometry + Optical Retail (frames/CL)','Full-Service (eye care + optical + vision therapy)'],
+    compliance:'state OD license (all providers), CMS NPI/PTAN enrollment, HIPAA Privacy & Security, OSHA bloodborne pathogen plan, ADA, FTC contact lens Rx release rule, ophthalmic device FDA compliance, optical lab permit (if in-house finishing)',
+    grants:'HRSA rural health grants, SBA 7(a) loans, state vision care access programs, Lions Club International vision grants, VSP Vision Care community grants, SCORE mentorship',
+    competitors:'Independent ODs, MyEyeDr, Visionworks, America\'s Best Contacts & Eyeglasses, LensCrafters, Walmart Vision Center, Costco Optical, 1-800-CONTACTS (online)',
+    financials:'comprehensive eye exam revenue ($100–$250), contact lens fitting fees, optical frame/lens retail margin (60–70%), contact lens product sales, vision therapy packages, medical billing (Medicare Part B for medical eye care), insurance plan participation (VSP, EyeMed, Davis Vision)',
+    staffing:'optometrist (OD), licensed optician, optometric technician/assistant, front desk/insurance coordinator, optical sales associate',
+    real_estate:'1,200–3,000 sqft, strip mall or medical office, 2–4 dedicated exam lanes, optical dispensary showroom (600–1,200 sqft frame displays), contact lens fitting station, pre-testing area (auto-refractor, OCT), ADA restrooms, 10+ parking',
+    revenue_unit:'revenue per patient encounter (exam + optical capture rate)',
+    price_label_primary:'Rev/Exam + Capture', price_label_secondary:'Optical Retail/mo',
+  },
 };
 
 // ── PER-INDUSTRY UI TEXT ─────────────────────────────────────
@@ -183,6 +200,7 @@ const IND_UI = {
   barbershop:  { dem:'Population Density · Household Income · Spend',  comp:"Sport Clips · Great Clips · Floyd's 99",       fin:'Rev/Chair/Day · Service Mix · Retail Products',         grant1:'SBA Microloan',    grant2:'Minority Biz Dev'  },
   coworking:        { dem:'Remote Workers · Business Density · Income',     comp:'WeWork · Regus · Industrious · Spaces',        fin:'Monthly Desk Rev · Private Offices · Day Passes',       grant1:'EDA / SBA 7(a)',  grant2:'Innovation Hub'    },
   medical_practice: { dem:'Population · Insurance Coverage · Physician Density · ACS', comp:'Hospital Groups · CVS MinuteClinic · Amazon Clinic', fin:'Rev/Visit · Payer Mix · Panel Revenue · DPC Model', grant1:'HRSA Health Center', grant2:'Rural Health Grants' },
+  optometry:        { dem:'Population · Vision Insurance Coverage · Age Demographics', comp:'MyEyeDr · Visionworks · LensCrafters · Walmart Vision', fin:'Rev/Exam · Optical Capture Rate · Contact Lens Revenue', grant1:'VSP Community Grants', grant2:'HRSA Rural Health' },
 };
 
 // ── MULTI-PROVIDER CONFIG ────────────────────────────────────

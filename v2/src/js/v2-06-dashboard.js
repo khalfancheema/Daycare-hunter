@@ -50,17 +50,26 @@ function v2RenderDashboard(run) {
         <div class="v2-dash-meta">ZIP ${run.zip} · ${run.radius} mi radius · $${parseInt(run.budget||0).toLocaleString()} budget · ${new Date(run.ts||Date.now()).toLocaleDateString()}</div>
       </div>
       <div class="v2-dash-actions">
-        <button class="v2-btn ghost sm" onclick="v2ShowExecution()" title="18-month Gantt + milestone tracker">🗓 Execution Plan</button>
-        <button class="v2-btn ghost sm" onclick="v2ShowInvestor()" title="Investor deck + pitch summary">📑 Investor Pack</button>
         <button class="v2-btn ghost sm" onclick="v2ExportAll()" title="Export full pipeline as JSON">⬇ Export</button>
-        <button class="v2-btn ghost sm" onclick="v2PrintDashboard()" title="Print / Save as PDF">🖨 Print</button>
         <button class="v2-btn ghost sm" onclick="v2ShareReport()" title="Copy shareable link">🔗 Share</button>
-        ${typeof v2GeneratePDFReport === 'function' ? `<button class="v2-btn ghost sm" onclick="v2GeneratePDFReport()" title="Formatted PDF report">📄 PDF</button>` : ''}
-        ${typeof v2ExportSlides === 'function' ? `<button class="v2-btn ghost sm" onclick="v2ExportSlides()" title="12-slide pitch deck">📊 Slides</button>` : ''}
-        ${typeof v2ShowREditor === 'function' ? `<button class="v2-btn ghost sm" onclick="v2ShowREditor()" title="Edit raw data & recalculate">🔧 Edit Data</button>` : ''}
-        ${typeof v2ShowZIPCompare === 'function' ? `<button class="v2-btn ghost sm" onclick="v2ShowZIPCompare()" title="Compare two ZIP codes">📍 ZIP Compare</button>` : ''}
-        <button class="v2-btn ghost sm" onclick="v2GoTo('traditional')" title="All raw agent outputs + advanced tools">🔬 Advanced View</button>
         <button class="v2-btn primary sm" onclick="v2SaveCurrentRun()">💾 Save Run</button>
+        <div class="v2-more-wrap">
+          <button class="v2-btn ghost sm" onclick="v2ToggleMoreMenu(this)" title="More actions">··· More</button>
+          <div class="v2-more-menu">
+            <button class="v2-more-item" onclick="v2ShowExecution();v2CloseMoreMenus()">🗓 Execution Plan</button>
+            <button class="v2-more-item" onclick="v2ShowInvestor();v2CloseMoreMenus()">📑 Investor Pack</button>
+            <button class="v2-more-item" onclick="v2PrintDashboard();v2CloseMoreMenus()">🖨 Print</button>
+            ${typeof v2GeneratePDFReport === 'function' ? `<button class="v2-more-item" onclick="v2GeneratePDFReport();v2CloseMoreMenus()">📄 PDF Report</button>` : ''}
+            ${typeof v2ExportSlides === 'function' ? `<button class="v2-more-item" onclick="v2ExportSlides();v2CloseMoreMenus()">📊 Slides</button>` : ''}
+            ${typeof v2ShowREditor === 'function' ? `<button class="v2-more-item" onclick="v2ShowREditor();v2CloseMoreMenus()">🔧 Edit Data</button>` : ''}
+            ${typeof v2ShowZIPCompare === 'function' ? `<button class="v2-more-item" onclick="v2ShowZIPCompare();v2CloseMoreMenus()">📍 ZIP Compare</button>` : ''}
+            <button class="v2-more-item" onclick="v2GoTo('traditional');v2CloseMoreMenus()">🔬 Advanced View</button>
+            <div class="v2-more-divider"></div>
+            <button class="v2-more-item" onclick="v2ExportDashboardHTML?.();v2CloseMoreMenus()">📥 Export HTML</button>
+            <button class="v2-more-item" onclick="v2ExportSBAPackage?.();v2CloseMoreMenus()">📋 SBA Package</button>
+            <button class="v2-more-item" onclick="v2SaveSearch?.();v2CloseMoreMenus()">🔖 Save Search</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -98,21 +107,23 @@ function v2RenderDashboard(run) {
 
     ${v2RenderScoreBreakdown(score)}
 
-    <div class="v2-dash-tabs" id="v2-dash-tabs">
-      <div class="v2-dash-tab active" onclick="v2DashTab('executive',this)">📋 Executive</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('financials',this)">💰 Financials</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('market',this)">🗺️ Market</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('competition',this)">🔍 Competition</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('risks',this)">⚠️ Risks</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('plan',this)">✅ Action Plan</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('grants',this)">💵 Grants</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('agents',this)">🤖 All Agents</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('dag',this)">🕸 Agent Flow</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('heatmap',this)">🗺 Heat Map</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('whatif',this)">🎲 What-If</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('benchmark',this)">📊 Benchmark</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('correlation',this)">🔗 Score Drivers</div>
-      <div class="v2-dash-tab" onclick="v2DashTab('audit',this)">🔬 Audit Trail</div>
+    <div class="v2-dash-tabs-wrap">
+      <div class="v2-dash-tabs" id="v2-dash-tabs">
+        <div class="v2-dash-tab active" onclick="v2DashTab('executive',this)">📋 Executive</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('financials',this)">💰 Financials</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('market',this)">🗺️ Market</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('competition',this)">🔍 Competition</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('risks',this)">⚠️ Risks</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('plan',this)">✅ Action Plan</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('grants',this)">💵 Grants</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('agents',this)">🤖 All Agents</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('dag',this)">🕸 Agent Flow</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('heatmap',this)">🗺 Heat Map</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('whatif',this)">🎲 What-If</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('benchmark',this)">📊 Benchmark</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('correlation',this)">🔗 Score Drivers</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('audit',this)">🔬 Audit Trail</div>
+      </div>
     </div>
 
     <div class="v2-dash-panel active" id="v2-panel-executive">${v2RenderExecutive()}</div>

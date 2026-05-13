@@ -98,7 +98,17 @@ CRITICAL — DATA INTEGRITY (strictly enforced):
 - If you found real data from a search, state the source. If you could not find it, return null/"N/A".
 - It is far better to return null than to return fabricated data.`;
   for (let attempt = 1; attempt <= 3; attempt++) {
-    if (attempt > 1) await new Promise(r => setTimeout(r, attempt * 1500));
+    // Bail immediately if pipeline was stopped
+    if (window._v2AbortCtrl?.signal?.aborted || window.stopRequested) throw new Error('Pipeline stopped');
+    if (attempt > 1) {
+      // Abort-aware retry delay — resolves immediately if stop is clicked
+      await new Promise(resolve => {
+        const t = setTimeout(resolve, attempt * 1500);
+        const sig = window._v2AbortCtrl?.signal;
+        if (sig) sig.addEventListener('abort', () => { clearTimeout(t); resolve(); }, { once: true });
+      });
+    }
+    if (window._v2AbortCtrl?.signal?.aborted || window.stopRequested) throw new Error('Pipeline stopped');
     try {
       const raw = await claude(strictSystem, user + (attempt > 1 ? '\n\nRemember: respond with ONLY the JSON object, nothing else.' : ''));
       const d = parseJSON(raw);
@@ -119,7 +129,11 @@ async function claude(system, user) {
   const url = p.url_custom ? customUrl() : (typeof p.url==='function' ? p.url(k) : p.url);
   const headers = p.headers(k);
   const body = p.buildBody(system, user, model());
-  const res=await fetch(url,{method:'POST',headers,body:JSON.stringify(body)});
+  // Use v2 abort controller if present (allows stop button to cancel mid-flight)
+  const signal = window._v2AbortCtrl?.signal;
+  const fetchOpts = { method:'POST', headers, body:JSON.stringify(body) };
+  if (signal && !signal.aborted) fetchOpts.signal = signal;
+  const res=await fetch(url, fetchOpts);
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'HTTP '+res.status)}
   const d=await res.json();
   if(d.error) throw new Error(d.error.message);

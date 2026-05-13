@@ -774,14 +774,41 @@ select option{background:var(--surface2)}
     <input id="customUrlInput" placeholder="API endpoint URL (e.g. http://localhost:11434/v1/chat/completions)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:12px;width:100%">
   </div>
   <div id="localGuidePanel" class="local-guide-panel" style="display:none">
-    <div class="local-guide-title">🆓 Run Locally for Free with Ollama</div>
-    <div class="local-guide-steps">
-      <div class="local-guide-step"><div class="lg-num">1</div><div><strong>Install Ollama</strong><br><code>curl -fsSL https://ollama.com/install.sh | sh</code><br><em style="color:var(--muted);font-size:11px">Mac: brew install ollama &nbsp;·&nbsp; Windows: download from ollama.com</em></div></div>
-      <div class="local-guide-step"><div class="lg-num">2</div><div><strong>Pull a model</strong><br><code>ollama pull llama3</code>&nbsp;&nbsp;&nbsp;<em style="color:var(--muted);font-size:11px">or: mistral, phi3, gemma2</em></div></div>
-      <div class="local-guide-step"><div class="lg-num">3</div><div><strong>Start the server</strong><br><code>ollama serve</code>&nbsp;&nbsp;&nbsp;<em style="color:var(--muted);font-size:11px">Runs at http://localhost:11434</em></div></div>
-      <div class="local-guide-step"><div class="lg-num">4</div><div><strong>Configure this app</strong><br>URL: <code>http://localhost:11434/v1/chat/completions</code><br>Model: <code>llama3</code> (or whichever you pulled)<br>API Key: <code>ollama</code> (any value works)</div></div>
+    <!-- Ollama quick-connect -->
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #334155;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="font-size:20px;line-height:1">🦙</div>
+      <div style="flex:1;min-width:140px">
+        <div style="font-size:12px;font-weight:700;color:#e2e8f0">Run 100% locally with Ollama</div>
+        <div id="cl-ollama-status" style="font-size:11px;color:#94a3b8;margin-top:2px">● detecting…</div>
+      </div>
+      <select id="cl-ollama-model-sel" style="background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:5px 8px;border-radius:6px;font-size:12px;max-width:160px">
+        <option value="llama3">llama3</option>
+      </select>
+      <button id="cl-ollama-btn" onclick="_applyOllamaPresetClassic()" disabled
+        style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;opacity:0.5">Use Ollama →</button>
     </div>
-    <div class="local-guide-note">⚡ Llama 3 8B runs on a MacBook Pro M2 in ~8-12s per agent. Full pipeline takes ~5-10 min locally. JSON output quality may vary — enable demo mode first to preview expected output shapes.</div>
+    <!-- OpenRouter quick-connect -->
+    <div style="background:linear-gradient(135deg,#1a0a2e,#1a1230);border:1px solid #4c1d95;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div style="font-size:20px;line-height:1;margin-top:2px">🌐</div>
+      <div style="flex:1;min-width:180px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:700;color:#e2e8f0">Free cloud models via OpenRouter</span>
+          <a href="https://openrouter.ai/keys" target="_blank" style="font-size:10px;color:#a78bfa;text-decoration:none;border:1px solid #4c1d95;border-radius:4px;padding:1px 6px">Get free key →</a>
+        </div>
+        <div id="cl-or-status" style="font-size:11px;color:#94a3b8;margin-bottom:8px">● loading models…</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="cl-or-key-input" type="password" placeholder="sk-or-v1-…" autocomplete="off"
+            oninput="_orKeyInputClassic()"
+            style="background:#0f172a;border:1px solid #4c1d95;color:#e2e8f0;padding:5px 10px;border-radius:6px;font-size:12px;width:155px;outline:none" />
+          <select id="cl-or-model-sel" style="background:#0f172a;border:1px solid #4c1d95;color:#e2e8f0;padding:5px 8px;border-radius:6px;font-size:12px;max-width:180px">
+            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B</option>
+          </select>
+          <button id="cl-or-btn" onclick="_applyOpenRouterPresetClassic()" disabled
+            style="background:linear-gradient(135deg,#7c3aed,#4c1d95);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;opacity:0.5">Use OpenRouter →</button>
+        </div>
+      </div>
+    </div>
+    <div class="local-guide-note" style="margin-top:6px">⚡ Llama 3 8B runs ~8-12s/agent locally. For best JSON quality use Llama 3.3 70B (via OpenRouter free) or gemma2 (Ollama). Full 17-agent pipeline takes ~5-10 min locally.</div>
   </div>
   <div style="display:flex;gap:8px">
     <input type="password" id="apiKey" placeholder="sk-ant-... / sk-... / AIza..." style="flex:1" autocomplete="off" />
@@ -808,6 +835,8 @@ select option{background:var(--surface2)}
         <option value="senior_care">🏥 Senior Care / Assisted Living</option>
         <option value="tutoring">📚 Tutoring / Learning Center</option>
         <option value="urgent_care">🩺 Urgent Care Clinic</option>
+        <option value="medical_practice">🏥 Medical Practice</option>
+        <option value="optometry">👁️ Optometry Practice</option>
         <option value="coffee_shop">☕ Coffee Shop / Café</option>
         <option value="barbershop">✂️ Barbershop / Salon</option>
         <option value="coworking">🖥️ Co-Working Space</option>
@@ -907,6 +936,8 @@ select option{background:var(--surface2)}
         <option value="senior_care">🏥 Senior Care / Assisted Living</option>
         <option value="tutoring">📚 Tutoring / Learning Center</option>
         <option value="urgent_care">🩺 Urgent Care Clinic</option>
+        <option value="medical_practice">🏥 Medical Practice</option>
+        <option value="optometry">👁️ Optometry Practice</option>
         <option value="coffee_shop">☕ Coffee Shop / Café</option>
         <option value="barbershop">✂️ Barbershop / Salon</option>
         <option value="coworking">🖥️ Co-Working Space</option>
@@ -1617,6 +1648,40 @@ const INDUSTRIES = {
   coffee_shop: { label:'Coffee Shop / Café', emoji:'☕', unit:'coffee shop', units:'coffee shops', capacity_label:'Seating Capacity', capacity_default:35, budget_default:180000, regulatory:'GA DPH food service permit, local business license, fire marshal, ADA', regulatory_url:'dph.georgia.gov', tiers_label:'Service Model', tiers:['Espresso Bar + Grab-and-Go','Full Café (espresso + food + seating)','Drive-Through Only'], compliance:'GA DPH food service permit (Class I or II), food handler certification for all staff, fire code, ADA, grease trap if cooking, health inspection, local business license, music licensing (ASCAP/BMI)', grants:'SBA 7(a) microloans, local CDBG small business grants, state tourism development, SCORE mentorship', competitors:'Starbucks, Dunkin, Scooters Coffee, Caribou Coffee, Dutch Bros, local independent cafés', financials:'average ticket ($6–$12 espresso drinks), food attach rate (~40%), throughput (morning rush 200–400 drinks), daily revenue per sq ft, wholesale bean sales, catering', staffing:'baristas (SCA-trained preferred), shift supervisors, assistant manager, baker/food prep', real_estate:'800–2,500 sqft, high-foot-traffic retail, corner or anchor visibility, drive-through option (high value), parking or walkable, outdoor seating patio (add 30% revenue capacity)', revenue_unit:'daily revenue per seating capacity', price_label_primary:'Avg Ticket', price_label_secondary:'Revenue/sq ft/day' },
   barbershop: { label:'Barbershop / Salon', emoji:'✂️', unit:'barbershop', units:'barbershops', capacity_label:'Styling Stations', capacity_default:8, budget_default:95000, regulatory:'State cosmetology or barber board license, local business license, building permit for plumbing', regulatory_url:'state cosmetology board', tiers_label:'Service Mix', tiers:['Traditional Barbershop','Barbershop + Color + Styling','Full-Service Salon'], compliance:'state board of cosmetology/barbering license (owner + each stylist), plumbing permit for shampoo bowls, building permit, fire code, ADA, business license, sales tax permit for retail products', grants:'SBA 7(a) microloans, state minority business development grants, local CDBG programs, SCORE mentorship, NAILS/beauty industry grants', competitors:'Sport Clips, Great Clips, Floyd\'s 99 Barbershop, MasterCuts, local independent barbershops and salons', financials:'service revenue per chair per day (haircut $25–$60, beard trim $15–$25, color $80–$150), retail product sales (~20% of revenue), tip-adjusted revenue per stylist', staffing:'licensed barbers/cosmetologists (booth rent or W-2), receptionist/front desk, apprentices', real_estate:'800–2,500 sqft, strip mall or standalone, plumbing at each station, hood ventilation (if chemical services), retail display area, ADA restrooms, parking', revenue_unit:'revenue per chair per day', price_label_primary:'Avg Cut Price', price_label_secondary:'Rev/Chair/Day' },
   coworking: { label:'Co-Working Space', emoji:'🖥️', unit:'co-working space', units:'co-working spaces', capacity_label:'Desk Capacity', capacity_default:80, budget_default:380000, regulatory:'Local zoning (office use), building occupancy certificate, ADA, fire code', regulatory_url:'local municipality', tiers_label:'Membership Tiers', tiers:['Hot Desk + Day Passes','Dedicated Desk + Private Offices','Full-Service (all tiers + event space)'], compliance:'commercial lease zoning for office use, certificate of occupancy, ADA accessibility, fire code and egress, network/data cabling permits, business license, food service permit if café included', grants:'SBA 7(a) loans, local economic development incentives, USDA Rural Development (if rural), EDA community development grants, innovation hub grants from state EDAs', competitors:'WeWork, Regus/IWG, Industrious, Spaces, local independent co-working operators, shared office suites', financials:'hot desk daily/monthly, dedicated desk monthly, private office monthly, day pass, virtual office service, conference room hourly, event rental, corporate team memberships', staffing:'community manager, front desk/host, IT/network support, maintenance, optional café staff', real_estate:'5,000–20,000 sqft, Class B or A office or adaptive reuse, open floor plan, private phone/office pods, conference rooms, kitchen, lounge, high-speed fiber, 24/7 access control, ADA, parking', revenue_unit:'monthly recurring membership revenue', price_label_primary:'Desk/mo', price_label_secondary:'Private Office/mo' },
+  medical_practice: {
+    label:'Medical Practice', emoji:'🏥',
+    unit:'medical practice', units:'medical practices',
+    capacity_label:'Exam Rooms', capacity_default:6, budget_default:500000,
+    regulatory:'State medical board licensure, DEA registration, CMS Medicare/Medicaid enrollment, CLIA waiver, HIPAA, OSHA bloodborne pathogen',
+    regulatory_url:'cms.gov / state medical board',
+    tiers_label:'Practice Scope',
+    tiers:['Primary Care (Family/Internal Med)','Primary Care + Specialty Services','Multi-Specialty Group Practice'],
+    compliance:'state facility license, physician/NP/PA DEA registration, CLIA certificate of waiver (POC labs), HIPAA Privacy & Security compliance, OSHA bloodborne pathogen plan, CMS NPI/PTAN enrollment, ADA, medical waste disposal, EMR/EHR certification',
+    grants:'HRSA Health Center Program funding, HRSA rural health grants, State Primary Care Office grants, HHS workforce programs, PCMH recognition incentives, Medicaid managed care quality bonuses',
+    competitors:'Independent family practices, Hospital-employed physician groups, CVS MinuteClinic, Walmart Health, Amazon Clinic, local FQHC clinics',
+    financials:'revenue per patient visit by payer mix (Medicare/Medicaid/commercial/self-pay), CPT code billing rates, insurance reimbursement schedules, ancillary revenue (labs, imaging referrals), value-based care bonuses, subscription/DPC model revenue',
+    staffing:'physician (MD/DO) or NP/PA, medical assistants, front desk/scheduler, medical biller/coder, care coordinator, optional RN',
+    real_estate:'1,500–4,000 sqft medical office, separate waiting/exam rooms (6–10 exam rooms ideal), ADA restrooms, on-site lab draw station, EHR/network wiring, 15+ parking spaces, proximity to hospital or specialist corridor',
+    revenue_unit:'revenue per patient visit (blended payer mix)',
+    price_label_primary:'Rev/Visit (blended)', price_label_secondary:'Monthly Panel Revenue',
+  },
+  optometry: {
+    label:'Optometry Practice', emoji:'👁️',
+    unit:'optometry practice', units:'optometry practices',
+    capacity_label:'Exam Lanes', capacity_default:4, budget_default:350000,
+    regulatory:'State board of optometry licensure (OD), DEA registration (if prescribing therapeutic agents), CMS Medicare/Medicaid enrollment, HIPAA, OSHA, contact lens Rx compliance (FTC)',
+    regulatory_url:'aoa.org / state optometry board',
+    tiers_label:'Practice Scope',
+    tiers:['Medical Optometry (primary eye care)','Optometry + Optical Retail (frames/CL)','Full-Service (eye care + optical + vision therapy)'],
+    compliance:'state OD license (all providers), CMS NPI/PTAN enrollment, HIPAA Privacy & Security, OSHA bloodborne pathogen plan, ADA, FTC contact lens Rx release rule, ophthalmic device FDA compliance, optical lab permit (if in-house finishing)',
+    grants:'HRSA rural health grants, SBA 7(a) loans, state vision care access programs, Lions Club International vision grants, VSP Vision Care community grants, SCORE mentorship',
+    competitors:'Independent ODs, MyEyeDr, Visionworks, America\'s Best Contacts & Eyeglasses, LensCrafters, Walmart Vision Center, Costco Optical, 1-800-CONTACTS (online)',
+    financials:'comprehensive eye exam revenue ($100–$250), contact lens fitting fees, optical frame/lens retail margin (60–70%), contact lens product sales, vision therapy packages, medical billing (Medicare Part B for medical eye care), insurance plan participation (VSP, EyeMed, Davis Vision)',
+    staffing:'optometrist (OD), licensed optician, optometric technician/assistant, front desk/insurance coordinator, optical sales associate',
+    real_estate:'1,200–3,000 sqft, strip mall or medical office, 2–4 dedicated exam lanes, optical dispensary showroom (600–1,200 sqft frame displays), contact lens fitting station, pre-testing area (auto-refractor, OCT), ADA restrooms, 10+ parking',
+    revenue_unit:'revenue per patient encounter (exam + optical capture rate)',
+    price_label_primary:'Rev/Exam + Capture', price_label_secondary:'Optical Retail/mo',
+  },
 };
 
 // ── PER-INDUSTRY UI TEXT ─────────────────────────────────────
@@ -1636,7 +1701,9 @@ const IND_UI = {
   urgent_care: { dem:'Population · Insurance Coverage · Health Gaps',  comp:'AFC Urgent · CityMD · FastMed · MedExpress',  fin:'Rev/Patient Visit · Payer Mix · Ancillary Revenue',     grant1:'HRSA / FQHC',     grant2:'Rural Health Grants' },
   coffee_shop: { dem:'Foot Traffic · Daytime Population · Income',     comp:'Starbucks · Dunkin · Dutch Bros · Local Cafés', fin:'Avg Ticket · Daily Throughput · Revenue/Sq Ft',         grant1:'SBA Microloan',    grant2:'CDBG Grants'       },
   barbershop:  { dem:'Population Density · Household Income · Spend',  comp:"Sport Clips · Great Clips · Floyd's 99",       fin:'Rev/Chair/Day · Service Mix · Retail Products',         grant1:'SBA Microloan',    grant2:'Minority Biz Dev'  },
-  coworking:   { dem:'Remote Workers · Business Density · Income',     comp:'WeWork · Regus · Industrious · Spaces',        fin:'Monthly Desk Rev · Private Offices · Day Passes',       grant1:'EDA / SBA 7(a)',  grant2:'Innovation Hub'    },
+  coworking:        { dem:'Remote Workers · Business Density · Income',     comp:'WeWork · Regus · Industrious · Spaces',        fin:'Monthly Desk Rev · Private Offices · Day Passes',       grant1:'EDA / SBA 7(a)',  grant2:'Innovation Hub'    },
+  medical_practice: { dem:'Population · Insurance Coverage · Physician Density · ACS', comp:'Hospital Groups · CVS MinuteClinic · Amazon Clinic', fin:'Rev/Visit · Payer Mix · Panel Revenue · DPC Model', grant1:'HRSA Health Center', grant2:'Rural Health Grants' },
+  optometry:        { dem:'Population · Vision Insurance Coverage · Age Demographics', comp:'MyEyeDr · Visionworks · LensCrafters · Walmart Vision', fin:'Rev/Exam · Optical Capture Rate · Contact Lens Revenue', grant1:'VSP Community Grants', grant2:'HRSA Rural Health' },
 };
 
 // ── MULTI-PROVIDER CONFIG ────────────────────────────────────
@@ -1903,7 +1970,17 @@ CRITICAL — DATA INTEGRITY (strictly enforced):
 - If you found real data from a search, state the source. If you could not find it, return null/"N/A".
 - It is far better to return null than to return fabricated data.`;
   for (let attempt = 1; attempt <= 3; attempt++) {
-    if (attempt > 1) await new Promise(r => setTimeout(r, attempt * 1500));
+    // Bail immediately if pipeline was stopped
+    if (window._v2AbortCtrl?.signal?.aborted || window.stopRequested) throw new Error('Pipeline stopped');
+    if (attempt > 1) {
+      // Abort-aware retry delay — resolves immediately if stop is clicked
+      await new Promise(resolve => {
+        const t = setTimeout(resolve, attempt * 1500);
+        const sig = window._v2AbortCtrl?.signal;
+        if (sig) sig.addEventListener('abort', () => { clearTimeout(t); resolve(); }, { once: true });
+      });
+    }
+    if (window._v2AbortCtrl?.signal?.aborted || window.stopRequested) throw new Error('Pipeline stopped');
     try {
       const raw = await claude(strictSystem, user + (attempt > 1 ? '\n\nRemember: respond with ONLY the JSON object, nothing else.' : ''));
       const d = parseJSON(raw);
@@ -1924,7 +2001,11 @@ async function claude(system, user) {
   const url = p.url_custom ? customUrl() : (typeof p.url==='function' ? p.url(k) : p.url);
   const headers = p.headers(k);
   const body = p.buildBody(system, user, model());
-  const res=await fetch(url,{method:'POST',headers,body:JSON.stringify(body)});
+  // Use v2 abort controller if present (allows stop button to cancel mid-flight)
+  const signal = window._v2AbortCtrl?.signal;
+  const fetchOpts = { method:'POST', headers, body:JSON.stringify(body) };
+  if (signal && !signal.aborted) fetchOpts.signal = signal;
+  const res=await fetch(url, fetchOpts);
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'HTTP '+res.status)}
   const d=await res.json();
   if(d.error) throw new Error(d.error.message);
@@ -7698,10 +7779,12 @@ function togglePhasePanel() {
 // Max capacity by industry; min budget by industry
 const _capMax = { daycare:300, gas_station:32, laundromat:100, car_wash:20,
                   restaurant:500, gym:5000, indoor_play:2000, dry_cleaning:2000,
-                  senior_care:50, tutoring:200, urgent_care:20, coffee_shop:150, barbershop:30, coworking:500 };
+                  senior_care:50, tutoring:200, urgent_care:20, coffee_shop:150, barbershop:30, coworking:500,
+                  medical_practice:20, optometry:12 };
 const _budMin = { daycare:150000, gas_station:500000, laundromat:100000, car_wash:300000,
                   restaurant:100000, gym:150000, indoor_play:200000, dry_cleaning:100000,
-                  senior_care:600000, tutoring:80000, urgent_care:400000, coffee_shop:100000, barbershop:60000, coworking:200000 };
+                  senior_care:600000, tutoring:80000, urgent_care:400000, coffee_shop:100000, barbershop:60000, coworking:200000,
+                  medical_practice:200000, optometry:150000 };
 
 const _tipText = {
   zip:      'Must be a valid 5-digit US ZIP code (e.g. 30097)',
@@ -8467,6 +8550,15 @@ const DEMO_DATA = {
       { city:"Buford",         rank:4, demand_score:7.8, supply_score:5.5, gap_score:6.0, unserved_children:290, income_tier:"Mid",        recommended_tuition_infant:1750, recommended_tuition_preschool:1400, priority:"Good Opportunity", rationale:"Rapid growth — supply gap widening" },
       { city:"Flowery Branch", rank:5, demand_score:7.4, supply_score:4.8, gap_score:6.8, unserved_children:210, income_tier:"Mid",        recommended_tuition_infant:1700, recommended_tuition_preschool:1350, priority:"Good Opportunity", rationale:"Highest under-5 pct (7.9%) — underserved smaller market" },
     ],
+    demand_forecast: [
+      { year:2024, demand:4200, supply:2340, gap:1860, label:'2024' },
+      { year:2025, demand:4580, supply:2520, gap:2060, label:'2025' },
+      { year:2026, demand:4990, supply:2700, gap:2290, label:'2026' },
+      { year:2027, demand:5450, supply:2890, gap:2560, label:'2027' },
+      { year:2028, demand:5940, supply:3080, gap:2860, label:'2028' },
+    ],
+    subsidy_eligible_pct: 28,
+    median_wait_weeks: 9,
     age_gaps: [
       { age:"Infant (0–12 mo)",   demand_idx:88, supply_idx:35, gap:53 },
       { age:"Toddler (1–2 yr)",   demand_idx:82, supply_idx:48, gap:34 },
@@ -8521,17 +8613,22 @@ const DEMO_DATA = {
 // ── AGENT 4 — Real Estate ────────────────────────────────
 4: {
   daycare: {
-    summary: "Active childcare-suitable commercial inventory in Suwanee and Sugar Hill. Three properties on Lawrenceville-Suwanee Rd meet DECAL footprint requirements (35 sqft/child indoor, 75 sqft/child outdoor). Average asking rents: $17–22/sqft NNN in Suwanee vs $14–18/sqft in Sugar Hill.",
+    summary: "Active childcare-suitable commercial inventory in Suwanee and Sugar Hill. Eight properties meet DECAL footprint requirements (35 sqft/child indoor, 75 sqft/child outdoor). Average asking rents: $17–22/sqft NNN in Suwanee vs $14–18/sqft in Sugar Hill. Top-ranked: 3820 Lawrenceville-Suwanee Rd scores 9.1/10 with existing playground pad and C-2 zoning pre-cleared.",
     listings: [
-      { city:"Suwanee",    address:"3820 Lawrenceville-Suwanee Rd, Suwanee GA 30024", sqft:6400, monthly_rent:10800, price_per_sqft:20.25, property_type:"Freestanding Retail", zoning:"C-2", url:"https://www.loopnet.com", highlights:["Existing playground pad","Drive-through lane convertible","Immediate I-85 access"] },
-      { city:"Suwanee",    address:"475 Buford Hwy, Suwanee GA 30024",               sqft:5800, monthly_rent:9600,  price_per_sqft:19.86, property_type:"End-Cap Retail",      zoning:"C-2", url:"https://www.loopnet.com", highlights:["Corner visibility","Large rear yard (outdoor play possible)","2024 HVAC"] },
-      { city:"Sugar Hill", address:"3340 Peachtree Industrial Blvd, Sugar Hill GA 30518", sqft:6100, monthly_rent:8900, price_per_sqft:17.51, property_type:"Strip Mall Anchor",    zoning:"C-1", url:"https://www.loopnet.com", highlights:["Below-market NNN","High residential density within 0.5mi","Separate entrance"] },
-      { city:"Sugar Hill", address:"4885 Nelson Brogdon Blvd, Sugar Hill GA 30518",   sqft:5500, monthly_rent:8200,  price_per_sqft:17.89, property_type:"Standalone Retail",    zoning:"C-2", url:"https://www.loopnet.com", highlights:["Fenced rear lot","ADA parking","2022 roof"] },
+      { rank:1, city:"Suwanee",    address:"3820 Lawrenceville-Suwanee Rd, Suwanee GA 30024",          sqft:6400, monthly_rent:10800, price_per_sqft:20.25, property_type:"Freestanding Retail", zoning:"C-2", score:9.1, url:"https://www.loopnet.com", highlights:["Existing playground pad","Drive-through lane convertible","Immediate I-85 access","TI allowance $35/sqft","ADA compliant"] },
+      { rank:2, city:"Suwanee",    address:"475 Buford Hwy — End Cap, Suwanee GA 30024",               sqft:5800, monthly_rent:9600,  price_per_sqft:19.86, property_type:"End-Cap Retail",      zoning:"C-2", score:8.6, url:"https://www.loopnet.com", highlights:["Corner visibility","Large rear yard (outdoor play)","2024 HVAC","36 parking spaces"] },
+      { rank:3, city:"Sugar Hill", address:"3340 Peachtree Industrial Blvd, Sugar Hill GA 30518",      sqft:6100, monthly_rent:8900,  price_per_sqft:17.51, property_type:"Strip Mall Anchor",   zoning:"C-1", score:8.3, url:"https://www.loopnet.com", highlights:["Below-market NNN","High residential density 0.5mi","Separate entrance","3 schools within 0.5mi"] },
+      { rank:4, city:"Sugar Hill", address:"4885 Nelson Brogdon Blvd, Sugar Hill GA 30518",            sqft:5500, monthly_rent:8200,  price_per_sqft:17.89, property_type:"Standalone Retail",   zoning:"C-2", score:8.1, url:"https://www.loopnet.com", highlights:["Fenced rear lot","ADA parking","2022 roof","0.3mi from Hwy 20"] },
+      { rank:5, city:"Duluth",     address:"3455 Hamilton Mill Rd — Bay B, Duluth GA 30096",           sqft:5200, monthly_rent:7400,  price_per_sqft:17.08, property_type:"Strip Anchor",        zoning:"C-1", score:7.4, url:"https://www.loopnet.com", highlights:["Lowest rent in corridor","Near apartment cluster","ADA upgrade needed","6 mo free rent negotiable"] },
+      { rank:6, city:"Suwanee",    address:"2847 Lawrenceville-Suwanee Rd — Suite 200, Suwanee GA 30024", sqft:7100, monthly_rent:12200, price_per_sqft:20.62, property_type:"Class A Retail", zoning:"C-2", score:7.9, url:"https://www.loopnet.com", highlights:["Largest footprint in market","Dual entrance","Owner offering 12-mo TI allowance","Premium SR-317 visibility"] },
+      { rank:7, city:"Buford",     address:"1620 Mall of Georgia Blvd, Buford GA 30519",               sqft:5900, monthly_rent:8600,  price_per_sqft:17.49, property_type:"Former Retail",      zoning:"C-2", score:7.2, url:"https://www.loopnet.com", highlights:["High foot traffic corridor","Near Mall of Georgia","Large paved lot","Prior tenant left partitions"] },
+      { rank:8, city:"Sugar Hill", address:"1180 Hwy 20 W — End Cap, Sugar Hill GA 30518",             sqft:6300, monthly_rent:9100,  price_per_sqft:17.33, property_type:"End-Cap Retail",      zoning:"C-2", score:7.8, url:"https://www.loopnet.com", highlights:["Hwy 20 exposure","Rear parking x24","2023 renovation","Good natural light — south-facing"] },
     ],
     by_city_summary: [
-      { city:"Suwanee",    avg_rent_sqft:20.06, listings_found:6, recommended_range:"$9,500–$12,500/mo", notes:"Premium market; limited turnkey spaces — factor 60–90 day build-out window" },
-      { city:"Sugar Hill", avg_rent_sqft:17.70, listings_found:9, recommended_range:"$8,200–$10,800/mo", notes:"More available inventory; recent new construction adding Class A space" },
-      { city:"Duluth",     avg_rent_sqft:15.40, listings_found:12, recommended_range:"$7,500–$9,800/mo", notes:"Lowest cost; higher competition density" },
+      { city:"Suwanee",    avg_rent_sqft:20.24, listings_found:8,  recommended_range:"$9,500–$12,500/mo", notes:"Premium market; limited turnkey spaces — factor 60–90 day build-out window" },
+      { city:"Sugar Hill", avg_rent_sqft:17.58, listings_found:11, recommended_range:"$8,200–$10,800/mo", notes:"More available inventory; recent new construction adding Class A space" },
+      { city:"Duluth",     avg_rent_sqft:15.40, listings_found:14, recommended_range:"$7,500–$9,800/mo", notes:"Lowest cost; higher competition density" },
+      { city:"Buford",     avg_rent_sqft:16.20, listings_found:7,  recommended_range:"$7,800–$9,400/mo", notes:"Growing market; good value for fast-growing population" },
     ],
     search_urls: { loopnet:"https://www.loopnet.com/search/commercial-real-estate/suwanee-ga/for-lease/", crexi:"https://www.crexi.com/lease/georgia/gwinnett-county", bizbuysell:"https://www.bizbuysell.com/Georgia/Gwinnett-County/" },
   },
@@ -8574,15 +8671,29 @@ const DEMO_DATA = {
   daycare: {
     summary: "Gwinnett corridor childcare market is dominated by national chains (Primrose, KinderCare) at the premium tier and independent centers at mid-tier. Suwanee has only 3 licensed centers within 2 miles vs. demand for 6+. No NAEYC-accredited center exists in Sugar Hill. Competitive differentiation opportunity: premium infant/toddler program with NAEYC pathway.",
     cities: [
-      { city:"Suwanee",    total_centers:3, licensed_capacity:285, qris_rated_count:2, naeyc_count:1, avg_tuition_infant:1980, avg_tuition_preschool:1520, avg_rating:4.2, market_saturation:"Low",    notes:"One Primrose; two independent; no true infant waitlist capacity" },
-      { city:"Sugar Hill", total_centers:4, licensed_capacity:340, qris_rated_count:1, naeyc_count:0, avg_tuition_infant:1850, avg_tuition_preschool:1420, avg_rating:3.9, market_saturation:"Low",    notes:"No NAEYC-accredited center; quality gap at infant level" },
-      { city:"Duluth",     total_centers:7, licensed_capacity:620, qris_rated_count:3, naeyc_count:2, avg_tuition_infant:1790, avg_tuition_preschool:1380, avg_rating:4.0, market_saturation:"Medium", notes:"KinderCare and 2 Brightspring centers; more competitive" },
+      { city:"Suwanee",        total_centers:3,  licensed_capacity:285, qris_rated_count:2, naeyc_count:1, avg_tuition_infant:1980, avg_tuition_preschool:1520, avg_rating:4.2, market_saturation:"Low",    gap_score:9.0, competitor_count:3, lat:34.0514, lng:-84.0663, notes:"One Primrose; two independent; no true infant waitlist capacity" },
+      { city:"Sugar Hill",     total_centers:4,  licensed_capacity:340, qris_rated_count:1, naeyc_count:0, avg_tuition_infant:1850, avg_tuition_preschool:1420, avg_rating:3.9, market_saturation:"Low",    gap_score:8.1, competitor_count:4, lat:34.1029, lng:-84.0547, notes:"No NAEYC-accredited center; quality gap at infant level" },
+      { city:"Duluth",         total_centers:7,  licensed_capacity:620, qris_rated_count:3, naeyc_count:2, avg_tuition_infant:1790, avg_tuition_preschool:1380, avg_rating:4.0, market_saturation:"Medium", gap_score:6.4, competitor_count:7, lat:33.9959, lng:-84.1447, notes:"KinderCare and 2 Brightspring centers; more competitive" },
+      { city:"Buford",         total_centers:5,  licensed_capacity:420, qris_rated_count:2, naeyc_count:1, avg_tuition_infant:1750, avg_tuition_preschool:1380, avg_rating:3.8, market_saturation:"Low",    gap_score:6.0, competitor_count:5, lat:34.1215, lng:-83.9913, notes:"Growing market; 3 independents + 2 national chains" },
+      { city:"Flowery Branch", total_centers:2,  licensed_capacity:160, qris_rated_count:0, naeyc_count:0, avg_tuition_infant:1700, avg_tuition_preschool:1350, avg_rating:3.7, market_saturation:"Low",    gap_score:6.8, competitor_count:2, lat:34.1840, lng:-83.9243, notes:"Very underserved small market — only 2 licensed centers for fastest-growing ZIP" },
     ],
     top_chains: [
-      { name:"Primrose Schools",   locations_in_area:2, avg_tuition_infant:2100, avg_rating:4.5, qris_stars:4 },
-      { name:"KinderCare",         locations_in_area:3, avg_tuition_infant:1900, avg_rating:4.0, qris_stars:3 },
-      { name:"Bright Horizons",    locations_in_area:1, avg_tuition_infant:2300, avg_rating:4.6, qris_stars:4 },
-      { name:"Independent Centers",locations_in_area:8, avg_tuition_infant:1650, avg_rating:3.8, qris_stars:2 },
+      { name:"Primrose Schools",    locations_in_area:2, avg_tuition_infant:2100, avg_tuition_preschool:1700, avg_rating:4.5, qris_stars:4, naeyc:true,  utilization_pct:94, avg_capacity:110, waitlist_weeks:10, founded:1982, staff_ratio:"1:4 infant", curriculum:"Balanced Learning" },
+      { name:"KinderCare",          locations_in_area:3, avg_tuition_infant:1900, avg_tuition_preschool:1520, avg_rating:4.0, qris_stars:3, naeyc:false, utilization_pct:86, avg_capacity:140, waitlist_weeks:3,  founded:1969, staff_ratio:"1:6 infant", curriculum:"Creative Curriculum" },
+      { name:"Bright Horizons",     locations_in_area:1, avg_tuition_infant:2300, avg_tuition_preschool:1880, avg_rating:4.6, qris_stars:4, naeyc:true,  utilization_pct:97, avg_capacity:100, waitlist_weeks:14, founded:1986, staff_ratio:"1:3 infant", curriculum:"World at Their Fingertips" },
+      { name:"Learning Experience", locations_in_area:2, avg_tuition_infant:1980, avg_tuition_preschool:1580, avg_rating:4.1, qris_stars:3, naeyc:false, utilization_pct:82, avg_capacity:120, waitlist_weeks:2,  founded:2002, staff_ratio:"1:4 infant", curriculum:"Proprietary STEAM" },
+      { name:"Independent Centers", locations_in_area:8, avg_tuition_infant:1650, avg_tuition_preschool:1320, avg_rating:3.8, qris_stars:2, naeyc:false, utilization_pct:71, avg_capacity:65,  waitlist_weeks:1,  founded:null, staff_ratio:"Varies",    curriculum:"Mixed" },
+    ],
+    // Individual center profiles for deep-dive panel
+    competitor_profiles: [
+      { name:"Primrose School of Suwanee",      city:"Suwanee",    address:"2625 Lawrenceville-Suwanee Rd", capacity:110, enrolled:104, utilization_pct:94, tuition_infant:2100, tuition_preschool:1700, rating:4.7, qris_stars:4, naeyc:true,  waitlist_weeks:10, lat:34.0530, lng:-84.0698, strengths:["National brand","Structured curriculum","Outdoor programs"], weaknesses:["Premium price excludes subsidy families","Director turnover 2023"] },
+      { name:"Sugar Hill Learning Academy",     city:"Sugar Hill", address:"750 Peachtree Industrial Blvd",  capacity:88,  enrolled:62,  utilization_pct:70, tuition_infant:1780, tuition_preschool:1380, rating:3.7, qris_stars:1, naeyc:false, waitlist_weeks:0,  lat:34.1010, lng:-84.0560, strengths:["Lower price","Community ties"],                     weaknesses:["No NAEYC","Aging facility","Limited infant slots (8)"] },
+      { name:"KinderCare Learning Center",      city:"Duluth",     address:"3285 Duluth Hwy 120",           capacity:140, enrolled:120, utilization_pct:86, tuition_infant:1890, tuition_preschool:1490, rating:4.0, qris_stars:3, naeyc:false, waitlist_weeks:3,  lat:33.9971, lng:-84.1430, strengths:["National brand","Corp benefit program","Good location"], weaknesses:["Curriculum less structured","Lower QRIS"] },
+      { name:"Bright Horizons (Johns Creek)",   city:"Johns Creek",address:"10585 Medlock Bridge Rd",       capacity:100, enrolled:97,  utilization_pct:97, tuition_infant:2300, tuition_preschool:1880, rating:4.6, qris_stars:4, naeyc:true,  waitlist_weeks:14, lat:34.0020, lng:-84.1310, strengths:["Highest quality brand","Corporate contracts","NAEYC"],  weaknesses:["Highest price point","Long waitlist","Far from target ZIP"] },
+      { name:"Sunshine Academy",                city:"Sugar Hill", address:"4102 Nelson Brogdon Blvd",      capacity:72,  enrolled:51,  utilization_pct:71, tuition_infant:1750, tuition_preschool:1350, rating:3.8, qris_stars:2, naeyc:false, waitlist_weeks:0,  lat:34.1080, lng:-84.0490, strengths:["Budget-friendly","Community relationships"],               weaknesses:["No NAEYC","Basic curriculum","Owner retiring 2026"] },
+      { name:"Little Scholars Learning Center", city:"Buford",     address:"2580 Buford Hwy NE",            capacity:65,  enrolled:46,  utilization_pct:71, tuition_infant:1720, tuition_preschool:1360, rating:3.9, qris_stars:2, naeyc:false, waitlist_weeks:0,  lat:34.1190, lng:-83.9920, strengths:["Value pricing","New management 2024","Expanding"],         weaknesses:["No brand recognition","No NAEYC","Small outdoor area"] },
+      { name:"Learning Experience Duluth",      city:"Duluth",     address:"2900 Satellite Blvd",           capacity:120, enrolled:98,  utilization_pct:82, tuition_infant:1970, tuition_preschool:1570, rating:4.1, qris_stars:3, naeyc:false, waitlist_weeks:2,  lat:33.9950, lng:-84.1500, strengths:["STEAM focus","Modern facility","Parent app"],               weaknesses:["Average QRIS","No NAEYC pathway","High staff turnover"] },
+      { name:"Primrose School of Buford",       city:"Buford",     address:"3700 Centennial Olympic Blvd",  capacity:115, enrolled:108, utilization_pct:94, tuition_infant:2050, tuition_preschool:1680, rating:4.5, qris_stars:4, naeyc:true,  waitlist_weeks:8,  lat:34.1220, lng:-83.9900, strengths:["Premium brand","NAEYC","Strong curriculum"],               weaknesses:["Premium price","Waitlist blocks new families"] },
     ],
   },
 },
@@ -8591,6 +8702,22 @@ const DEMO_DATA = {
 7: {
   daycare: {
     summary: "Base case shows profitability by Month 14 with 75% enrollment. At full capacity (90 children), annual net income reaches $182k (Year 2) rising to $228k (Year 3). Infant/toddler rooms drive 60% of revenue despite occupying 45% of licensed slots. SBA 7(a) recommended for $380k of $600k total startup.",
+    total_startup_cost: 526500,
+    monthly_expenses:   108400,
+    monthly_fixed_costs:108400,
+    key_assumptions: [
+      "75-child center with 90-child licensed capacity (base case at 83% fill rate Year 2)",
+      "Infant tuition $2,050/mo — 10% premium to market average; justified by NAEYC pathway",
+      "Wage inflation +3% annually; no COLA assumed in Year 1 to hit break-even",
+      "CACFP food reimbursement ~$4.20/child/day reduces food costs by $8,500/mo at capacity",
+      "Lease: $10,800/mo NNN with 3% annual escalator; 5-year initial term + two 3-year options",
+      "SBA 7(a): $380k at 8.5% over 10 years = $4,714/mo debt service (included in monthly_ops)",
+    ],
+    funding_sources: [
+      { source:"SBA 7(a) Loan",        amount:380000, rate_pct:8.5, term_months:120, monthly_payment:4714, notes:"Pre-qualify with Regions Bank or Truist; plan 60-90 day approval" },
+      { source:"Owner Equity",          amount:180000, rate_pct:0,   term_months:0,   monthly_payment:0,    notes:"Minimum 20% equity; demonstrates commitment to SBA lender" },
+      { source:"Seller Note / Partner", amount:40000,  rate_pct:6.0, term_months:60,  monthly_payment:773,  notes:"Optional; reduces SBA loan size and approval complexity" },
+    ],
     startup_breakdown: [
       { item:"Leasehold improvements & build-out", amount:180000 },
       { item:"Furniture, fixtures & equipment",    amount:85000  },
@@ -8620,14 +8747,25 @@ const DEMO_DATA = {
       { name:"Optimistic",    label:"Full capacity",  enrolled:90, revenue_infant:78800, revenue_toddler:51400, revenue_preschool:30400, revenue_prek:24400, avg_tuition:1978, monthly_revenue:185000, monthly_expenses:118600, monthly_net:66400,  annual_net:796800,  breakeven_months:9,  roi_3yr:44, color:"var(--green)" },
     ],
     projections: [
-      { month:"M1",  rev:18000,   exp:108400, cum:-526000 },
-      { month:"M3",  rev:55000,   exp:108400, cum:-440000 },
-      { month:"M6",  rev:85000,   exp:108400, cum:-340000 },
-      { month:"M9",  rev:110000,  exp:108400, cum:-245000 },
-      { month:"M12", rev:130000,  exp:108400, cum:-155000 },
-      { month:"M15", rev:140000,  exp:108400, cum:-40000  },
-      { month:"M18", rev:145000,  exp:110000, cum:95000   },
-      { month:"M24", rev:155000,  exp:112000, cum:320000  },
+      { month:"M1",  rev:12000,   exp:108400, cum:-590000 },
+      { month:"M2",  rev:28000,   exp:108400, cum:-565000 },
+      { month:"M3",  rev:46000,   exp:108400, cum:-536000 },
+      { month:"M4",  rev:63000,   exp:108400, cum:-502000 },
+      { month:"M5",  rev:78000,   exp:108400, cum:-466000 },
+      { month:"M6",  rev:91000,   exp:108400, cum:-430000 },
+      { month:"M7",  rev:102000,  exp:108400, cum:-395000 },
+      { month:"M8",  rev:110000,  exp:108400, cum:-361000 },
+      { month:"M9",  rev:117000,  exp:108400, cum:-318000 },
+      { month:"M10", rev:123000,  exp:108400, cum:-268000 },
+      { month:"M11", rev:129000,  exp:108400, cum:-212000 },
+      { month:"M12", rev:133000,  exp:108400, cum:-152000 },
+      { month:"M13", rev:136000,  exp:108400, cum:-88000  },
+      { month:"M14", rev:138000,  exp:108400, cum:-22000  },
+      { month:"M15", rev:140000,  exp:108400, cum:48000   },
+      { month:"M16", rev:142000,  exp:110000, cum:120000  },
+      { month:"M17", rev:145000,  exp:110000, cum:195000  },
+      { month:"M18", rev:148000,  exp:112000, cum:271000  },
+      { month:"M24", rev:158000,  exp:114000, cum:594000  },
     ],
     by_city_financials: [
       { city:"Suwanee",    avg_tuition:2050, break_even_mo:13, annual_net_yr2:228000, risk:"Low-Med" },
@@ -8635,9 +8773,15 @@ const DEMO_DATA = {
       { city:"Duluth",     avg_tuition:1800, break_even_mo:18, annual_net_yr2:162000, risk:"Medium"  },
     ],
     funding: [
-      { source:"SBA 7(a) Loan",        amount:380000, rate_pct:8.5, term_months:120, notes:"Pre-qualify with Regions Bank or Truist; plan 60-90 day approval" },
-      { source:"Owner Equity",          amount:180000, rate_pct:0,   term_months:0,   notes:"Minimum 20% equity; demonstrates commitment to SBA lender" },
-      { source:"Seller Note / Partner", amount:40000,  rate_pct:6.0, term_months:60,  notes:"Optional; reduces SBA loan size and approval complexity" },
+      { source:"SBA 7(a) Loan",        amount:380000, rate_pct:8.5, term_months:120, monthly_payment:4714, notes:"Pre-qualify with Regions Bank or Truist; plan 60-90 day approval" },
+      { source:"Owner Equity",          amount:180000, rate_pct:0,   term_months:0,   monthly_payment:0,    notes:"Minimum 20% equity; demonstrates commitment to SBA lender" },
+      { source:"Seller Note / Partner", amount:40000,  rate_pct:6.0, term_months:60,  monthly_payment:773,  notes:"Optional; reduces SBA loan size and approval complexity" },
+    ],
+    sensitivity: [
+      { variable:"Enrollment Rate (%)",   base:75, pessimistic:60, optimistic:90, break_even_impact_months:{ pessimistic:22, base:14, optimistic:9 },  label:"enrollment_pct" },
+      { variable:"Infant Tuition ($/mo)", base:2050, pessimistic:1850, optimistic:2250, break_even_impact_months:{ pessimistic:18, base:14, optimistic:11 }, label:"tuition_infant" },
+      { variable:"Monthly Lease ($/mo)",  base:10800, pessimistic:12500, optimistic:9000, break_even_impact_months:{ pessimistic:17, base:14, optimistic:12 }, label:"lease_monthly" },
+      { variable:"Wage Inflation (%/yr)", base:3, pessimistic:7, optimistic:1, break_even_impact_months:{ pessimistic:16, base:14, optimistic:13 }, label:"wage_inflation_pct" },
     ],
   },
 },
@@ -8656,11 +8800,13 @@ const DEMO_DATA = {
       "Launch pre-enrollment waitlist in Suwanee Parents Facebook group (28k members) 6 months before opening — converts curiosity to signed contracts",
     ],
     risks: [
-      { risk:"DECAL licensing timeline can push open date 60–90 days", mitigation:"Hire director in Month 1; file DECAL pre-application before lease signing; budget 16-week total license timeline", severity:"High" },
-      { risk:"SBA 7(a) approval delays can freeze build-out capital", mitigation:"Begin SBA pre-qualification at Regions Bank or Truist immediately; maintain 6-month working capital reserve from owner equity", severity:"High" },
-      { risk:"Infant staffing ratios (1:6 teacher:child) compress revenue per room", mitigation:"Design infant room as premium offering at $2,200/mo — higher tuition offsets ratio constraint; limit infant slots to 12", severity:"Medium" },
-      { risk:"Suwanee lease market tightening — suitable spaces limited", mitigation:"Engage commercial RE broker specializing in childcare immediately; identify backup Sugar Hill site; consider build-to-suit negotiation", severity:"Medium" },
-      { risk:"Staff recruitment at required CDA credential level", mitigation:"Partner with Georgia Gwinnett College ECE program; offer signing bonuses; start recruiting 8 months before opening", severity:"Medium" },
+      { risk:"DECAL licensing timeline can push open date 60–90 days",       mitigation:"Hire director in Month 1; file DECAL pre-application before lease signing; budget 16-week total license timeline",                          severity:"High",   probability:7, impact:9, cost_to_mitigate:4500,  trigger:"Director not hired by Month 2" },
+      { risk:"SBA 7(a) approval delays can freeze build-out capital",        mitigation:"Begin SBA pre-qualification at Regions Bank or Truist immediately; maintain 6-month working capital reserve from owner equity",              severity:"High",   probability:5, impact:9, cost_to_mitigate:0,     trigger:"Approval timeline >90 days" },
+      { risk:"Infant staffing ratios (1:6) compress revenue per room",       mitigation:"Design infant room as premium offering at $2,200/mo — higher tuition offsets ratio constraint; limit infant slots to 12",                    severity:"Medium", probability:8, impact:5, cost_to_mitigate:0,     trigger:"Enrollment >12 infants" },
+      { risk:"Suwanee lease market tightening — suitable spaces limited",    mitigation:"Engage commercial RE broker specializing in childcare immediately; identify backup Sugar Hill site; consider build-to-suit negotiation",      severity:"Medium", probability:4, impact:7, cost_to_mitigate:2000,  trigger:"No suitable space available in 60 days" },
+      { risk:"Staff recruitment at required CDA credential level",           mitigation:"Partner with Georgia Gwinnett College ECE program; offer signing bonuses; start recruiting 8 months before opening",                         severity:"Medium", probability:6, impact:6, cost_to_mitigate:12000, trigger:"Director vacancy at 6-month mark" },
+      { risk:"Enrollment ramp slower than 75% by Month 9 (break-even risk)", mitigation:"Pre-enrollment waitlist campaigns, corporate partnership with Suwanee Tech Park employers, CAPS subsidy enrollment to expand accessible market", severity:"Medium", probability:4, impact:8, cost_to_mitigate:8000,  trigger:"Enrollment <50% at M6" },
+      { risk:"Construction cost overruns on DECAL-compliant build-out",      mitigation:"Contractor with childcare experience; fixed-price contract; 10% contingency already budgeted ($46k)",                                       severity:"Low",    probability:5, impact:5, cost_to_mitigate:46000, trigger:">10% over bid" },
     ],
     next_steps: [
       "This week: Engage Gwinnett County commercial RE broker specializing in childcare — tour 3820 Lawrenceville-Suwanee Rd and 475 Buford Hwy listings",
@@ -8744,8 +8890,11 @@ const DEMO_DATA = {
       { name:"Flowery Branch", county:"Hall",     lat:_DC.flowery.lat,  lng:_DC.flowery.lng,  gap_score:6.8, demand_score:7.4, supply_score:4.8, unserved_children:210, median_income:82100,  competitor_count:2, priority:"Good Opportunity", recommended_action:"Small market — high gap but limited ceiling", real_estate_url:"https://www.loopnet.com" },
     ],
     real_estate_pins: [
-      { label:"3820 Lawrenceville-Suwanee Rd", lat:34.055, lng:-84.072, city:"Suwanee",    sqft:6400, monthly_rent:10800, type:"Freestanding" },
-      { label:"3340 Peachtree Industrial Blvd", lat:34.108, lng:-84.058, city:"Sugar Hill", sqft:6100, monthly_rent:8900,  type:"Strip Anchor"  },
+      { label:"3820 Lawrenceville-Suwanee Rd",      lat:34.055, lng:-84.072, city:"Suwanee",        sqft:6400, monthly_rent:10800, type:"Freestanding",   zoning:"C-2", ada_parking:true,  schools_within_half_mi:2, highlights:["Existing playground pad","Drive-through convertible","I-85 access"] },
+      { label:"475 Buford Hwy — End Cap",            lat:34.051, lng:-84.062, city:"Suwanee",        sqft:5800, monthly_rent:9600,  type:"End-Cap Retail", zoning:"C-2", ada_parking:true,  schools_within_half_mi:1, highlights:["Corner visibility","Large rear yard","2024 HVAC"] },
+      { label:"3340 Peachtree Industrial Blvd",      lat:34.108, lng:-84.058, city:"Sugar Hill",     sqft:6100, monthly_rent:8900,  type:"Strip Anchor",   zoning:"C-1", ada_parking:true,  schools_within_half_mi:3, highlights:["Below-market NNN","High residential density","Separate entrance"] },
+      { label:"4885 Nelson Brogdon Blvd",            lat:34.112, lng:-84.050, city:"Sugar Hill",     sqft:5500, monthly_rent:8200,  type:"Freestanding",   zoning:"C-2", ada_parking:true,  schools_within_half_mi:2, highlights:["Fenced rear lot","ADA parking","2022 roof"] },
+      { label:"3455 Hamilton Mill Rd — Retail Bay",  lat:34.002, lng:-84.101, city:"Duluth",         sqft:5200, monthly_rent:7400,  type:"Strip Anchor",   zoning:"C-1", ada_parking:false, schools_within_half_mi:1, highlights:["Lowest rent in corridor","Near apartment cluster","ADA upgrade needed"] },
     ],
     directions: [],
   },
@@ -8769,7 +8918,16 @@ const DEMO_DATA = {
       { name:"Gwinnett Chamber SEED Grant",       amount_range:"$2k–$10k",              deadline:"Quarterly", url:"https://www.gwinnettchamber.org",   notes:"Small business development fund; childcare prioritized category" },
       { name:"Suwanee CID Tax Abatement",         amount_range:"5-year property tax abatement", deadline:"At permitting", url:"https://www.suwanee.com/business", notes:"Contact Suwanee Economic Development office early in site selection process" },
     ],
-    grants_table: [],
+    grants_table: [
+      { name:"USDA CACFP",                    type:"Federal",  amount:"$3–8/child/day", deadline:"Rolling",  probability:"High",   eligibility:"Enroll at opening — adds $8,500/mo revenue at capacity",     action_required:"Apply via FNS.USDA.gov at licensing; 6-week approval" },
+      { name:"USDA Rural Business Dev Grant", type:"Federal",  amount:"$10k–$100k",     deadline:"Varies",   probability:"Medium", eligibility:"Gwinnett rural set-aside; check with USDA GA state office",  action_required:"Submit pre-application to confirm eligibility; then full RFP" },
+      { name:"Georgia CAPS Subsidy",          type:"State",    amount:"$500–$1,200/child/mo", deadline:"Rolling", probability:"High", eligibility:"Accept low-income families; expands market 15–25%",       action_required:"Complete CAPS provider enrollment at DECAL.ga.gov" },
+      { name:"DECAL Quality Rated Incentives",type:"State",    amount:"$15k–$50k",      deadline:"Annual",   probability:"High",   eligibility:"Achieve 2-Star Quality Rated within 18 months of opening",  action_required:"Begin QR self-study at opening; submit 12-month assessment" },
+      { name:"Georgia OneGeorgia Authority",  type:"State",    amount:"$5k–$25k",       deadline:"Varies",   probability:"Low",    eligibility:"Rural community development; verify Gwinnett eligibility",   action_required:"Contact OneGeorgia office for eligibility determination" },
+      { name:"Gwinnett Chamber SEED Grant",   type:"Local",    amount:"$2k–$10k",       deadline:"Quarterly",probability:"Medium", eligibility:"Gwinnett County small business; childcare is priority category", action_required:"Apply quarterly via GwinnettChamber.org; 2-page application" },
+      { name:"Suwanee CID Tax Abatement",     type:"Local",    amount:"5-yr abatement", deadline:"At permitting", probability:"Medium", eligibility:"New commercial tenant in Suwanee CID boundaries",     action_required:"Contact Suwanee Economic Development at permitting stage" },
+      { name:"SBA Community Advantage Loan",  type:"Federal",  amount:"Up to $350k",    deadline:"Rolling",  probability:"High",   eligibility:"Under-served market community development; childcare qualifies", action_required:"Apply through SBA-approved Community Advantage lender" },
+    ],
   },
 },
 
@@ -8778,19 +8936,37 @@ const DEMO_DATA = {
   daycare: {
     summary: "Primrose Schools leads the premium tier with strong brand recognition and waitlists at all 2 Gwinnett locations. Independent centers fill mid-tier with inconsistent quality. Key gap: no NAEYC-accredited center in Sugar Hill. Differentiation strategy: premium infant/toddler program + NAEYC pathway + transparent pricing.",
     competitor_profiles: [
-      { name:"Primrose Schools (Suwanee)",  city:"Suwanee",    tuition_infant:2100, tuition_preschool:1700, rating:4.5, qris_stars:4, naeyc:true,  capacity:110, waitlist:"Yes (8–12 weeks)", strengths:["Strong brand","Structured curriculum","Outdoor programs"], weaknesses:["Premium price limits accessible market","High director turnover in 2023"] },
-      { name:"KinderCare (Duluth)",         city:"Duluth",     tuition_infant:1880, tuition_preschool:1480, rating:4.0, qris_stars:3, naeyc:false, capacity:95,  waitlist:"No",              strengths:["National brand","Corporate benefit programs","Good location"], weaknesses:["Curriculum less structured than Primrose","Lower QRIS rating"] },
-      { name:"Sunshine Academy (Sugar Hill)",city:"Sugar Hill", tuition_infant:1750, tuition_preschool:1350, rating:3.8, qris_stars:2, naeyc:false, capacity:72,  waitlist:"No",              strengths:["Lower price point","Community relationships"], weaknesses:["No NAEYC","Aging facility","Limited infant slots (8 total)"] },
+      { name:"Primrose Schools (Suwanee)",      city:"Suwanee",    tuition_infant:2100, tuition_preschool:1700, rating:4.5, qris_stars:4, naeyc:true,  capacity:110, enrolled:104, waitlist:"8–12 weeks", strengths:["Strong brand","Structured curriculum","Outdoor programs"], weaknesses:["Premium price excludes CAPS families","High director turnover 2023","No digital enrollment — phone only"] },
+      { name:"KinderCare Learning Center",       city:"Duluth",     tuition_infant:1880, tuition_preschool:1480, rating:4.0, qris_stars:3, naeyc:false, capacity:140, enrolled:120, waitlist:"2–3 weeks",  strengths:["National brand","Corporate benefit programs","Good location"], weaknesses:["Curriculum less structured than Primrose","Lower QRIS","Above-average director turnover"] },
+      { name:"Sunshine Academy",                 city:"Sugar Hill", tuition_infant:1750, tuition_preschool:1350, rating:3.8, qris_stars:2, naeyc:false, capacity:72,  enrolled:51,  waitlist:"None",       strengths:["Lower price point","Community relationships"], weaknesses:["No NAEYC","Aging facility","Only 8 infant slots","Owner retiring 2026"] },
+      { name:"Learning Experience (Duluth)",     city:"Duluth",     tuition_infant:1970, tuition_preschool:1570, rating:4.1, qris_stars:3, naeyc:false, capacity:120, enrolled:98,  waitlist:"2 weeks",    strengths:["Modern STEAM-focused facility","Parent app","Active social media"], weaknesses:["High staff turnover","No NAEYC pathway","Standardized curriculum lacks flex"] },
+      { name:"Little Scholars Learning Center",  city:"Buford",     tuition_infant:1720, tuition_preschool:1360, rating:3.9, qris_stars:2, naeyc:false, capacity:65,  enrolled:46,  waitlist:"None",       strengths:["Budget-friendly","New management 2024","Expanding enrollment"], weaknesses:["No brand recognition","Small outdoor play area","QRIS 2-star only"] },
+      { name:"Bright Horizons at Technology Park",city:"Johns Creek",tuition_infant:2300, tuition_preschool:1880, rating:4.6, qris_stars:4, naeyc:true,  capacity:100, enrolled:97,  waitlist:"12–14 weeks",strengths:["Highest brand quality","Corporate contracts with Suwanee Tech Park","NAEYC","Near competitor ZIP"], weaknesses:["Most expensive in corridor","Waitlist drives parents to alternatives","Far from Suwanee proper"] },
     ],
     pain_point_analysis: [
-      { pain_point:"Infant waitlists at premium centers are 8–12 weeks", opportunity:"Open with 18 dedicated infant slots as primary differentiator" },
-      { pain_point:"Parents want transparent, online enrollment — most centers require in-person tours first", opportunity:"Build digital enrollment funnel with pricing shown upfront" },
-      { pain_point:"Sugar Hill has zero NAEYC-accredited centers", opportunity:"Commit to NAEYC pathway from Day 1 — becomes marketing anchor within 18 months" },
+      { pain_point:"Infant waitlists at premium centers are 8–12 weeks",                 opportunity:"Open with 18 dedicated infant slots — address #1 market pain point at launch" },
+      { pain_point:"Parents want transparent online enrollment — most require in-person tours", opportunity:"Build digital enrollment funnel with pricing shown upfront; 10-min online application" },
+      { pain_point:"Sugar Hill has zero NAEYC-accredited centers",                       opportunity:"Commit to NAEYC pathway Day 1 — becomes marketing anchor within 18 months" },
+      { pain_point:"KinderCare and Sunshine Academy have 40–48% staff turnover/yr",      opportunity:"Lead with teacher retention story: above-market pay, development budget, <20% target turnover" },
+      { pain_point:"No competitor accepts CAPS subsidy in Suwanee north corridor",       opportunity:"CAPS enrollment expands accessible market 15–25% with no discounting or margin compression" },
     ],
-    differentiation_strategy: ["Premium infant/toddler program — highest gap, highest margin, lowest competition","NAEYC accreditation commitment — first in Sugar Hill","Online enrollment + transparent pricing page — removes #1 parent friction","CACFP-enrolled + CAPS-accepting — expands accessible market without discounting"],
+    differentiation_strategy: [
+      "Premium infant/toddler program — highest gap (53pt), highest margin, lowest local competition",
+      "NAEYC accreditation commitment — first in Sugar Hill; 18-month milestone; use as primary marketing hook",
+      "Online enrollment + transparent pricing page — removes #1 parent friction point identified in competitor audit",
+      "CACFP-enrolled + CAPS-accepting — expands accessible market without discounting premium tiers",
+      "Teacher excellence: above-market wages, CDA sponsorship, targeting <20% annual turnover vs 45% industry avg",
+    ],
+    win_loss: [
+      { scenario:"Parent choosing between Bright Futures and Primrose (Suwanee)", likely_win:true,  reason:"Our center opens without 8-week waitlist; NAEYC pathway; 7% lower infant tuition" },
+      { scenario:"Parent choosing between Bright Futures and KinderCare",         likely_win:true,  reason:"Better curriculum (Reggio vs corporate), NAEYC pathway, higher staff retention story" },
+      { scenario:"Parent requiring subsidy (CAPS)",                               likely_win:true,  reason:"Only CAPS-enrolled center in Suwanee corridor" },
+      { scenario:"Corporate employee with Bright Horizons benefit",               likely_win:false, reason:"Bright Horizons has corporate employer contracts we cannot match in Year 1" },
+    ],
     messaging_guide: [
-      { segment:"Dual-income professional parents", message:"Your infant deserves the same quality investment as your home. Suwanee's first NAEYC-pathway center — with transparent pricing starting at $2,050/month." },
+      { segment:"Dual-income professional parents", message:"Your infant deserves the same quality investment as your home. Suwanee's first NAEYC-pathway center — transparent pricing starting at $2,050/month, zero waitlist at launch." },
       { segment:"Working parents needing subsidy", message:"CAPS-enrolled and CACFP-certified. Quality care that works with your budget — apply in 10 minutes online." },
+      { segment:"Corporate relocation families",   message:"Moving to Suwanee Tech Park? We partner with area employers and offer corporate priority enrollment for new families." },
     ],
   },
 },
@@ -8845,7 +9021,16 @@ const DEMO_DATA = {
       { name:"Primrose Schools (Franchise)", type:"Buy-Franchise", fee_upfront:75000, royalty_pct:7, pros:["National brand","Established curriculum","Referral network"], cons:["$75k upfront + 7% royalty","Restricted territory","Corporate oversight"], recommendation:"Not recommended — royalty cost not justified in under-served market where independent can build own waitlist" },
       { name:"Acquire Existing Center", type:"Buy-Acquisition", fee_upfront:null, royalty_pct:0, pros:["Existing enrollment = Day 1 revenue","No DECAL licensing wait"], cons:["Premium 3–5× EBITDA multiples for quality centers","Takes on existing staff and lease"], recommendation:"Conditional — pursue if distressed center available at 2–3× EBITDA; otherwise Build" },
     ],
-    comparison_table: [],
+    comparison_table: [
+      { metric:"Upfront Capital Required",   build:"$526,500 (30% equity)",        franchise:"$600k–$675k (75k fee + build)", acquisition:"$350k–$500k (3–5× EBITDA)" },
+      { metric:"Time to First Revenue",      build:"14–18 months",                  franchise:"10–14 months (brand recognition)", acquisition:"Day 1 (existing enrollment)" },
+      { metric:"Year 2 Net Income (base)",   build:"$182,000",                      franchise:"~$140k (after 7% royalty)",        acquisition:"Varies — depends on purchase price" },
+      { metric:"10-Year Cumulative Profit",  build:"~$2.4M",                        franchise:"~$1.7M (royalties reduce margin)", acquisition:"~$2.1M (depends on price paid)" },
+      { metric:"Brand Equity at Year 3",     build:"Local + NAEYC-accredited",      franchise:"National Primrose brand",           acquisition:"Inherited brand (quality variable)" },
+      { metric:"Operational Control",        build:"Full — no restrictions",        franchise:"Limited by franchisor standards",   acquisition:"Full after transition period" },
+      { metric:"DECAL Licensing Wait",       build:"12–16 months",                  franchise:"10–14 months (franchise support)",  acquisition:"None — existing license transfers" },
+      { metric:"Our Recommendation",         build:"✓ RECOMMENDED",                 franchise:"Not recommended",                   acquisition:"Conditional on price" },
+    ],
     decision_matrix: [
       { criterion:"Upfront cost",     build_score:8, franchise_score:4, acquisition_score:6 },
       { criterion:"Time to revenue",  build_score:6, franchise_score:7, acquisition_score:9 },
@@ -8858,21 +9043,287 @@ const DEMO_DATA = {
   },
 },
 
+// ── AGENT 9 — Business Plan ───────────────────────────────
+9: {
+  daycare: {
+    business_name: "Bright Futures Early Learning Center",
+    entity_type: "LLC",
+    owner_placeholder: "[Owner Name]",
+    executive_summary: {
+      concept: "Bright Futures Early Learning Center is a premium, Reggio Emilia-inspired childcare and early education center in Suwanee, GA, offering full-day programs for infants through Pre-K. Our 8,200-square-foot facility provides 75 licensed slots across 6 age-differentiated classrooms, with child-to-teacher ratios exceeding state minimums. We serve dual-income professional families in Gwinnett County's highest-income submarket — households earning $100k+ who currently face 8–14 week waitlists at competing centers.",
+      opportunity: "Gwinnett County has 4,200+ working families with children under 5 and only 2,340 licensed slots within 10 miles of ZIP 30097 — a verified childcare desert per NDCP 2024 data. Sugar Hill and Suwanee lead the corridor in population growth (+18% and +12% over 5 years), with median household incomes of $98k–$112k supporting premium tuition. Three of the top 5 competitors operate at 95%+ capacity with documented waitlists.",
+      ask: "Total capital: $526,500 (30% equity / 70% SBA 7(a) loan at 7.5%). Use of funds: build-out $228K · FF&E $92K · playground $48K · working capital 9 months $103K · licensing/legal $28K · marketing $15K · tech $12K. Projected 3-year ROI: 42%. Break-even at 58% enrollment (month 16).",
+    },
+    company_overview: {
+      mission: "To nurture every child's full potential through inquiry-based learning, genuine relationships, and an environment designed for wonder — so that working families can pursue their careers with complete peace of mind.",
+      vision: "To become the childcare provider of choice in Gwinnett County's northern corridor, recognized for measurable school-readiness outcomes, transparent communication, and a waitlist that proves demand.",
+      values: [
+        "Whole-Child Development: We address cognitive, social-emotional, and physical growth in every daily experience",
+        "Radical Transparency: Parents receive daily digital updates, open-door access, and financial clarity",
+        "Teacher Excellence: Above-market wages and professional development to achieve <20% annual turnover vs 45% industry average",
+        "Community Partnership: Collaborate with Gwinnett County Schools, DECAL, and local pediatricians"
+      ],
+      legal_structure: "Georgia Limited Liability Company (LLC). Registered with Georgia SOS. EIN obtained. Converting to multi-member LLC upon equity partner entry.",
+      location_rationale: "Suwanee, GA scored highest (92/100) in site analysis: $112,400 median household income, 74% working-parent concentration, 7.3% under-5 population, 12.4% 5-year population growth, and gap score 8.9/10 — the highest in the corridor. The target pad at 2847 Lawrenceville-Suwanee Rd offers existing commercial shell, adequate parking, C-2 zoning clearance, and $35/sqft TI allowance.",
+      services: [
+        { name: "Infant Program (6 wk – 11 mo)", capacity: 12, ratio: "1:4", monthly_tuition: 2350, annual_revenue: 338400, description: "Full-day care with sensory-rich environment, individualized feeding/sleep schedules, daily photo updates via Brightwheel" },
+        { name: "Toddler Program (12 – 23 mo)", capacity: 12, ratio: "1:6", monthly_tuition: 2050, annual_revenue: 295200, description: "Language-rich program with Reggio provocation stations, outdoor play twice daily, music and movement" },
+        { name: "Preschool 1 (age 2–3)", capacity: 14, ratio: "1:7", monthly_tuition: 1850, annual_revenue: 310800, description: "Project-based learning with literacy foundations, emergent curriculum, dedicated outdoor classroom access" },
+        { name: "Preschool 2 (age 3–4)", capacity: 14, ratio: "1:10", monthly_tuition: 1750, annual_revenue: 294000, description: "Pre-reading, STEM explorations, social skill development with kindergarten-readiness progress reports" },
+        { name: "Pre-K (age 4–5)", capacity: 16, ratio: "1:10", monthly_tuition: 1650, annual_revenue: 316800, description: "Georgia Pre-K program eligible. Structured literacy, numeracy, full-day format with school-readiness assessment" },
+      ],
+    },
+    market_analysis: {
+      target_market: "Primary customer: dual-income professional households in Gwinnett County's northern corridor earning $90k–$130k annually, typically aged 28–42 with one or two children under 5. These parents prioritize educational quality, digital transparency (app updates), and reliable hours over cost. Currently underserved — nearest rated childcare has a 14-week infant waitlist. Secondary market: corporate relocations to Suwanee Technology Park and Sugar Hill housing developments adding 800+ units/year.",
+      market_size: {
+        total_addressable: "47,200 households within 25 miles with children 0–5 (Census ACS 2023). At $20K avg annual spend, TAM = $944M/year.",
+        serviceable: "12,400 households within 10 miles in $90k+ income bracket willing to pay premium tuition. SAM = $248M/year.",
+        target_share: "75-slot center at 90% utilization = $1.38M/year revenue. Represents 0.56% of SAM — achievable given demonstrated demand gap.",
+      },
+      competitor_comparison: [
+        { name: "Primrose School of Suwanee", locations: 1, monthly_primary_rate: 2200, rating: 4.7, waitlist: true, our_advantage: "Match Primrose quality at 7% lower infant tuition, add Brightwheel digital transparency, no current waitlist at opening" },
+        { name: "Learning Experience (Duluth)", locations: 1, monthly_primary_rate: 1950, rating: 4.2, waitlist: false, our_advantage: "Reggio curriculum vs corporate TLE approach; our Suwanee location 7 miles closer to target ZIP" },
+        { name: "KinderCare Sugar Hill", locations: 1, monthly_primary_rate: 1850, rating: 3.9, waitlist: false, our_advantage: "Higher teacher ratios, above-market pay cutting turnover (KinderCare 48% vs our target 20%)" },
+        { name: "Sunshine House (Buford)", locations: 2, monthly_primary_rate: 1700, rating: 4.0, waitlist: false, our_advantage: "Premium positioning — not competing for price-sensitive segment; 15 miles closer to Suwanee corridor" },
+      ],
+      differentiators: [
+        "Reggio Emilia-inspired curriculum with digital learning portfolios shared via Brightwheel — measurable school-readiness outcomes",
+        "Above-market teacher pay ($18-22/hr vs $14-16/hr market) targeting <20% turnover vs 45% industry average",
+        "Real-time parent app with photo updates, daily reports, electronic invoicing — 94% parent satisfaction at comparable centers",
+        "NAEYC accreditation pathway beginning Month 6 — premium market signal",
+        "Partner pediatrician for monthly developmental screenings included in tuition",
+        "Phased enrollment with pre-enrollment waitlist strategy before opening day",
+      ],
+      trends: [
+        "Georgia added 94,000 jobs in 2024 (BLS) — dual-income household formation rising, increasing childcare demand",
+        "NDCP 2024: 49% of Gwinnett County ZIP codes are childcare deserts — supply has not kept pace with growth",
+        "SBA 7(a) approval rate for childcare businesses: 78% (vs 68% all industries) per SBA FY2024 data",
+        "Post-COVID: 71% of working mothers cite childcare quality as primary factor in returning to work (McKinsey 2024)",
+        "Georgia Pre-K expansion adds $4,000/year/child subsidy available to qualifying centers",
+      ],
+    },
+    financial_plan: {
+      startup_capital_needed: 526500,
+      use_of_funds: [
+        { category: "Leasehold Improvement / Build-Out", amount: 228000, pct: 43 },
+        { category: "Furniture, Fixtures & Equipment (FF&E)", amount: 92000, pct: 17 },
+        { category: "Playground Equipment", amount: 48000, pct: 9 },
+        { category: "Working Capital (9 months)", amount: 103500, pct: 20 },
+        { category: "Licensing, Permits & Legal", amount: 28000, pct: 5 },
+        { category: "Marketing & Pre-Enrollment", amount: 15000, pct: 3 },
+        { category: "Technology & Software", amount: 12000, pct: 2 },
+      ],
+      funding_sources: [
+        { source: "Owner Equity", amount: 157950, pct: 30, type: "Equity" },
+        { source: "SBA 7(a) Loan (10-year, 7.5%)", amount: 368550, pct: 70, type: "Debt" },
+      ],
+      year1_projections:  { revenue: 830400,  gross_profit: 664320,  operating_expenses: 602800, ebitda: 61520,  net_income: 27600  },
+      year2_projections:  { revenue: 1242000, gross_profit: 993600,  operating_expenses: 632400, ebitda: 361200, net_income: 279000 },
+      year3_projections:  { revenue: 1386000, gross_profit: 1108800, operating_expenses: 648900, ebitda: 459900, net_income: 371400 },
+      breakeven_analysis: "Month 16 at 58% enrollment (44 of 75 slots). Requires: 6 infants, 8 toddlers, 12 preschool, 10 pre-K, 8 school-age.",
+      debt_service_coverage: "DSCR 1.42 at Year 2 base case — exceeds SBA minimum of 1.25",
+      collateral: "SBA 7(a): personal guarantee, equipment lien ($140K FF&E), lease assignment. Owner primary residence equity ($180K) as additional collateral.",
+    },
+    operations_plan: {
+      facility: {
+        total_sqft: 8200, indoor_sqft_per_child: 38, outdoor_sqft_per_child: 82,
+        rooms: [
+          { name: "Infant Suite A", capacity: 6, ratio: "1:4", sqft: 420, equipment: "4 cribs, changing station, feeding chairs, sensory mat, baby monitor" },
+          { name: "Infant Suite B", capacity: 6, ratio: "1:4", sqft: 420, equipment: "4 cribs, changing station, feeding chairs, sensory mat" },
+          { name: "Toddler Room", capacity: 12, ratio: "1:6", sqft: 720, equipment: "Low shelving, dramatic play, art table, outdoor door" },
+          { name: "Preschool A (2-3 yr)", capacity: 14, ratio: "1:7", sqft: 820, equipment: "6 interest centers, reading corner, sensory table, smart display" },
+          { name: "Preschool B (3-4 yr)", capacity: 14, ratio: "1:10", sqft: 780, equipment: "Project tables, science center, block area, smart display" },
+          { name: "Pre-K Room (4-5 yr)", capacity: 16, ratio: "1:10", sqft: 940, equipment: "5 student tables, whiteboard, reading library, 4 computer stations" },
+        ],
+      },
+      hours: "Monday–Friday 6:30 AM – 6:30 PM",
+      staffing_plan: [
+        { role: "Center Director", count: 1, annual_salary: 68000, qualifications: "BA in ECE + 2 yrs director experience (DECAL requirement)" },
+        { role: "Lead Teacher", count: 5, annual_salary: 48000, qualifications: "CDA or AA in ECE" },
+        { role: "Assistant Teacher", count: 8, annual_salary: 36000, qualifications: "HS diploma + CDA in progress" },
+        { role: "Cook / Nutrition Aide", count: 1, annual_salary: 34000, qualifications: "ServSafe certified, CACFP training" },
+        { role: "Administrative Assistant", count: 1, annual_salary: 38000, qualifications: "Office experience, Brightwheel proficiency" },
+      ],
+      curriculum: "Reggio Emilia-inspired emergent curriculum with GELDS alignment. Monthly theme projects documented in digital portfolios. Annual ASQ-3 developmental screenings.",
+      technology: ["Brightwheel (parent communication, check-in/out, billing)", "Procare (center management, DECAL compliance)", "4-camera IP security with parent app access", "Amazon Echo Dot for classroom music/timers"],
+    },
+    sba_narrative: {
+      loan_purpose: "SBA 7(a) $368,550 for leasehold improvements, FF&E, playground, and working capital to open a licensed childcare center in Suwanee, GA addressing a verified childcare desert.",
+      owner_experience: "Owner brings management experience and has completed Georgia SBDC childcare entrepreneurship program. Director hire brings 8 years DECAL-licensed center experience.",
+      repayment_source: "Annual debt service: $54,200 (10-year term, 7.5%). Covered by Year 2 projected EBITDA of $361,200 (DSCR 1.42).",
+      collateral_offered: "Personal guarantee. Equipment lien on $140K assets. Lease assignment to SBA.",
+    },
+    investor_slides: [
+      { slide: 1, title: "The Problem", content: "49% of Gwinnett County ZIP codes are childcare deserts. 4,200+ working families — no licensed slot available within 10 miles." },
+      { slide: 2, title: "The Opportunity", content: "$526K investment → $1.38M/year revenue at capacity. 42% 3-year ROI. Break-even month 16." },
+      { slide: 3, title: "Why Now?", content: "Sugar Hill +18% population growth. SBA 7(a) approvals at 78% for childcare. Competitor waitlists proving unmet demand." },
+      { slide: 4, title: "The Business", content: "75-slot premium center, Suwanee GA. Reggio curriculum, 6 age-differentiated classrooms. $112K median household income market." },
+      { slide: 5, title: "Financial Highlights", content: "Year 1: $830K revenue | Year 2: $1.24M | Year 3: $1.39M. DSCR 1.42 at Year 2." },
+    ],
+  },
+},
+
+// ── AGENT 10 — Project Plan ───────────────────────────────
+10: {
+  daycare: {
+    project_name: "Bright Futures Early Learning Center — Launch Plan",
+    total_duration_months: 18,
+    target_open_date: "Month 19 from project start",
+    phases: [
+      {
+        phase: "Phase 1: Foundation & Funding",
+        months: "1-3",
+        color: "#4a9eff",
+        tasks: [
+          { task: "Form Georgia LLC", month_start: 1, duration: 0.5, owner: "Owner", priority: "Critical", cost: 150, detail: "File Articles of Organization at sos.ga.gov ($100 fee). Draft operating agreement. Appoint registered agent.", links: ["https://sos.ga.gov/page/business-formation"] },
+          { task: "Obtain EIN from IRS", month_start: 1, duration: 0.25, owner: "Owner", priority: "Critical", cost: 0, detail: "Apply online at IRS.gov — free, instant. Required for banking and SBA loan.", links: ["https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online"] },
+          { task: "Open Business Bank Account", month_start: 1, duration: 0.5, owner: "Owner", priority: "Critical", cost: 0, detail: "Truist or Regions preferred (active SBA lenders in Gwinnett). Bring LLC docs, EIN, photo ID.", links: [] },
+          { task: "Engage SBA Lender — Pre-Qualification", month_start: 1, duration: 2, owner: "Owner + CPA", priority: "Critical", cost: 0, detail: "Contact Live Oak Bank (childcare specialist), Truist SBA, or Regions. Submit personal financial statement, credit check, business plan draft.", links: ["https://www.liveoak.bank", "https://www.truist.com/loans/small-business/sba"] },
+          { task: "Hire CPA (Childcare Experience)", month_start: 1, duration: 1, owner: "Owner", priority: "High", cost: 3600, detail: "Annual engagement. Childcare industry experience required. Prepare financial projections for SBA, set up QuickBooks.", links: [] },
+          { task: "Hire Attorney (Business + Real Estate)", month_start: 1, duration: 1, owner: "Owner", priority: "High", cost: 5000, detail: "Review lease, LLC docs, employment agreements. Gwinnett County experience preferred.", links: [] },
+          { task: "Engage Commercial Real Estate Broker", month_start: 1, duration: 1, owner: "Owner", priority: "Critical", cost: 0, detail: "Broker commission paid by landlord. Specify: childcare use, C-1/C-2 zoning, 6,500–9,000 sqft, outdoor play space, Suwanee/Sugar Hill target.", links: ["https://www.loopnet.com", "https://www.crexi.com"] },
+          { task: "DECAL Pre-Application Consultation", month_start: 2, duration: 1, owner: "Owner + DECAL Consultant", priority: "Critical", cost: 1500, detail: "Hire DECAL consultant before signing lease. Review floor plan concept against Rules Chapter 591-1. Prevents costly mistakes.", links: ["https://decal.ga.gov"] },
+          { task: "SBA Loan Package Submission", month_start: 2, duration: 2, owner: "Owner + CPA + Attorney", priority: "Critical", cost: 0, detail: "Submit full SBA 7(a) package: Form 1919, Form 413, business plan, projections, personal returns, credit auth, lease LOI.", links: ["https://www.sba.gov/document/sba-form-1919-borrower-information-form"] },
+          { task: "Letter of Intent on Target Lease", month_start: 2, duration: 0.5, owner: "Owner + Broker + Attorney", priority: "Critical", cost: 500, detail: "Non-binding LOI. Negotiate: 5-year lease + 2 five-year options, $35/sqft TI allowance, 3-month free rent.", links: [] },
+        ],
+      },
+      {
+        phase: "Phase 2: Legal, Lease & Design",
+        months: "3-6",
+        color: "#3dd68c",
+        tasks: [
+          { task: "Execute Commercial Lease", month_start: 3, duration: 0.5, owner: "Owner + Attorney", priority: "Critical", cost: 42000, detail: "Sign lease. Pay security deposit (3 months) + first/last month rent. Confirm TI allowance in writing.", links: [] },
+          { task: "Hire Licensed Architect", month_start: 3, duration: 1, owner: "Owner", priority: "Critical", cost: 18000, detail: "Must be familiar with Georgia childcare licensing — 35 sqft/child indoor, 75 sqft/child outdoor, fire egress, handwashing stations.", links: [] },
+          { task: "Apply for Building Permit", month_start: 4, duration: 1, owner: "Architect + Owner", priority: "Critical", cost: 3500, detail: "Submit to Gwinnett County building department. Change-of-occupancy permits take 4-6 weeks. Start ASAP.", links: [] },
+          { task: "Zoning Certificate / Use Permit", month_start: 3, duration: 1, owner: "Owner + Attorney", priority: "Critical", cost: 500, detail: "Confirm childcare use permitted at specific address. Gwinnett County: 678-518-6000.", links: ["https://www.gwinnettcounty.com"] },
+          { task: "Collect 2-3 Construction Bids", month_start: 4, duration: 1, owner: "Owner", priority: "Critical", cost: 0, detail: "Provide architect drawings to 3 licensed GCs. Specify: HVAC zoning, diaper stations, commercial kitchen, playground prep.", links: [] },
+          { task: "Order Playground Equipment", month_start: 5, duration: 2, owner: "Owner", priority: "High", cost: 48000, detail: "Lead time: 8-12 weeks. ASTM F1487 safety standards required. Vendors: Playworld, Landscape Structures, GameTime.", links: ["https://www.playworld.com"] },
+          { task: "DECAL Pre-Application Submission", month_start: 5, duration: 1, owner: "Owner + Consultant", priority: "Critical", cost: 50, detail: "Submit Form 282 to DECAL: business ownership, location, age groups, capacity, director info.", links: ["https://decal.ga.gov/BftS/Home.aspx"] },
+        ],
+      },
+      {
+        phase: "Phase 3: Construction & Licensing",
+        months: "6-12",
+        color: "#f5a623",
+        tasks: [
+          { task: "Construction / Build-Out", month_start: 6, duration: 4, owner: "General Contractor", priority: "Critical", cost: 185000, detail: "Typical 14-18 weeks. Monitor weekly. Key: rough-in (week 4), drywall (week 8), paint/flooring (week 12), punch list (week 16).", links: [] },
+          { task: "Background Checks — All Staff", month_start: 7, duration: 2, owner: "Owner + Director", priority: "Critical", cost: 60, detail: "FBI + GBI fingerprinting for all owners, director, teachers, assistants. ~3 weeks processing. Cogent Systems (DECAL approved).", links: ["https://decal.ga.gov"] },
+          { task: "Hire Center Director", month_start: 7, duration: 2, owner: "Owner", priority: "Critical", cost: 0, detail: "Must hold BA in ECE + 2 years director experience OR CDA + 5 years. DECAL lists director on license. Recruit via Indeed, LinkedIn, Georgia ECE boards.", links: ["https://www.indeed.com"] },
+          { task: "DECAL Full Application", month_start: 8, duration: 2, owner: "Owner + Director + Consultant", priority: "Critical", cost: 500, detail: "Complete Form 282: director credentials, staff list, background checks, insurance proof, approved floor plan, zoning. Pay license fee $50.", links: ["https://decal.ga.gov/BftS/Home.aspx"] },
+          { task: "Fire Marshal Inspection", month_start: 10, duration: 1, owner: "Owner + Contractor", priority: "Critical", cost: 0, detail: "Schedule after construction complete. Check: egress routes, fire suppression, extinguishers, smoke detectors, exit signage.", links: [] },
+          { task: "Purchase Indoor FF&E", month_start: 9, duration: 2, owner: "Owner + Director", priority: "High", cost: 92000, detail: "Source: Whitney Brothers, Lakeshore Learning, Kaplan Early Learning. Budget by room: Infant $18K, Toddler $14K, Preschool $12K×2, Pre-K $12K×2.", links: ["https://www.whitneybros.com", "https://www.lakeshorelearning.com"] },
+        ],
+      },
+      {
+        phase: "Phase 4: Staffing & Pre-Opening",
+        months: "12-16",
+        color: "#b45cf4",
+        tasks: [
+          { task: "Hire Lead Teachers (5)", month_start: 12, duration: 2, owner: "Director", priority: "Critical", cost: 0, detail: "Target: CDA or AA in ECE. Post on Indeed, Georgia ECE job boards, local college career centers. $48K base salary.", links: [] },
+          { task: "Hire Assistant Teachers (8)", month_start: 12, duration: 2, owner: "Director", priority: "Critical", cost: 0, detail: "HS diploma + CDA in progress. $36K base salary. Offer CDA sponsorship as retention incentive.", links: [] },
+          { task: "Pre-Enrollment Marketing Campaign", month_start: 13, duration: 3, owner: "Owner", priority: "High", cost: 8000, detail: "Facebook/Instagram ads targeting Suwanee parents. Google My Business setup. Neighborhood placard campaign. Target: 40+ pre-enrolled families.", links: [] },
+          { task: "Staff Training — DECAL Orientation", month_start: 14, duration: 2, owner: "Director", priority: "Critical", cost: 2000, detail: "DECAL pre-service training: CPR/First Aid, Universal Precautions, Shaken Baby Syndrome. All staff must complete before opening.", links: ["https://decal.ga.gov"] },
+          { task: "Brightwheel / Procare Setup", month_start: 14, duration: 1, owner: "Admin", priority: "High", cost: 3600, detail: "Set up parent accounts, billing schedules, classroom management. Run test billing cycle.", links: ["https://www.mybrightwheel.com"] },
+          { task: "DECAL License Issuance", month_start: 15, duration: 1, owner: "Owner + DECAL", priority: "Critical", cost: 0, detail: "Expect DECAL to issue license within 30 days of final inspection approval. Keep copy posted at entry per GA rules.", links: [] },
+        ],
+      },
+      {
+        phase: "Phase 5: Soft Open & Ramp",
+        months: "16-18",
+        color: "#22c55e",
+        tasks: [
+          { task: "Soft Opening — 40% Capacity", month_start: 16, duration: 1, owner: "Director + Owner", priority: "Critical", cost: 0, detail: "Open with pre-enrolled families only. Limit to ~30 children for first 2 weeks. Iron out operational workflows.", links: [] },
+          { task: "First Parent Communication", month_start: 16, duration: 0.25, owner: "Director", priority: "High", cost: 0, detail: "Send welcome packet via Brightwheel. Include: daily schedule, meal menu, curriculum overview, emergency contact forms.", links: [] },
+          { task: "CACFP Enrollment", month_start: 16, duration: 1, owner: "Cook + Director", priority: "High", cost: 0, detail: "Apply for Child and Adult Care Food Program reimbursement. Adds ~$18K/year for meals. Contact Georgia Department of Education.", links: ["https://www.gadoe.org/nutrition"] },
+          { task: "Ramp to 75% Capacity", month_start: 17, duration: 2, owner: "Director + Owner", priority: "High", cost: 0, detail: "Enroll from pre-registration list. Target 56 children by end of Month 18. Begin waitlist.", links: [] },
+          { task: "NAEYC Accreditation Application", month_start: 18, duration: 1, owner: "Director", priority: "Medium", cost: 1000, detail: "Submit NAEYC self-study application. Process takes 12-18 months. Premium market signal — commands 8-12% tuition premium.", links: ["https://www.naeyc.org/accreditation"] },
+        ],
+      },
+    ],
+    milestones: [
+      { month: "Month 1",  title: "Entity Formation Complete",     detail: "LLC formed, EIN obtained, bank account open, SBA lender engaged", owner: "Owner",          priority: "critical" },
+      { month: "Month 2",  title: "SBA Loan Package Submitted",    detail: "Full 7(a) package submitted — Form 1919, 413, projections, LOI", owner: "Owner + CPA",    priority: "critical" },
+      { month: "Month 3",  title: "Lease Signed + Architect Hired", detail: "Commercial lease executed, architect retained, building permit submitted", owner: "Owner", priority: "critical" },
+      { month: "Month 5",  title: "SBA Loan Approved",             detail: "SBA approval received, loan closes, funds available", owner: "Lender",          priority: "critical" },
+      { month: "Month 6",  title: "Construction Begins",           detail: "GC mobilizes, build-out underway, playground order placed",        owner: "GC",             priority: "critical" },
+      { month: "Month 10", title: "Construction Complete",         detail: "Building ready, fire marshal inspection passed, health inspection passed", owner: "Owner",  priority: "critical" },
+      { month: "Month 12", title: "Hiring Phase Begins",           detail: "Director hired, teacher recruiting active, DECAL application submitted", owner: "Owner",   priority: "critical" },
+      { month: "Month 15", title: "DECAL License Issued",          detail: "State childcare license received — legally permitted to operate",  owner: "DECAL",          priority: "critical" },
+      { month: "Month 16", title: "Soft Open — 40% Capacity",      detail: "30 children enrolled, staff trained, billing system live",        owner: "Director",       priority: "critical" },
+      { month: "Month 18", title: "Full Ramp — 75% Capacity Target",detail: "56+ children enrolled, CACFP active, NAEYC application submitted", owner: "Owner",       priority: "high"     },
+    ],
+    budget_tracker: [
+      { category: "Leasehold Improvement",   budgeted: 228000, actual: 0, variance: 228000, status: "Pending" },
+      { category: "FF&E (Furniture/Fixtures)", budgeted: 92000, actual: 0, variance: 92000, status: "Pending" },
+      { category: "Playground Equipment",    budgeted: 48000,  actual: 0, variance: 48000,  status: "Pending" },
+      { category: "Working Capital Reserve", budgeted: 103500, actual: 0, variance: 103500, status: "Pending" },
+      { category: "Legal / Permits",         budgeted: 28000,  actual: 0, variance: 28000,  status: "Pending" },
+      { category: "Marketing (Pre-Open)",    budgeted: 15000,  actual: 0, variance: 15000,  status: "Pending" },
+      { category: "Technology / Software",   budgeted: 12000,  actual: 0, variance: 12000,  status: "Pending" },
+    ],
+    risk_register: [
+      { risk: "SBA Loan Delayed > 90 days",         probability: "Medium", impact: "High",   mitigation: "Start SBA process Month 1. Parallel-path USDA loan or equipment financing as backup.", owner: "Owner" },
+      { risk: "Construction Cost Overrun > 15%",    probability: "Medium", impact: "High",   mitigation: "AIA contract with fixed-price bid. 10% contingency in budget. Weekly GC check-ins.", owner: "Owner + GC" },
+      { risk: "DECAL License Delay",                probability: "Low",    impact: "Critical",mitigation: "Hire DECAL consultant Month 2. Submit application Month 8. Allow 30-day buffer.", owner: "Owner + Consultant" },
+      { risk: "Director Hire Takes > 3 Months",     probability: "Medium", impact: "High",   mitigation: "Start recruiting Month 7. Use staffing agency. Maintain temp director option via DECAL waiver.", owner: "Owner" },
+      { risk: "Pre-Enrollment < 30 Families",       probability: "Low",    impact: "Medium", mitigation: "Launch marketing Month 13. Target $8K paid social campaign. Offer founding-family discount.", owner: "Owner" },
+      { risk: "Lease TI Allowance Clawback",        probability: "Low",    impact: "Medium", mitigation: "Attorney reviews TI terms before signing. Ensure TI is non-recourse on lease termination.", owner: "Attorney" },
+    ],
+    team_vendors: [
+      { role: "SBA Lender", vendor: "Live Oak Bank", contact: "1-866-518-0286", url: "https://www.liveoak.bank", phase: "Month 1" },
+      { role: "CPA (Childcare)", vendor: "Local CPA TBD", contact: "Georgia Society of CPAs referral: 404-231-8676", url: "https://www.gscpa.org", phase: "Month 1" },
+      { role: "Real Estate Broker", vendor: "Gwinnett Commercial Brokers", contact: "Via LoopNet referral", url: "https://www.loopnet.com", phase: "Month 1" },
+      { role: "DECAL Consultant", vendor: "Georgia Childcare Consulting LLC", contact: "See DECAL vendor list", url: "https://decal.ga.gov", phase: "Month 2" },
+      { role: "Architect", vendor: "Local architect with childcare experience", contact: "AIA Georgia referral: 404-253-2453", url: "https://www.aiaatlanta.com", phase: "Month 3" },
+      { role: "General Contractor", vendor: "Competitive bid — 3 quotes required", contact: "Via sos.ga.gov license verification", url: "https://sos.ga.gov", phase: "Month 5" },
+      { role: "Playground Equipment", vendor: "Playworld / Landscape Structures", contact: "1-800-233-4080", url: "https://www.playworld.com", phase: "Month 5" },
+      { role: "Center Management Software", vendor: "Brightwheel + Procare", contact: "support@mybrightwheel.com", url: "https://www.mybrightwheel.com", phase: "Month 14" },
+    ],
+    checklist_phases: [
+      { phase: "Pre-Opening Legal", items: ["LLC filed ✓","EIN obtained ✓","Bank account open ✓","SBA loan approved ✓","Commercial lease signed ✓","Business insurance (GL + property) ✓","DECAL license issued ✓"] },
+      { phase: "Facility Readiness", items: ["Building permit approved ✓","Construction complete ✓","Fire marshal inspection passed ✓","Health department inspection passed ✓","Playground installed + safety audit ✓","All FF&E delivered + installed ✓"] },
+      { phase: "Staffing & Compliance", items: ["Director hired + credentialed ✓","All staff background checks complete ✓","CPR/First Aid certified — all staff ✓","Staff DECAL orientation complete ✓","Student-teacher ratios verified ✓"] },
+      { phase: "Operations Ready", items: ["Brightwheel configured + tested ✓","Procare billing tested ✓","CACFP enrollment submitted ✓","Daily schedule finalized ✓","Parent handbook distributed ✓","Emergency procedures posted ✓"] },
+    ],
+  },
+},
+
 // ── AGENT 17 — Sources & Citations ───────────────────────
 17: {
   daycare: {
     summary: "Source review complete across all 17 agents. 94% of factual claims are sourced to verifiable public data (Census, BLS, DECAL, USDA). 6 claims flagged as AI-estimated and clearly labeled. No fabricated business names, addresses, or statistics detected. Citation quality score: 88/100.",
-    all_sources: [
-      { agent:"Agent 1", source:"US Census ACS 2023 1-year estimates", url:"https://data.census.gov", type:"Government" },
-      { agent:"Agent 1", source:"BLS QCEW Q3 2024", url:"https://www.bls.gov/cew/", type:"Government" },
-      { agent:"Agent 5", source:"DECAL Child Care Licensing Rules", url:"https://decal.ga.gov", type:"Government" },
-      { agent:"Agent 6", source:"DECAL Licensed Facility Search", url:"https://www.decal.ga.gov/Search/PublicFacilitySearch", type:"Government" },
-      { agent:"Agent 7", source:"SBA 7(a) Loan Program Guidelines", url:"https://www.sba.gov", type:"Government" },
-      { agent:"Agent 8", source:"NDCP State Fact Sheets 2024", url:"https://www.childcaredeserts.org", type:"Research" },
+    data_sources: [
+      { category: "Demographics", source: "US Census ACS 2023 1-year estimates (Tables B01001, B19013, B23025)", url: "https://data.census.gov", agent: "Agent 1", data_used: "Population by age group, household income, employment status for ZIP codes in analysis radius", last_updated: "2023 (ACS 1-year)", reliability: "High" },
+      { category: "Demographics", source: "BLS Quarterly Census of Employment and Wages (QCEW) Q3 2024", url: "https://www.bls.gov/cew/", agent: "Agent 1", data_used: "Local employment levels, wage data for Gwinnett/Hall Counties", last_updated: "Q3 2024", reliability: "High" },
+      { category: "Demographics", source: "Census Population Estimates Program (PEP) 2023", url: "https://www.census.gov/programs-surveys/popest.html", agent: "Agent 1", data_used: "Annual population estimates, growth rates 2020–2023", last_updated: "2023", reliability: "High" },
+      { category: "Compliance & Licensing", source: "DECAL Child Care Licensing Rules (Chapter 591-1-1)", url: "https://decal.ga.gov", agent: "Agent 5", data_used: "Physical space requirements, staff ratios, director qualifications, application process", last_updated: "2024", reliability: "High" },
+      { category: "Compliance & Licensing", source: "Gwinnett County Zoning Ordinance", url: "https://www.gwinnettcounty.com", agent: "Agent 5", data_used: "C-1/C-2 zoning requirements for childcare use, outdoor space requirements", last_updated: "2024", reliability: "High" },
+      { category: "Competitive Intelligence", source: "DECAL Licensed Facility Public Search", url: "https://www.decal.ga.gov/Search/PublicFacilitySearch", agent: "Agent 6", data_used: "Licensed childcare provider count, capacity, location within 25-mile radius of ZIP 30097", last_updated: "January 2025", reliability: "High" },
+      { category: "Competitive Intelligence", source: "Google Maps / Winnie childcare marketplace", url: "https://www.winniehq.com", agent: "Agent 6", data_used: "Competitor tuition rates, Google ratings, waitlist status", last_updated: "January 2025", reliability: "Medium" },
+      { category: "Financial", source: "SBA 7(a) Loan Program Guidelines FY2024", url: "https://www.sba.gov/funding-programs/loans/7a-loans", agent: "Agent 7", data_used: "Loan terms, approval rates, collateral requirements for childcare businesses", last_updated: "FY2024", reliability: "High" },
+      { category: "Financial", source: "National Childcare Association Financial Benchmarks 2024", url: "https://www.naccrra.org", agent: "Agent 7", data_used: "Industry-standard labor cost ratios (65-70% of revenue), typical startup cost ranges", last_updated: "2024", reliability: "Medium" },
+      { category: "Market Research", source: "National Day Care & Pre-school Statistics (NDCP) State Fact Sheets 2024", url: "https://www.childcaredeserts.org", agent: "Agent 8", data_used: "Childcare desert designation for Gwinnett County ZIPs, licensed slot vs demand gap data", last_updated: "2024", reliability: "High" },
+      { category: "Funding & Grants", source: "USDA CACFP Program Guidelines", url: "https://www.fns.usda.gov/cacfp", agent: "Agent 12", data_used: "Child and Adult Care Food Program reimbursement rates, eligibility criteria", last_updated: "FY2025", reliability: "High" },
+      { category: "Funding & Grants", source: "Georgia Department of Early Care and Learning Grant Portal", url: "https://decal.ga.gov/Bft/Grants.aspx", agent: "Agent 12", data_used: "Available state grants for new childcare centers, application requirements", last_updated: "2024", reliability: "High" },
     ],
-    unverified_claims: [
-      { agent:"Agent 4", claim:"LoopNet listing monthly rents are estimates based on market comparables", suggested_action:"Verify with listing broker before signing LOI" },
-      { agent:"Agent 6", claim:"Competitor tuition rates are based on public Winnie/Google listing data and may not reflect current pricing", suggested_action:"Call each competitor to confirm current infant and preschool rates" },
+    data_quality_notes: [
+      { note: "Competitor tuition rates sourced from Winnie/Google public listings — may not reflect current pricing. Verify by calling each center directly.", severity: "Warning" },
+      { note: "Real estate rental rates are LoopNet market estimates — actual rates depend on lease negotiation. Verify with listing broker before LOI.", severity: "Warning" },
+      { note: "Population growth projections beyond 5 years are extrapolated from historical Census PEP data — treat as directional, not precise.", severity: "Info" },
+      { note: "SBA approval rate (78%) is national average for childcare — individual approval depends on applicant creditworthiness and business plan quality.", severity: "Info" },
+    ],
+    sourced_claims: [
+      { claim: "Median household income in Suwanee GA: $112,400", source: "US Census ACS 2023", verifiable: true },
+      { claim: "49% of Gwinnett County ZIP codes are childcare deserts", source: "NDCP State Fact Sheets 2024", verifiable: true },
+      { claim: "Sugar Hill 5-year population growth: +18.2%", source: "Census PEP 2023", verifiable: true },
+      { claim: "SBA 7(a) approval rate for childcare businesses: 78%", source: "SBA FY2024 Annual Report", verifiable: true },
+      { claim: "DECAL requires 35 sqft/child indoor, 75 sqft/child outdoor", source: "DECAL Rules Chapter 591-1-1", verifiable: true },
+      { claim: "Georgia Pre-K program adds $4,000/year/child subsidy", source: "Georgia DOE Pre-K Program", verifiable: true },
+    ],
+    unable_to_source: [
+      { claim: "Competitor waitlist lengths (8-14 weeks for infants)", reason: "AI estimate based on Google review analysis and reported anecdotal data — not from a verified public dataset", agent: "Agent 6 — Competitive Intel" },
+      { claim: "Working parent concentration: 74% in Suwanee", reason: "Derived estimate combining Census B23025 (employment status) + B11003 (family composition) — not a direct Census figure", agent: "Agent 1 — Demographics" },
+      { claim: "Industry teacher turnover rate: 45%", reason: "National industry estimate from multiple advocacy reports — no single authoritative dataset", agent: "Agent 9 — Business Plan" },
     ],
     citation_quality_score: 88,
   },
@@ -9351,7 +9802,12 @@ function _showLocalGuide() {
   const panel = $('localGuidePanel');
   if (!panel) return;
   const prov = provider ? provider() : ($('providerSelect')?.value || '');
-  panel.style.display = prov === 'openai_compat' ? 'block' : 'none';
+  const show = prov === 'openai_compat';
+  panel.style.display = show ? 'block' : 'none';
+  if (show) {
+    _detectOllamaModelsClassic();
+    _detectOpenRouterModelsClassic();
+  }
 }
 
 // Patch onProviderChange to also show/hide the guide
@@ -9364,6 +9820,145 @@ function _showLocalGuide() {
     };
   });
 })();
+
+// ── Classic View: Ollama ──────────────────────────────────
+
+async function _detectOllamaModelsClassic() {
+  const btn    = document.getElementById('cl-ollama-btn');
+  const status = document.getElementById('cl-ollama-status');
+  const sel    = document.getElementById('cl-ollama-model-sel');
+  try {
+    const r = await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(1500) });
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    const models = (data.models || []).map(m => m.name);
+    if (models.length) {
+      if (sel) {
+        sel.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
+        const saved = localStorage.getItem('v2_model') || '';
+        if (models.includes(saved)) sel.value = saved;
+      }
+      if (btn) { btn.disabled = false; btn.title = `Ollama running · ${models.length} model(s)`; }
+      if (status) status.innerHTML = `<span style="color:#22c55e">● running</span> · ${models.length} model(s)`;
+    } else {
+      throw new Error('no models');
+    }
+  } catch {
+    if (status) status.innerHTML = `<span style="color:#ef4444">● not detected</span> · <a href="https://ollama.com" target="_blank" style="color:inherit">install ollama.com</a>`;
+  }
+}
+
+function _applyOllamaPresetClassic() {
+  const sel = document.getElementById('cl-ollama-model-sel');
+  const model = sel?.value || 'llama3';
+  const url = 'http://localhost:11434/v1/chat/completions';
+
+  const provEl   = document.getElementById('providerSelect');
+  const urlEl    = document.getElementById('customUrlInput');
+  const modelEl  = document.getElementById('modelInput');
+  const keyEl    = document.getElementById('apiKey');
+
+  if (provEl)  provEl.value  = 'openai_compat';
+  if (urlEl)   urlEl.value   = url;
+  if (modelEl) modelEl.value = model;
+  if (keyEl)   keyEl.value   = 'ollama';
+
+  localStorage.setItem('v2_provider',   'openai_compat');
+  localStorage.setItem('v2_custom_url', url);
+  localStorage.setItem('v2_model',      model);
+  localStorage.setItem('v2_apikey',     'ollama');
+
+  if (typeof onProviderChange === 'function') onProviderChange();
+
+  // Visual feedback
+  const btn = document.getElementById('cl-ollama-btn');
+  if (btn) { const orig = btn.textContent; btn.textContent = '✓ Applied!'; setTimeout(() => btn.textContent = orig, 1800); }
+}
+
+// ── Classic View: OpenRouter ──────────────────────────────
+
+const _CL_OR_DEFAULTS = [
+  { id: 'meta-llama/llama-3.3-70b-instruct:free',    name: 'Llama 3.3 70B' },
+  { id: 'nousresearch/hermes-3-llama-3.1-405b:free', name: 'Hermes 3 405B' },
+  { id: 'nvidia/nemotron-3-super-120b-a12b:free',    name: 'Nemotron 120B' },
+  { id: 'openai/gpt-oss-120b:free',                  name: 'GPT-OSS 120B' },
+  { id: 'google/gemma-4-31b-it:free',                name: 'Gemma 4 31B' },
+  { id: 'qwen/qwen3-coder:free',                     name: 'Qwen3 Coder' },
+  { id: 'meta-llama/llama-3.2-3b-instruct:free',     name: 'Llama 3.2 3B (fast)' },
+];
+
+async function _detectOpenRouterModelsClassic() {
+  const sel    = document.getElementById('cl-or-model-sel');
+  const status = document.getElementById('cl-or-status');
+  const btn    = document.getElementById('cl-or-btn');
+  const ki     = document.getElementById('cl-or-key-input');
+  if (!sel) return;
+
+  const savedKey   = localStorage.getItem('v2_or_apikey') || '';
+  const savedModel = localStorage.getItem('v2_or_model') || _CL_OR_DEFAULTS[0].id;
+  if (ki) ki.value = savedKey;
+
+  sel.innerHTML = _CL_OR_DEFAULTS.map(m =>
+    `<option value="${m.id}"${m.id === savedModel ? ' selected' : ''}>${m.name}</option>`
+  ).join('');
+  if (savedKey && btn) btn.disabled = false;
+
+  try {
+    const r = await fetch('https://openrouter.ai/api/v1/models', { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    const free = (d.data || [])
+      .filter(m => m.pricing?.prompt === '0' && m.pricing?.completion === '0' && m.id.endsWith(':free'))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (free.length) {
+      sel.innerHTML = free.map(m =>
+        `<option value="${m.id}"${m.id === savedModel ? ' selected' : ''}>${m.name} (${m.id.split('/')[0]})</option>`
+      ).join('');
+      if (status) status.innerHTML = `<span style="color:#22c55e">● ${free.length} free models available</span>`;
+    }
+  } catch {
+    if (status) status.innerHTML = `<span style="color:#94a3b8">● ${_CL_OR_DEFAULTS.length} curated free models</span>`;
+  }
+}
+
+function _orKeyInputClassic() {
+  const ki  = document.getElementById('cl-or-key-input');
+  const btn = document.getElementById('cl-or-btn');
+  if (btn) btn.disabled = !(ki?.value.trim());
+}
+
+function _applyOpenRouterPresetClassic() {
+  const ki    = document.getElementById('cl-or-key-input');
+  const sel   = document.getElementById('cl-or-model-sel');
+  const key   = ki?.value.trim() || '';
+  const model = sel?.value || _CL_OR_DEFAULTS[0].id;
+  if (!key) { alert('⚠️ Enter your OpenRouter API key first'); return; }
+
+  const url = 'https://openrouter.ai/api/v1/chat/completions';
+
+  const provEl   = document.getElementById('providerSelect');
+  const urlEl    = document.getElementById('customUrlInput');
+  const modelEl  = document.getElementById('modelInput');
+  const keyEl    = document.getElementById('apiKey');
+
+  if (provEl)  provEl.value  = 'openai_compat';
+  if (urlEl)   urlEl.value   = url;
+  if (modelEl) modelEl.value = model;
+  if (keyEl)   keyEl.value   = key;
+
+  localStorage.setItem('v2_provider',   'openai_compat');
+  localStorage.setItem('v2_custom_url', url);
+  localStorage.setItem('v2_model',      model);
+  localStorage.setItem('v2_apikey',     key);
+  localStorage.setItem('v2_or_apikey',  key);
+  localStorage.setItem('v2_or_model',   model);
+
+  if (typeof onProviderChange === 'function') onProviderChange();
+
+  // Visual feedback
+  const btn = document.getElementById('cl-or-btn');
+  if (btn) { const orig = btn.textContent; btn.textContent = '✓ Applied!'; setTimeout(() => btn.textContent = orig, 1800); }
+}
 
 // ── Data Freshness Badge ──────────────────────────────────
 /**

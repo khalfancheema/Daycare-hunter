@@ -371,6 +371,21 @@ function getDemoData(agentNum, industry) {
           top_complaint_themes: ['Understaffed','High turnover','Mediocre curriculum'],
           sample_complaints: ['3 different teachers in 6 months', 'Feels like a warehouse, not a school'],
           differentiation_opportunity: 'Low-ratio classrooms and NAEYC accreditation' },
+        { name: "Mary's Family Daycare", type: 'Home-based', avg_rating: 4.8, review_count_est: 18, monthly_primary_rate: 950,
+          monthly_secondary_rate: 850, strengths: ['Personalized care (6 children max)', 'Flexible hours 6am-7pm', 'Accepts CAPS subsidy', 'High parent trust'], weaknesses: ['No structured curriculum', 'Single provider = closure risk', 'Limited capacity'],
+          differentiator: 'Lowest cost option in market — direct competition for budget-conscious families and subsidy recipients.',
+          accepts_subsidy: true, capacity_est: 6
+        },
+        { name: 'Grace Community Church Childcare', type: 'Faith-based Non-profit', avg_rating: 4.5, review_count_est: 62, monthly_primary_rate: 875,
+          monthly_secondary_rate: 775, strengths: ['Community trust & long-standing reputation', 'CAPS-accepting', 'Sliding scale pricing', 'Strong volunteer support'], weaknesses: ['Limited hours (7am-6pm)', 'Older facility', 'No NAEYC accreditation'],
+          differentiator: 'Faith-based mission draws strong community loyalty; pricing 50% below premium centers creates distinct market segment.',
+          accepts_subsidy: true, capacity_est: 48
+        },
+        { name: 'Gwinnett Head Start Program', type: 'Government/Non-profit', avg_rating: 4.1, review_count_est: 95, monthly_primary_rate: 0,
+          monthly_secondary_rate: 0, strengths: ['Free for income-qualified families', 'Comprehensive wraparound services', 'Federal quality standards'], weaknesses: ['Income-restricted eligibility', 'Part-day program only (typically 3.5hrs)', 'Competitive for slots'],
+          differentiator: 'Serves lowest-income bracket — not direct revenue competition, but captures 8-12% of potential market through income qualification.',
+          accepts_subsidy: true, capacity_est: 120
+        },
       ],
       pain_point_analysis: [
         { pain: 'Rigid pick-up/drop-off windows (no flexibility for working parents)', frequency_pct: 68, your_solution: 'Flexible 7am–7pm hours with 30-min grace windows', marketing_angle: 'Built for the real working parent' },

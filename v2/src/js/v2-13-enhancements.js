@@ -1299,15 +1299,6 @@ function v2CloseModal(id) {
       riskPanel.insertAdjacentHTML('beforeend', v2RenderRiskScored());
     }
 
-    // 7. Enhance header with export/save buttons
-    const dashHeader = wrap.querySelector('.v2-dash-header');
-    if (dashHeader && !dashHeader.querySelector('.v2-export-dashboard-btn')) {
-      dashHeader.insertAdjacentHTML('beforeend', `
-        <div class="v2-dash-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-          <button class="v2-btn ghost sm v2-export-dashboard-btn" onclick="v2ExportDashboardHTML()">📥 Export HTML</button>
-          <button class="v2-btn ghost sm" onclick="v2ExportSBAPackage()">📋 SBA Package</button>
-          <button class="v2-btn ghost sm" onclick="v2SaveSearch()">🔖 Save Search</button>
-        </div>`);
-    }
+    // 7. Export/save buttons now live in the ··· More overflow menu (v2-06-dashboard.js)
   };
 })();

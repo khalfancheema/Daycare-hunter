@@ -60,9 +60,20 @@ SEARCH QUERIES TO EXECUTE:
 - Google: "${ind.unit} [city name] waitlist"
 - Google: "${ind.unit} tuition [city name] [state]"
 
-For each city, find the ACTUAL names and addresses of competitors.
+For each city, find the ACTUAL names and addresses of ALL competitor types — include ALL of the following, not just premium chains:
+- Premium chains (Primrose, KinderCare, Bright Horizons, Goddard)
+- Independent licensed centers (private, non-franchise)
+- Home-based / family daycares (licensed, typically 6–12 children)
+- Faith-based / church-run childcare programs
+- Non-profit childcare centers
+- Head Start / Early Head Start programs (federally subsidized)
+- Subsidized / CCAP-accepting centers (lower income brackets)
+- Employer-sponsored or campus-based centers
+- Childcare co-ops (parent-run or community-run)
+- After-school and school-age care programs (SACC)
+
 Include gap_score_explanation (cite specific numbers and sources).
-Note accreditation status, QRIS rating, and whether center is chain/independent/non-profit/faith-based/employer-sponsored.
+Note accreditation status, QRIS rating, provider_type (Premium/Budget/Subsidized/Home-based/Faith-based/Non-profit), and whether center accepts CCAP/CAPS subsidies.
 
 Return ONLY this JSON:
 {
@@ -113,22 +124,67 @@ Return ONLY this JSON:
           "google_maps_url": "https://maps.google.com/?q=KinderCare+City+A+GA",
           "yelp_url": "", "winnie_url": "",
           "notes": "90 capacity, currently enrolling, 3-star QRIS"
+        },
+        {
+          "name": "Mary's Home Daycare", "address": "789 Elm St, City A, GA",
+          "rating": 4.7, "review_count": 28, "type": "Home-based", "provider_type": "Home-based/Budget", "nonprofit": false,
+          "capacity_est": 8, "monthly_rate_est": 950,
+          "accreditation": "None", "qris_stars": 2,
+          "accepts_subsidy": true, "waitlist_weeks": 0, "currently_enrolling": true,
+          "google_maps_url": "", "yelp_url": "", "winnie_url": "",
+          "notes": "Licensed home daycare, 8 capacity, CAPS-accepting, flexible hours, $950/mo"
+        },
+        {
+          "name": "Grace Church Early Learning", "address": "101 Oak Rd, City A, GA",
+          "rating": 4.5, "review_count": 45, "type": "Faith-based", "provider_type": "Faith-based/Budget", "nonprofit": true,
+          "capacity_est": 40, "monthly_rate_est": 850,
+          "accreditation": "None", "qris_stars": 3,
+          "accepts_subsidy": true, "waitlist_weeks": 2, "currently_enrolling": true,
+          "google_maps_url": "", "yelp_url": "", "winnie_url": "",
+          "notes": "Church-run, 40 capacity, CAPS-accepting, $850/mo — direct competition for budget-conscious families"
         }
       ]
     }
   ],
   "top_chains": [
     {
-      "name": "Competitor A", "locations_in_area": 4,
+      "name": "Competitor A (Premium)", "locations_in_area": 4,
       "monthly_tuition_range": "$1,600–$2,100", "rating": 4.1,
-      "type": "Chain", "nonprofit": false, "market_share_pct": 22,
-      "naeyc_accredited": true, "employer_partnerships": true,
+      "type": "Chain", "provider_type": "Premium", "nonprofit": false, "market_share_pct": 22,
+      "accepts_subsidy": false, "naeyc_accredited": true, "employer_partnerships": true,
       "strengths": "Brand recognition, employer subsidies, NAEYC accreditation",
       "weaknesses": "Premium pricing, rigid curriculum, long waitlists"
+    },
+    {
+      "name": "Local Home Daycare Network", "locations_in_area": 12,
+      "monthly_tuition_range": "$800–$1,200", "rating": 4.3,
+      "type": "Home-based", "provider_type": "Home-based/Budget", "nonprofit": false, "market_share_pct": 15,
+      "accepts_subsidy": true, "naeyc_accredited": false, "employer_partnerships": false,
+      "strengths": "Low cost, flexible hours, personalized care, subsidy-friendly",
+      "weaknesses": "Small capacity (6–12), limited structured curriculum, licensing varies"
+    },
+    {
+      "name": "First Baptist Childcare Center", "locations_in_area": 2,
+      "monthly_tuition_range": "$700–$1,000", "rating": 4.5,
+      "type": "Faith-based", "provider_type": "Faith-based/Budget", "nonprofit": true, "market_share_pct": 8,
+      "accepts_subsidy": true, "naeyc_accredited": false, "employer_partnerships": false,
+      "strengths": "Community trust, low cost, faith-based values, CAPS-accepting",
+      "weaknesses": "Limited capacity, may have religious enrollment preference"
+    },
+    {
+      "name": "Head Start Program — [County]", "locations_in_area": 3,
+      "monthly_tuition_range": "$0 (income-qualified)", "rating": 4.0,
+      "type": "Government/Non-profit", "provider_type": "Subsidized", "nonprofit": true, "market_share_pct": 10,
+      "accepts_subsidy": true, "naeyc_accredited": false, "employer_partnerships": false,
+      "strengths": "Free for qualifying families, comprehensive services (health, nutrition, family support)",
+      "weaknesses": "Income-limited, part-day only in many sites, waitlist for slots"
     }
   ],
+  "home_daycares_estimated": 20,
+  "faith_based_count": 4,
+  "subsidized_seats_total": 180,
   "competitive_intensity_score": 6,
-  "market_structure_note": "Fragmented market — 4 chains (55% market share) + 6 independents + 1 non-profit Head Start program"
+  "market_structure_note": "Fragmented market — 4 chains (35% share) + 8 independents + 12 home daycares + 2 faith-based + 1 Head Start program"
 }
 
 Replace ALL example values with real search data for ZIP ${zip()}.

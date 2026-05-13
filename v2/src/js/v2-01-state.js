@@ -80,6 +80,38 @@ function v2GoTo(screen) {
   if (screen === 'wizard' && typeof v2CheckWizardDraft === 'function') v2CheckWizardDraft();
 }
 
+// ── SETTINGS DROPDOWN ─────────────────────────────────────────────────────
+function v2ToggleSettingsMenu() {
+  const menu = document.getElementById('v2-settings-menu');
+  if (!menu) return;
+  const isOpen = menu.classList.toggle('open');
+  // Close more menus when settings opens
+  document.querySelectorAll('.v2-more-menu.open').forEach(m => m.classList.remove('open'));
+}
+function v2CloseSettingsMenu() {
+  const menu = document.getElementById('v2-settings-menu');
+  if (menu) menu.classList.remove('open');
+}
+
+// ── MORE / OVERFLOW DROPDOWN ───────────────────────────────────────────────
+function v2ToggleMoreMenu(btn) {
+  const wrap = btn?.closest('.v2-more-wrap');
+  const menu = wrap?.querySelector('.v2-more-menu');
+  if (!menu) return;
+  const isOpen = menu.classList.toggle('open');
+  // Close settings when more opens
+  if (isOpen) document.getElementById('v2-settings-menu')?.classList.remove('open');
+}
+function v2CloseMoreMenus() {
+  document.querySelectorAll('.v2-more-menu.open').forEach(m => m.classList.remove('open'));
+}
+
+// Close all dropdowns on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#v2-settings-wrap')) v2CloseSettingsMenu();
+  if (!e.target.closest('.v2-more-wrap')) v2CloseMoreMenus();
+}, true);
+
 function v2ToggleMobileNav() {
   const nav = document.getElementById('v2-mobile-nav');
   const btn = document.getElementById('v2-ham-btn');
@@ -112,10 +144,54 @@ function v2Toast(msg, ms = 2800) {
 function v2ShowDetail()  { v2GoTo('traditional'); }
 function v2HideDetail()  { v2GoTo('dashboard'); }
 
+// Global abort controller — created fresh each pipeline run, aborted on stop
+window._v2AbortCtrl = new AbortController();
+
 function v2StopPipeline() {
+  // 1. Signal pipeline loop to exit at next checkpoint
   stopRequested = true;
+  running = false;
+
+  // 2. Abort any in-flight API fetch immediately
+  if (window._v2AbortCtrl) {
+    window._v2AbortCtrl.abort();
+    window._v2AbortCtrl = new AbortController(); // fresh for next run
+  }
+
+  // 3. Visual feedback
   const btn = document.getElementById('v2-copilot-stop');
-  if (btn) { btn.textContent = 'Stopping…'; btn.disabled = true; }
+  if (btn) { btn.textContent = '⬛ Stopped'; btn.disabled = true; }
+
+  // 4. Reset classic pipeline UI state
+  const runBtn = document.getElementById('runBtn');
+  if (runBtn) runBtn.disabled = false;
+  const stopBtn = document.getElementById('stopBtn');
+  if (stopBtn) { stopBtn.style.display = 'none'; stopBtn.disabled = false; stopBtn.textContent = '⬛ Stop'; }
+  const orchStatus = document.getElementById('orchStatus');
+  if (orchStatus) orchStatus.textContent = 'stopped';
+
+  // 5. Navigate to partial dashboard if results exist, else back to wizard
+  // Give pipeline ~800ms to bail out of current agent before reading R
+  setTimeout(() => {
+    if (btn) btn.disabled = false;
+    const hasResults = typeof R !== 'undefined' && Object.keys(R).length > 0;
+    if (hasResults) {
+      // Mark all still-pending agents as skipped
+      if (typeof V2_AGENTS !== 'undefined') {
+        V2_AGENTS.forEach(a => {
+          const row = document.getElementById(`v2-ar-${a.id}`);
+          if (row && !row.classList.contains('done') && !row.classList.contains('error')) {
+            if (typeof v2UpdateAgentRow === 'function') v2UpdateAgentRow(a.id, 'error');
+          }
+        });
+      }
+      v2Toast('⬛ Stopped — showing partial results');
+      if (typeof v2GoToDashboard === 'function') v2GoToDashboard();
+    } else {
+      v2GoTo('wizard');
+      v2Toast('⬛ Analysis stopped — no results yet');
+    }
+  }, 800);
 }
 
 function v2ShowApiKey() {
