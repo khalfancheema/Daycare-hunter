@@ -31,23 +31,51 @@ function v2RenderDashboard(run) {
   const offset  = circ * (1 - score / 100);
   const ringColor = score >= 70 ? '#22c55e' : score >= 45 ? '#f59e0b' : '#ef4444';
 
+  // Build verdict signal chips from available data
+  const a1 = R.a1 || {}, a6 = R.a6 || {}, a7 = R.a7 || {}, a2 = R.a2 || {};
+  const signals = [];
+  if (a1.median_income > 100000) signals.push({cls:'green', txt:`💰 $${Math.round(a1.median_income/1000)}K median income`});
+  if (a2.gap_score >= 7) signals.push({cls:'green', txt:`📈 Gap score ${a2.gap_score}/10`});
+  else if (a2.gap_score >= 4) signals.push({cls:'amber', txt:`📊 Gap score ${a2.gap_score}/10`});
+  if (a1.dual_income_pct >= 65) signals.push({cls:'green', txt:`👔 ${a1.dual_income_pct}% dual income`});
+  if (a6.total_licensed_estimated) signals.push({cls:'blue', txt:`🏫 ${a6.total_licensed_estimated} licensed competitors`});
+  if (a7.break_even_month) {
+    const beClass = a7.break_even_month <= 18 ? 'green' : a7.break_even_month <= 30 ? 'amber' : 'red';
+    signals.push({cls: beClass, txt: `⏱ Break-even mo. ${a7.break_even_month}`});
+  }
+  if (a1.population_under_6) signals.push({cls:'blue', txt:`👶 ${(a1.population_under_6/1000).toFixed(1)}K children <6`});
+  const sigHtml = signals.length ? `<div class="v2-verdict-signals">${signals.map(s=>`<span class="v2-vsig ${s.cls}">${s.txt}</span>`).join('')}</div>` : '';
+
+  // Confidence bar
+  const confidence = Math.min(95, 50 + score * 0.45);
+  const confColor = score >= 70 ? '#22c55e' : score >= 45 ? '#f59e0b' : '#ef4444';
+
   const ring = `
     <svg width="130" height="130" viewBox="0 0 130 130" style="display:block">
       <circle class="v2-score-ring-bg" cx="65" cy="65" r="54"/>
       <circle class="v2-score-ring-fill" cx="65" cy="65" r="54"
         stroke="${ringColor}" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"
-        style="transform:rotate(-90deg);transform-origin:center"/>
+        style="--ring-target:${offset.toFixed(1)};transform:rotate(-90deg);transform-origin:center"/>
     </svg>
     <div class="v2-score-num">
-      <span class="big" style="color:${ringColor}">${score}</span>
+      <span class="big v2-score-counter" data-target="${score}" style="color:${ringColor}">0</span>
       <span class="small">/100</span>
     </div>`;
 
   wrap.innerHTML = `
     <div class="v2-dash-header">
-      <div>
+      <div style="min-width:0;flex:1">
         <div class="v2-dash-title">${ind.emoji} ${ind.label} Analysis</div>
-        <div class="v2-dash-meta">ZIP ${run.zip} · ${run.radius} mi radius · $${parseInt(run.budget||0).toLocaleString()} budget · ${new Date(run.ts||Date.now()).toLocaleDateString()}</div>
+        <div class="v2-dash-meta" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px">
+          <span>📍 ZIP ${run.zip}</span>
+          <span style="color:var(--v2-border2)">·</span>
+          <span>📐 ${run.radius} mi</span>
+          <span style="color:var(--v2-border2)">·</span>
+          <span>💵 $${parseInt(run.budget||0).toLocaleString()}</span>
+          <span style="color:var(--v2-border2)">·</span>
+          <span>🗓 ${new Date(run.ts||Date.now()).toLocaleDateString()}</span>
+          <span class="v2-badge" style="background:var(--v2-s4);font-size:10px;padding:2px 8px">17 agents</span>
+        </div>
       </div>
       <div class="v2-dash-actions">
         <button class="v2-btn ghost sm" onclick="v2ExportAll()" title="Export full pipeline as JSON">⬇ Export</button>
@@ -74,33 +102,49 @@ function v2RenderDashboard(run) {
     </div>
 
     <div class="v2-verdict-banner ${verdict.colorClass}">
-      <div class="v2-verdict-icon">${verdict.icon}</div>
+      <div class="v2-verdict-icon" style="font-size:32px;flex-shrink:0">${verdict.icon}</div>
       <div class="v2-verdict-text">
-        <h3>${verdict.title}</h3>
-        <p>${verdict.summary}</p>
+        <h3 style="margin:0 0 4px;font-size:18px;font-weight:800">${verdict.title}${verdict.colorClass==='go'?' <span class="v2-go-sparkle">✨</span>':''}</h3>
+        <p style="margin:0;color:var(--v2-t2);font-size:13px;line-height:1.5">${verdict.summary}</p>
+        ${sigHtml}
+        <div class="v2-verdict-confidence">
+          <span>Confidence</span>
+          <div class="v2-verdict-confidence-bar">
+            <div class="v2-verdict-confidence-fill" style="width:${confidence}%;--bar-w:${confidence}%;background:${confColor}"></div>
+          </div>
+          <span style="color:var(--v2-t1);font-weight:800">${confidence.toFixed(0)}%</span>
+        </div>
       </div>
-      <div class="v2-verdict-cta">
-        <span class="v2-badge ${verdict.colorClass==='go'?'green':verdict.colorClass==='caution'?'amber':'red'}" style="font-size:13px;padding:6px 14px">${verdict.label}</span>
+      <div class="v2-verdict-cta" style="flex-shrink:0">
+        <span class="v2-badge ${verdict.colorClass==='go'?'green':verdict.colorClass==='caution'?'amber':'red'}" style="font-size:14px;padding:8px 18px;font-weight:900">${verdict.label}</span>
       </div>
     </div>
 
     <div class="v2-metrics-row">
       <div class="v2-card glow v2-score-card">
         <div class="v2-score-ring-wrap">${ring}</div>
-        <div class="v2-score-verdict" style="color:${ringColor}">${verdict.title}</div>
-        <div class="v2-score-reason">Gap · Financials · Verdict · Competition · Compliance</div>
+        <div class="v2-score-verdict" style="color:${ringColor};font-size:20px">${verdict.title}</div>
+        <div class="v2-score-reason" style="font-size:11px;margin-top:4px">Gap · Financials · Verdict<br>Competition · Compliance</div>
         ${v2RenderScoreBreakdown()}
       </div>
-      <div class="v2-card" style="padding:20px">
-        <div class="v2-label" style="margin-bottom:14px">Key Metrics</div>
+      <div class="v2-card" style="padding:20px;min-width:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div class="v2-label">Key Metrics</div>
+          <div style="font-size:11px;color:var(--v2-t3)">17 agents · live data</div>
+        </div>
         <div class="v2-kpi-grid">
-          ${kpis.map(k=>`
-            <div class="v2-kpi">
+          ${kpis.map((k,i)=>{
+            const trend = k.trend || '';
+            const trendHtml = trend ? `<div class="v2-kpi-trend ${k.trendDir||'flat'}">${trend}</div>` : '';
+            const ctx = k.context ? `<div class="v2-kpi-context">${k.context}</div>` : '';
+            return `<div class="v2-kpi" style="animation-delay:${(i+1)*0.07}s">
               <div class="v2-kpi-ico">${k.ico}</div>
               <div class="v2-kpi-val">${k.val}</div>
               <div class="v2-kpi-lbl">${k.lbl}</div>
-            </div>`).join('')}
-          ${!kpis.length?'<div style="color:var(--v2-t3);font-size:13px;padding:12px">Run the pipeline to see metrics</div>':''}
+              ${trendHtml}${ctx}
+            </div>`;
+          }).join('')}
+          ${!kpis.length?'<div style="color:var(--v2-t3);font-size:13px;padding:12px">Run pipeline to see metrics</div>':''}
         </div>
       </div>
     </div>
@@ -206,6 +250,35 @@ function v2RenderDashboard(run) {
       </div>
     </div>
   `;
+
+  // ── Post-render animations ───────────────────────────────────────────────
+  requestAnimationFrame(() => {
+    // 1. Score counter count-up
+    const counter = wrap.querySelector('.v2-score-counter');
+    if (counter) {
+      const target = parseInt(counter.dataset.target || 0);
+      const dur = 900, start = performance.now();
+      const tick = (now) => {
+        const t = Math.min(1, (now - start) / dur);
+        const ease = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+        counter.textContent = Math.round(target * ease);
+        if (t < 1) requestAnimationFrame(tick);
+        else counter.textContent = target;
+      };
+      requestAnimationFrame(tick);
+    }
+    // 2. Animate score breakdown bars
+    setTimeout(() => {
+      wrap.querySelectorAll('.v2-sb-bar-fill, .v2-stat-bar-fill').forEach(el => {
+        const w = el.style.width;
+        el.style.width = '0';
+        requestAnimationFrame(() => {
+          el.style.transition = 'width 0.8s cubic-bezier(.4,0,.2,1)';
+          el.style.width = w;
+        });
+      });
+    }, 450);
+  });
 }
 
 // ── SCORE BREAKDOWN ───────────────────────────────────────────────────────

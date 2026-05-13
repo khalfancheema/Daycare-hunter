@@ -1867,6 +1867,249 @@ div > .v2-ind-category-label:first-of-type { margin-top: 0; border-top: none; }
   .v2-score-ring-fill { transition-duration: 0ms; }
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   JAZZ — animations, hover lift, shimmer, glow, counter, content-rich
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Core keyframes ─────────────────────────────────────────────────── */
+@keyframes v2FadeUp    { from { opacity:0; transform:translateY(18px) } to { opacity:1; transform:translateY(0) } }
+@keyframes v2FadeIn    { from { opacity:0 } to { opacity:1 } }
+@keyframes v2ScaleIn   { from { opacity:0; transform:scale(0.88) } to { opacity:1; transform:scale(1) } }
+@keyframes v2SlideLeft { from { opacity:0; transform:translateX(-12px) } to { opacity:1; transform:translateX(0) } }
+@keyframes v2Shimmer   { 0% { background-position:-200% center } 100% { background-position:200% center } }
+@keyframes v2PulseRing { 0%,100% { box-shadow:0 0 0 0 rgba(99,102,241,0) } 50% { box-shadow:0 0 0 10px rgba(99,102,241,0.12) } }
+@keyframes v2GlowGo    { 0%,100% { box-shadow:0 0 0 0 rgba(34,197,94,0) } 50% { box-shadow:0 0 24px 4px rgba(34,197,94,0.15) } }
+@keyframes v2GlowAmber { 0%,100% { box-shadow:0 0 0 0 rgba(245,158,11,0) } 50% { box-shadow:0 0 24px 4px rgba(245,158,11,0.12) } }
+@keyframes v2Bounce    { 0%,100% { transform:translateY(0) } 40% { transform:translateY(-5px) } 65% { transform:translateY(-2px) } }
+@keyframes v2Spin      { to { transform:rotate(360deg) } }
+@keyframes v2RingDraw  {
+  from { stroke-dashoffset: 339.3 }
+  to   { stroke-dashoffset: var(--ring-target, 0) }
+}
+@keyframes v2BarFill   { from { width:0 } to { width:var(--bar-w,100%) } }
+@keyframes v2CountUp   { from { opacity:0; transform:scale(0.8) } to { opacity:1; transform:scale(1) } }
+@keyframes v2Sparkle {
+  0%   { opacity:0; transform:scale(0) rotate(0deg) }
+  50%  { opacity:1; transform:scale(1.2) rotate(180deg) }
+  100% { opacity:0; transform:scale(0) rotate(360deg) }
+}
+@keyframes v2TabSlide { from { transform:scaleX(0) } to { transform:scaleX(1) } }
+@keyframes v2SidebarIn { from { opacity:0; transform:translateX(-10px) } to { opacity:1; transform:translateX(0) } }
+@keyframes v2FloatBob  { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-6px) } }
+
+/* ── Dashboard entrance ─────────────────────────────────────────────── */
+.v2-dash-header   { animation: v2FadeUp .35s var(--ease-out) both; }
+.v2-verdict-banner { animation: v2FadeUp .4s var(--ease-out) .05s both; }
+.v2-metrics-row   { animation: v2FadeUp .45s var(--ease-out) .1s both; }
+.v2-dash-tabs-wrap { animation: v2FadeUp .4s var(--ease-out) .15s both; }
+.v2-dash-panel    { animation: v2FadeIn .3s var(--ease-out) both; }
+
+/* ── Verdict banner glow ────────────────────────────────────────────── */
+.v2-verdict-banner.go     { animation: v2FadeUp .4s var(--ease-out) .05s both, v2GlowGo 3.5s ease-in-out 1s infinite; }
+.v2-verdict-banner.caution{ animation: v2FadeUp .4s var(--ease-out) .05s both, v2GlowAmber 3.5s ease-in-out 1s infinite; }
+
+/* ── Score ring animated draw ───────────────────────────────────────── */
+.v2-score-ring-fill {
+  animation: v2RingDraw 1.4s cubic-bezier(.25,.46,.45,.94) .3s both;
+  stroke-dashoffset: var(--ring-target, 0);
+}
+.v2-score-ring-wrap { animation: v2ScaleIn .5s var(--ease-out) .2s both; }
+
+/* ── KPI cards ──────────────────────────────────────────────────────── */
+.v2-kpi {
+  position: relative; overflow: hidden;
+  transition: transform .2s var(--ease-out), border-color .18s, box-shadow .2s;
+}
+.v2-kpi::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--v2-grad); opacity: 0;
+  transition: opacity .3s;
+  border-radius: inherit; pointer-events: none;
+}
+@media (hover:hover) and (pointer:fine) {
+  .v2-kpi:hover { transform: translateY(-4px); border-color: var(--v2-border2); box-shadow: 0 10px 32px rgba(0,0,0,.4); }
+  .v2-kpi:hover::before { opacity: .04; }
+}
+.v2-kpi { animation: v2FadeUp .4s var(--ease-out) both; }
+.v2-kpi:nth-child(1) { animation-delay: .15s; }
+.v2-kpi:nth-child(2) { animation-delay: .20s; }
+.v2-kpi:nth-child(3) { animation-delay: .25s; }
+.v2-kpi:nth-child(4) { animation-delay: .30s; }
+.v2-kpi:nth-child(5) { animation-delay: .35s; }
+
+/* KPI value count-up pop */
+.v2-kpi-val { animation: v2CountUp .5s var(--ease-out) .25s both; }
+
+/* Trend badge on KPI */
+.v2-kpi-trend {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11px; font-weight: 700; margin-top: 5px;
+  padding: 2px 7px; border-radius: 20px;
+}
+.v2-kpi-trend.up   { color: var(--v2-green); background: rgba(34,197,94,.12); }
+.v2-kpi-trend.down { color: var(--v2-red);   background: rgba(239,68,68,.12); }
+.v2-kpi-trend.flat { color: var(--v2-t2);    background: var(--v2-s4); }
+.v2-kpi-context { font-size: 10px; color: var(--v2-t3); margin-top: 3px; line-height: 1.3; }
+
+/* ── Score card glow pulse ──────────────────────────────────────────── */
+.v2-score-card { animation: v2PulseRing 4s ease-in-out 2s infinite; }
+.v2-score-num .big { animation: v2ScaleIn .6s var(--ease-out) .5s both; }
+
+/* ── Verdict signal chips ───────────────────────────────────────────── */
+.v2-verdict-signals {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+}
+.v2-vsig {
+  font-size: 11px; font-weight: 600; padding: 3px 10px;
+  border-radius: 20px; white-space: nowrap;
+}
+.v2-vsig.green { background: rgba(34,197,94,.15); color: var(--v2-green); border: 1px solid rgba(34,197,94,.2); }
+.v2-vsig.amber { background: rgba(245,158,11,.12); color: var(--v2-amber); border: 1px solid rgba(245,158,11,.2); }
+.v2-vsig.red   { background: rgba(239,68,68,.12);  color: var(--v2-red);   border: 1px solid rgba(239,68,68,.2); }
+.v2-vsig.blue  { background: rgba(59,130,246,.12); color: var(--v2-blue);  border: 1px solid rgba(59,130,246,.2); }
+.v2-vsig { animation: v2FadeUp .3s var(--ease-out) both; }
+.v2-vsig:nth-child(1) { animation-delay: .3s; }
+.v2-vsig:nth-child(2) { animation-delay: .38s; }
+.v2-vsig:nth-child(3) { animation-delay: .46s; }
+.v2-vsig:nth-child(4) { animation-delay: .54s; }
+.v2-vsig:nth-child(5) { animation-delay: .62s; }
+
+/* ── Verdict confidence meter ───────────────────────────────────────── */
+.v2-verdict-confidence {
+  font-size: 12px; font-weight: 700; color: var(--v2-t3);
+  margin-top: 8px; display: flex; align-items: center; gap: 8px;
+}
+.v2-verdict-confidence-bar {
+  flex: 1; height: 3px; background: var(--v2-s4); border-radius: 3px; overflow: hidden;
+}
+.v2-verdict-confidence-fill {
+  height: 100%; border-radius: 3px;
+  animation: v2BarFill 1s cubic-bezier(.4,0,.2,1) .6s both;
+}
+
+/* ── Primary button shimmer ─────────────────────────────────────────── */
+.v2-btn.primary {
+  background-image: linear-gradient(90deg, #6366f1 0%, #8b5cf6 33%, #ec4899 66%, #6366f1 100%);
+  background-size: 200% 100%;
+  animation: v2Shimmer 4s linear infinite;
+}
+
+/* ── Tab active underline slide ─────────────────────────────────────── */
+.v2-dash-tab { position: relative; }
+.v2-dash-tab.active::after {
+  content: ''; position: absolute;
+  bottom: -1px; left: 10px; right: 10px; height: 2px;
+  background: var(--v2-a1); border-radius: 2px;
+  animation: v2TabSlide .2s var(--ease-out) both;
+  transform-origin: left;
+}
+
+/* ── Sidebar stagger ────────────────────────────────────────────────── */
+.v2-agent-row { animation: v2SidebarIn .25s var(--ease-out) both; }
+.v2-agent-row:nth-child(1)  { animation-delay: .05s; }
+.v2-agent-row:nth-child(2)  { animation-delay: .08s; }
+.v2-agent-row:nth-child(3)  { animation-delay: .11s; }
+.v2-agent-row:nth-child(4)  { animation-delay: .14s; }
+.v2-agent-row:nth-child(5)  { animation-delay: .17s; }
+.v2-agent-row:nth-child(6)  { animation-delay: .20s; }
+.v2-agent-row:nth-child(7)  { animation-delay: .23s; }
+.v2-agent-row:nth-child(8)  { animation-delay: .26s; }
+.v2-agent-row:nth-child(9)  { animation-delay: .29s; }
+.v2-agent-row:nth-child(10) { animation-delay: .32s; }
+.v2-agent-row:nth-child(11) { animation-delay: .35s; }
+.v2-agent-row:nth-child(12) { animation-delay: .38s; }
+.v2-agent-row:nth-child(n+13) { animation-delay: .4s; }
+
+/* ── Running agent dot pulse ─────────────────────────────────────────── */
+.v2-agent-dot.running { animation: v2Bounce 0.9s ease-in-out infinite; }
+
+/* ── Section panel headings ─────────────────────────────────────────── */
+.v2-section-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--v2-border);
+}
+.v2-section-title {
+  font-size: 14px; font-weight: 700; color: var(--v2-t1);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.v2-section-badge {
+  font-size: 11px; font-weight: 700; padding: 2px 9px;
+  border-radius: 20px; background: var(--v2-s4); color: var(--v2-t2);
+}
+
+/* ── Data table polish ──────────────────────────────────────────────── */
+.v2-data-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--v2-border);
+  transition: background .15s;
+}
+.v2-data-row:last-child { border-bottom: none; }
+.v2-data-row:hover { background: rgba(99,102,241,.04); margin: 0 -12px; padding: 10px 12px; border-radius: 8px; }
+
+/* ── Stat bar (horizontal) ──────────────────────────────────────────── */
+.v2-stat-bar { height: 6px; background: var(--v2-s4); border-radius: 6px; overflow: hidden; margin-top: 4px; }
+.v2-stat-bar-fill { height: 100%; border-radius: 6px; animation: v2BarFill .8s var(--ease-out) both; }
+
+/* ── Info callout boxes ─────────────────────────────────────────────── */
+.v2-callout {
+  padding: 12px 16px; border-radius: 10px; margin: 12px 0;
+  font-size: 13px; line-height: 1.5; border-left: 3px solid;
+}
+.v2-callout.info   { background: rgba(59,130,246,.08); border-color: var(--v2-blue); color: #93c5fd; }
+.v2-callout.warn   { background: rgba(245,158,11,.08); border-color: var(--v2-amber); color: #fcd34d; }
+.v2-callout.danger { background: rgba(239,68,68,.08);  border-color: var(--v2-red);  color: #fca5a5; }
+.v2-callout.ok     { background: rgba(34,197,94,.08);  border-color: var(--v2-green);color: #86efac; }
+
+/* ── Overflow guards ────────────────────────────────────────────────── */
+.v2-kpi-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.v2-kpi-val  { font-size: clamp(18px, 3vw, 28px); word-break: break-all; }
+.v2-metrics-row > * { min-width: 0; overflow: hidden; }
+.v2-dash-panel { overflow-wrap: break-word; word-break: break-word; min-width: 0; }
+.v2-verdict-banner { overflow: hidden; }
+.v2-verdict-text { min-width: 0; flex: 1; }
+.v2-dash-title { overflow-wrap: break-word; word-break: break-word; }
+
+/* Panel content flow */
+.v2-dash-panel > * + * { margin-top: 20px; }
+.v2-dash-panel table { width: 100%; table-layout: fixed; }
+.v2-dash-panel td, .v2-dash-panel th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Landing hero enhancements ──────────────────────────────────────── */
+.v2-hero-badge { animation: v2FloatBob 4s ease-in-out infinite; }
+.v2-hero-title { animation: v2FadeUp .6s var(--ease-out) .1s both; }
+.v2-hero-sub   { animation: v2FadeUp .6s var(--ease-out) .2s both; }
+.v2-hero-cta   { animation: v2FadeUp .6s var(--ease-out) .3s both; }
+
+/* ── Wizard card entrance ───────────────────────────────────────────── */
+.v2-wizard-wrap { animation: v2ScaleIn .4s var(--ease-out) both; }
+.v2-choose-item {
+  transition: transform .18s var(--ease-out), border-color .15s, background .15s, box-shadow .18s;
+}
+@media (hover:hover) and (pointer:fine) {
+  .v2-choose-item:hover {
+    transform: translateY(-3px) scale(1.02);
+    border-color: var(--v2-a1);
+    box-shadow: 0 6px 20px rgba(99,102,241,.25);
+  }
+}
+
+/* ── Portfolio card jazz ─────────────────────────────────────────────── */
+.v2-port-card {
+  transition: transform .2s var(--ease-out), border-color .18s, box-shadow .2s;
+}
+@media (hover:hover) and (pointer:fine) {
+  .v2-port-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.5); border-color: var(--v2-a1); }
+}
+
+/* ── Sparkle GO decoration ───────────────────────────────────────────── */
+.v2-go-sparkle {
+  display: inline-block; font-size: 18px;
+  animation: v2Sparkle 1.5s ease-in-out infinite;
+}
+.v2-go-sparkle:nth-child(2) { animation-delay: .5s; }
+.v2-go-sparkle:nth-child(3) { animation-delay: 1s; }
+
 /* ══════════════════════════════════════════════════════════════════
    DESIGN POLISH — from critique
    ══════════════════════════════════════════════════════════════════ */
