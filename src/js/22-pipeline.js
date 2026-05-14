@@ -325,13 +325,15 @@ function resetAll() {
   clearIds.forEach(id=>{const el=$(id);if(el)el.innerHTML='';});
   Object.keys(charts).forEach(k=>{try{charts[k].destroy()}catch{}});
   charts={};
-  $('finalBox').className='final-box';
+  const fb=$('finalBox'); if(fb) fb.className='final-box';
   const ph=$('profileHeader'); if(ph){ph.innerHTML='';ph.style.display='none';}
   const pf=$('profileForm'); if(pf) pf.style.display='none';
-  $('progressFill').style.width='0%';
-  $('progressText').textContent='Enter your API key and click Run';
-  $('orchStatus').textContent='idle';
-  $('resetBtn').style.display='none';
-  hideErr(); R={};
+  const pfill=$('progressFill'); if(pfill) pfill.style.width='0%';
+  const ptxt=$('progressText'); if(ptxt) ptxt.textContent='Enter your API key and click Run';
+  const os=$('orchStatus'); if(os) os.textContent='idle';
+  const rb=$('resetBtn'); if(rb) rb.style.display='none';
+  hideErr();
+  // Empty R in-place so other modules that hold a reference see the cleared object
+  Object.keys(R).forEach(k => { delete R[k]; });
 }
 

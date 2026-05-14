@@ -25,7 +25,7 @@
 <div id="sessionRestoreBanner" class="session-banner" style="display:none"></div>
 
 <div class="card">
-  <label>API Key</label>
+  <label for="apiKey">API Key</label>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
     <select id="providerSelect" onchange="onProviderChange()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:12px">
       <option value="anthropic">Anthropic (Claude)</option>
@@ -87,7 +87,7 @@
 <div class="card">
   <div class="controls-row">
     <div class="field">
-      <label>Industry</label>
+      <label for="industrySelect">Industry</label>
       <select id="industrySelect" style="width:210px" onchange="onIndustryChange()">
         <option value="daycare">🏫 Daycare / Childcare</option>
         <option value="gas_station">⛽ Gas Station / C-Store</option>
@@ -108,25 +108,25 @@
       </select>
     </div>
     <div class="field">
-      <label>ZIP Code</label>
+      <label for="zip">ZIP Code</label>
       <input type="text" id="zip" value="30097" style="width:95px" />
       <div id="tip-zip" class="input-tip" style="display:none"></div>
     </div>
     <div class="field">
-      <label>Radius (mi)</label>
+      <label for="radius">Radius (mi)</label>
       <input type="number" id="radius" value="40" min="5" max="150" style="width:85px" />
       <div id="tip-radius" class="input-tip" style="display:none"></div>
     </div>
-    <div class="field" id="tiersField"><label id="tiersLabel">Service Tiers</label>
+    <div class="field" id="tiersField"><label id="tiersLabel" for="grades">Service Tiers</label>
       <select id="grades" style="width:170px"></select>
     </div>
     <div class="field">
-      <label id="capacityLabel">Capacity</label>
+      <label id="capacityLabel" for="capacity">Capacity</label>
       <input type="number" id="capacity" value="75" min="1" max="9999" style="width:90px" />
       <div id="tip-capacity" class="input-tip" style="display:none"></div>
     </div>
     <div class="field">
-      <label>Budget ($)</label>
+      <label for="budget">Budget ($)</label>
       <input type="number" id="budget" value="600000" min="50000" step="50000" style="width:120px" />
       <div id="tip-budget" class="input-tip" style="display:none"></div>
     </div>

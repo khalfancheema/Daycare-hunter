@@ -708,7 +708,7 @@
 /* ── INVESTOR MODAL ───────────────────────────────────────────────── */
 .v2-modal-bg {
   position: fixed; inset: 0; background: rgba(0,0,0,.75);
-  backdrop-filter: blur(8px); z-index: 9500; display: none;
+  backdrop-filter: blur(8px); z-index: 9700; display: none;
   align-items: center; justify-content: center;
 }
 .v2-modal-bg.open { display: flex; }
@@ -1302,7 +1302,7 @@ html, body { overflow-x: hidden; }
 
   .v2-wizard-wrap  { padding: 16px; }
   .v2-grid-choose  { grid-template-columns: repeat(2, 1fr) !important; }
-  .v2-v2-budget-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .v2-budget-grid { grid-template-columns: repeat(2, 1fr) !important; }
 
   .v2-dash-layout { flex-direction: column !important; }
   #v2-agent-sidenav { display: none; }

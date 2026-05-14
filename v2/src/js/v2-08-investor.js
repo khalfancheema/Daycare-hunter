@@ -103,13 +103,19 @@ function v2ShowInvestor() {
 }
 
 function v2CloseInvestor() {
-  document.getElementById('v2-investor-modal').classList.remove('open');
+  const m = document.getElementById('v2-investor-modal');
+  if (m) m.classList.remove('open');
 }
 
 function v2PrintInvestor() {
-  const content = document.getElementById('v2-investor-content')?.innerHTML || '';
+  let content = document.getElementById('v2-investor-content')?.innerHTML || '';
+  // Strip <script>/inline handlers — AI content may contain user-shaped HTML
+  content = content
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, '')
+    .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '');
   const w = window.open('', '_blank');
-  if (!w) return;
+  if (!w) { if (typeof v2Toast === 'function') v2Toast('Pop-up blocked — allow pop-ups to print investor package.'); return; }
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Investor Package</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>

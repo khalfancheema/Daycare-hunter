@@ -1453,7 +1453,7 @@ select option{background:var(--surface2)}
 /* ── INVESTOR MODAL ───────────────────────────────────────────────── */
 .v2-modal-bg {
   position: fixed; inset: 0; background: rgba(0,0,0,.75);
-  backdrop-filter: blur(8px); z-index: 9500; display: none;
+  backdrop-filter: blur(8px); z-index: 9700; display: none;
   align-items: center; justify-content: center;
 }
 .v2-modal-bg.open { display: flex; }
@@ -2047,7 +2047,7 @@ html, body { overflow-x: hidden; }
 
   .v2-wizard-wrap  { padding: 16px; }
   .v2-grid-choose  { grid-template-columns: repeat(2, 1fr) !important; }
-  .v2-v2-budget-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .v2-budget-grid { grid-template-columns: repeat(2, 1fr) !important; }
 
   .v2-dash-layout { flex-direction: column !important; }
   #v2-agent-sidenav { display: none; }
@@ -2983,7 +2983,7 @@ div > .v2-ind-category-label:first-of-type { margin-top: 0; border-top: none; }
 <div id="sessionRestoreBanner" class="session-banner" style="display:none"></div>
 
 <div class="card">
-  <label>API Key</label>
+  <label for="apiKey">API Key</label>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
     <select id="providerSelect" onchange="onProviderChange()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:12px">
       <option value="anthropic">Anthropic (Claude)</option>
@@ -3045,7 +3045,7 @@ div > .v2-ind-category-label:first-of-type { margin-top: 0; border-top: none; }
 <div class="card">
   <div class="controls-row">
     <div class="field">
-      <label>Industry</label>
+      <label for="industrySelect">Industry</label>
       <select id="industrySelect" style="width:210px" onchange="onIndustryChange()">
         <option value="daycare">🏫 Daycare / Childcare</option>
         <option value="gas_station">⛽ Gas Station / C-Store</option>
@@ -3066,25 +3066,25 @@ div > .v2-ind-category-label:first-of-type { margin-top: 0; border-top: none; }
       </select>
     </div>
     <div class="field">
-      <label>ZIP Code</label>
+      <label for="zip">ZIP Code</label>
       <input type="text" id="zip" value="30097" style="width:95px" />
       <div id="tip-zip" class="input-tip" style="display:none"></div>
     </div>
     <div class="field">
-      <label>Radius (mi)</label>
+      <label for="radius">Radius (mi)</label>
       <input type="number" id="radius" value="40" min="5" max="150" style="width:85px" />
       <div id="tip-radius" class="input-tip" style="display:none"></div>
     </div>
-    <div class="field" id="tiersField"><label id="tiersLabel">Service Tiers</label>
+    <div class="field" id="tiersField"><label id="tiersLabel" for="grades">Service Tiers</label>
       <select id="grades" style="width:170px"></select>
     </div>
     <div class="field">
-      <label id="capacityLabel">Capacity</label>
+      <label id="capacityLabel" for="capacity">Capacity</label>
       <input type="number" id="capacity" value="75" min="1" max="9999" style="width:90px" />
       <div id="tip-capacity" class="input-tip" style="display:none"></div>
     </div>
     <div class="field">
-      <label>Budget ($)</label>
+      <label for="budget">Budget ($)</label>
       <input type="number" id="budget" value="600000" min="50000" step="50000" style="width:120px" />
       <div id="tip-budget" class="input-tip" style="display:none"></div>
     </div>
@@ -7581,14 +7581,16 @@ function resetAll() {
   clearIds.forEach(id=>{const el=$(id);if(el)el.innerHTML='';});
   Object.keys(charts).forEach(k=>{try{charts[k].destroy()}catch{}});
   charts={};
-  $('finalBox').className='final-box';
+  const fb=$('finalBox'); if(fb) fb.className='final-box';
   const ph=$('profileHeader'); if(ph){ph.innerHTML='';ph.style.display='none';}
   const pf=$('profileForm'); if(pf) pf.style.display='none';
-  $('progressFill').style.width='0%';
-  $('progressText').textContent='Enter your API key and click Run';
-  $('orchStatus').textContent='idle';
-  $('resetBtn').style.display='none';
-  hideErr(); R={};
+  const pfill=$('progressFill'); if(pfill) pfill.style.width='0%';
+  const ptxt=$('progressText'); if(ptxt) ptxt.textContent='Enter your API key and click Run';
+  const os=$('orchStatus'); if(os) os.textContent='idle';
+  const rb=$('resetBtn'); if(rb) rb.style.display='none';
+  hideErr();
+  // Empty R in-place so other modules that hold a reference see the cleared object
+  Object.keys(R).forEach(k => { delete R[k]; });
 }
 
 
@@ -12734,6 +12736,41 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.v2-more-wrap')) v2CloseMoreMenus();
 }, true);
 
+// ── Modal accessibility — apply role/aria + Escape-key close ──
+// One-shot setup: tag all .v2-modal-bg with role="dialog" + aria-modal="true"
+// and close whichever is currently open on Escape.
+(function _v2ModalA11y() {
+  function tagModals() {
+    document.querySelectorAll('.v2-modal-bg').forEach(m => {
+      if (!m.hasAttribute('role')) m.setAttribute('role', 'dialog');
+      if (!m.hasAttribute('aria-modal')) m.setAttribute('aria-modal', 'true');
+      if (!m.hasAttribute('aria-hidden')) m.setAttribute('aria-hidden', 'true');
+    });
+    const ag = document.getElementById('agentModalOverlay');
+    if (ag && !ag.hasAttribute('role')) {
+      ag.setAttribute('role', 'dialog');
+      ag.setAttribute('aria-modal', 'true');
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', tagModals);
+  } else {
+    tagModals();
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    // Find topmost visible modal (last .open or display:!none)
+    const candidates = Array.from(document.querySelectorAll('.v2-modal-bg.open, .v2-modal-bg[style*="display: flex"], .v2-modal-bg[style*="display:flex"]'));
+    const top = candidates[candidates.length - 1];
+    if (top) {
+      // Try various close patterns (modal-specific close functions, or remove .open)
+      const closeBtn = top.querySelector('.v2-modal-close, [onclick*="Close"]');
+      if (closeBtn) closeBtn.click();
+      else { top.classList.remove('open'); top.style.display = 'none'; }
+    }
+  });
+})();
+
 function v2ToggleMobileNav() {
   const nav = document.getElementById('v2-mobile-nav');
   const btn = document.getElementById('v2-ham-btn');
@@ -16012,13 +16049,19 @@ function v2ShowInvestor() {
 }
 
 function v2CloseInvestor() {
-  document.getElementById('v2-investor-modal').classList.remove('open');
+  const m = document.getElementById('v2-investor-modal');
+  if (m) m.classList.remove('open');
 }
 
 function v2PrintInvestor() {
-  const content = document.getElementById('v2-investor-content')?.innerHTML || '';
+  let content = document.getElementById('v2-investor-content')?.innerHTML || '';
+  // Strip <script>/inline handlers — AI content may contain user-shaped HTML
+  content = content
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, '')
+    .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '');
   const w = window.open('', '_blank');
-  if (!w) return;
+  if (!w) { if (typeof v2Toast === 'function') v2Toast('Pop-up blocked — allow pop-ups to print investor package.'); return; }
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Investor Package</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -24849,9 +24892,9 @@ let _v2EnrichPending = false;
       </div>
     </div>
     <div class="v2-provider-grid" id="v2-provider-grid"></div>
-    <div id="v2-custom-url-row" style="display:none;margin-bottom:16px">
-      <label class="v2-field" style="margin:0"><label style="font-size:12px;font-weight:600;color:var(--v2-t2);display:block;margin-bottom:8px">Custom API Endpoint URL</label>
-      <input class="v2-input" id="v2-custom-url-input" placeholder="http://localhost:11434/v1/chat/completions" /></label>
+    <div id="v2-custom-url-row" class="v2-field" style="display:none;margin-bottom:16px">
+      <label for="v2-custom-url-input" style="font-size:12px;font-weight:600;color:var(--v2-t2);display:block;margin-bottom:8px">Custom API Endpoint URL</label>
+      <input class="v2-input" id="v2-custom-url-input" placeholder="http://localhost:11434/v1/chat/completions" />
     </div>
     <div class="v2-field">
       <label>API Key</label>

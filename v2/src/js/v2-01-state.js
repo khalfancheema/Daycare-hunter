@@ -112,6 +112,41 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.v2-more-wrap')) v2CloseMoreMenus();
 }, true);
 
+// ── Modal accessibility — apply role/aria + Escape-key close ──
+// One-shot setup: tag all .v2-modal-bg with role="dialog" + aria-modal="true"
+// and close whichever is currently open on Escape.
+(function _v2ModalA11y() {
+  function tagModals() {
+    document.querySelectorAll('.v2-modal-bg').forEach(m => {
+      if (!m.hasAttribute('role')) m.setAttribute('role', 'dialog');
+      if (!m.hasAttribute('aria-modal')) m.setAttribute('aria-modal', 'true');
+      if (!m.hasAttribute('aria-hidden')) m.setAttribute('aria-hidden', 'true');
+    });
+    const ag = document.getElementById('agentModalOverlay');
+    if (ag && !ag.hasAttribute('role')) {
+      ag.setAttribute('role', 'dialog');
+      ag.setAttribute('aria-modal', 'true');
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', tagModals);
+  } else {
+    tagModals();
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    // Find topmost visible modal (last .open or display:!none)
+    const candidates = Array.from(document.querySelectorAll('.v2-modal-bg.open, .v2-modal-bg[style*="display: flex"], .v2-modal-bg[style*="display:flex"]'));
+    const top = candidates[candidates.length - 1];
+    if (top) {
+      // Try various close patterns (modal-specific close functions, or remove .open)
+      const closeBtn = top.querySelector('.v2-modal-close, [onclick*="Close"]');
+      if (closeBtn) closeBtn.click();
+      else { top.classList.remove('open'); top.style.display = 'none'; }
+    }
+  });
+})();
+
 function v2ToggleMobileNav() {
   const nav = document.getElementById('v2-mobile-nav');
   const btn = document.getElementById('v2-ham-btn');
