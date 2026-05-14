@@ -129,6 +129,109 @@ Return ONLY this JSON (use real data from the sources above, note source and "es
     "new_permits_issued_2023": 3200,
     "yoy_permit_growth_pct": 8.4,
     "source": "Census Building Permits Survey 2023"
+  },
+  "age_pyramid": [
+    {"bracket": "0-4",   "male": 2400, "female": 2350},
+    {"bracket": "5-9",   "male": 2600, "female": 2500},
+    {"bracket": "10-14", "male": 2550, "female": 2480},
+    {"bracket": "15-19", "male": 2300, "female": 2200},
+    {"bracket": "20-24", "male": 2800, "female": 2750},
+    {"bracket": "25-29", "male": 4200, "female": 4100},
+    {"bracket": "30-34", "male": 5100, "female": 4900},
+    {"bracket": "35-39", "male": 4800, "female": 4700},
+    {"bracket": "40-44", "male": 4200, "female": 4100},
+    {"bracket": "45-49", "male": 3800, "female": 3900},
+    {"bracket": "50-54", "male": 3200, "female": 3400},
+    {"bracket": "55-59", "male": 2800, "female": 3100},
+    {"bracket": "60-64", "male": 2200, "female": 2600},
+    {"bracket": "65-69", "male": 1600, "female": 2100},
+    {"bracket": "70-74", "male": 1100, "female": 1600},
+    {"bracket": "75+",   "male":  700, "female": 1200}
+  ],
+  "generation_breakdown": [
+    {"gen": "Gen Alpha (0-12)",   "population_pct": 16.2, "households_pct": 19.4},
+    {"gen": "Gen Z (13-28)",      "population_pct": 14.8, "households_pct": 12.1},
+    {"gen": "Millennial (29-44)", "population_pct": 24.6, "households_pct": 32.8},
+    {"gen": "Gen X (45-60)",      "population_pct": 22.4, "households_pct": 25.2},
+    {"gen": "Boomer (61-79)",     "population_pct": 18.2, "households_pct":  9.4},
+    {"gen": "Silent (80+)",       "population_pct":  3.8, "households_pct":  1.1}
+  ],
+  "multi_radius": [
+    {"ring": "1 mi", "population": 8200,   "households": 2900,  "median_hh_income": 142000, "pct_with_children": 38, "pop_under5":   980, "avg_hh_size": 2.82},
+    {"ring": "3 mi", "population": 48600,  "households": 16800, "median_hh_income": 138900, "pct_with_children": 41, "pop_under5":  5800, "avg_hh_size": 2.91},
+    {"ring": "5 mi", "population": 124000, "households": 42400, "median_hh_income": 128400, "pct_with_children": 40, "pop_under5": 14800, "avg_hh_size": 2.88}
+  ],
+  "consumer_expenditure": {
+    "radius_miles": 5,
+    "total_expenditure_millions": 8110,
+    "categories": [
+      {"category": "Housing",               "amount_millions": 2840, "pct_of_total": 35.0},
+      {"category": "Transportation",        "amount_millions": 1140, "pct_of_total": 14.1},
+      {"category": "Food at Home",          "amount_millions":  810, "pct_of_total": 10.0},
+      {"category": "Healthcare",            "amount_millions":  620, "pct_of_total":  7.6},
+      {"category": "Education & Childcare", "amount_millions":  490, "pct_of_total":  6.0},
+      {"category": "Food Away from Home",   "amount_millions":  480, "pct_of_total":  5.9},
+      {"category": "Entertainment",         "amount_millions":  340, "pct_of_total":  4.2},
+      {"category": "Personal Care",         "amount_millions":  180, "pct_of_total":  2.2},
+      {"category": "Other",                 "amount_millions": 1210, "pct_of_total": 14.9}
+    ]
+  },
+  "lifestyle_segments": [
+    {"segment": "Savvy Suburbanites",         "pct": 18.4, "description": "Established upper-middle-class families, homeowners, education-focused"},
+    {"segment": "Professional Pride",         "pct": 14.2, "description": "Younger professionals, dual-income, high education, tech-forward"},
+    {"segment": "Bright Young Professionals", "pct": 11.8, "description": "Recent college grads building careers, renter households"},
+    {"segment": "In Style",                   "pct":  9.6, "description": "Upper-middle urban lifestyle, brand conscious, high disposable income"},
+    {"segment": "Family Foundations",         "pct":  7.3, "description": "Young families prioritizing schools, safety, and suburban amenities"}
+  ],
+  "population_projections": [
+    {"year": 2020, "population": 41200},
+    {"year": 2021, "population": 43800},
+    {"year": 2022, "population": 46100},
+    {"year": 2023, "population": 47800},
+    {"year": 2024, "population": 49200},
+    {"year": 2025, "population": 51000},
+    {"year": 2030, "population": 58400}
+  ],
+  "occupation_lq": [
+    {"occupation": "Computer & Math",          "area_pct": 12.4, "us_pct":  3.1, "lq": 4.00},
+    {"occupation": "Business & Financial",     "area_pct":  8.6, "us_pct":  5.3, "lq": 1.62},
+    {"occupation": "Management",               "area_pct":  7.2, "us_pct":  5.8, "lq": 1.24},
+    {"occupation": "Healthcare Practitioners", "area_pct":  6.8, "us_pct":  6.3, "lq": 1.08},
+    {"occupation": "Education & Training",     "area_pct":  5.4, "us_pct":  6.1, "lq": 0.89},
+    {"occupation": "Sales & Related",          "area_pct":  9.2, "us_pct": 10.1, "lq": 0.91},
+    {"occupation": "Service Occupations",      "area_pct": 11.8, "us_pct": 17.4, "lq": 0.68}
+  ],
+  "education_attainment": {
+    "radius_miles": 3,
+    "less_than_hs_pct":  2.4,
+    "hs_grad_pct":       8.6,
+    "some_college_pct": 14.2,
+    "associates_pct":    5.8,
+    "bachelors_pct":    38.4,
+    "graduate_pct":     30.6
+  },
+  "housing_detail": {
+    "median_home_value":    548000,
+    "avg_home_value":       624000,
+    "owner_occupied_pct":    72.4,
+    "renter_occupied_pct":   27.6,
+    "median_gross_rent":     1840,
+    "built_2010_later_pct":  28.2,
+    "built_2000_2009_pct":   34.6
+  },
+  "language_spoken": [
+    {"language": "English only",  "pct": 58.4},
+    {"language": "Asian/Pacific", "pct": 22.8},
+    {"language": "Spanish",       "pct": 12.6},
+    {"language": "Indo-European", "pct":  4.2},
+    {"language": "Other",         "pct":  2.0}
+  ],
+  "daytime_population": {
+    "residential_pop":               49200,
+    "daytime_pop":                   54800,
+    "daytime_to_residential_ratio":   1.11,
+    "workers_present":               28400,
+    "workers_at_home":               14600
   }
 }`;
 

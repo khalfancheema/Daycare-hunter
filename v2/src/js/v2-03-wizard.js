@@ -155,7 +155,7 @@ function v2WizRenderStep() {
 
   } else if (s.id === 'budget') {
     // Sync state with the visual default so "Continue" doesn't silently block
-    if (!d.budget) { V2.wizard.data.budget = '600000'; d = V2.wizard.data; }
+    if (!d.budget) { V2.wizard.data.budget = '600000'; }
     body = `
       <div class="v2-budget-grid">
         ${V2_BUDGETS.map(b=>`<div class="v2-budget-item${d.budget===b.val?' selected':''}" onclick="v2WizPickBudget('${b.val}')">

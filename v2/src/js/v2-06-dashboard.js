@@ -154,6 +154,7 @@ function v2RenderDashboard(run) {
     <div class="v2-dash-tabs-wrap">
       <div class="v2-dash-tabs" id="v2-dash-tabs">
         <div class="v2-dash-tab active" onclick="v2DashTab('executive',this)">📋 Executive</div>
+        <div class="v2-dash-tab" onclick="v2DashTab('community',this)">👥 Community</div>
         <div class="v2-dash-tab" onclick="v2DashTab('financials',this)">💰 Financials</div>
         <div class="v2-dash-tab" onclick="v2DashTab('market',this)">🗺️ Market</div>
         <div class="v2-dash-tab" onclick="v2DashTab('competition',this)">🔍 Competition</div>
@@ -171,6 +172,7 @@ function v2RenderDashboard(run) {
     </div>
 
     <div class="v2-dash-panel active" id="v2-panel-executive">${v2RenderExecutive()}</div>
+    <div class="v2-dash-panel" id="v2-panel-community">${v2RenderCommunityProfile()}</div>
     <div class="v2-dash-panel" id="v2-panel-financials">
       ${v2RenderFinancials()}
       <div class="v2-card" style="padding:20px;margin-top:16px">
@@ -278,6 +280,8 @@ function v2RenderDashboard(run) {
         });
       });
     }, 450);
+    // 3. Pre-init community charts (lazy — only if panel is visible later)
+    setTimeout(() => v2InitCommunityCharts(), 600);
   });
 }
 
@@ -537,6 +541,7 @@ function v2DashTab(id, el) {
   if (el) el.classList.add('active');
   const panel = document.getElementById(`v2-panel-${id}`);
   if (panel) panel.classList.add('active');
+  if (id === 'community') requestAnimationFrame(() => v2InitCommunityCharts());
 }
 
 // ── EXECUTIVE SUMMARY ─────────────────────────────────────────────────────
@@ -686,6 +691,427 @@ function v2RenderFinancials() {
       </div>
     </div>` : ''}
   `;
+}
+
+// ── COMMUNITY PROFILE ─────────────────────────────────────────────────────
+function v2RenderCommunityProfile() {
+  const a1 = (typeof R !== 'undefined' && R.a1) ? R.a1 : {};
+  const hasData = a1.age_pyramid || a1.multi_radius || a1.generation_breakdown ||
+                  a1.consumer_expenditure || a1.lifestyle_segments || a1.population_projections;
+
+  if (!hasData) return `
+    <div class="v2-empty-panel">
+      <div style="font-size:40px;margin-bottom:12px">👥</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px">No community data yet</div>
+      <div class="v2-prose">Run Agent 1 (Demographics) to generate the full community profile with age pyramid, lifestyle segments, consumer expenditure, and more.</div>
+    </div>`;
+
+  // ── helpers ──────────────────────────────────────────────────────────────
+  const fmtN = v => (v == null ? '—' : Number(v).toLocaleString());
+  const fmtD = v => (v == null ? '—' : '$' + Number(v).toLocaleString());
+  const fmtK = v => (v == null ? '—' : '$' + (Number(v)/1000).toFixed(0) + 'K');
+  const pct  = v => (v == null ? '—' : v + '%');
+
+  // ── Palette ───────────────────────────────────────────────────────────────
+  const MALE_CLR   = 'rgba(74,158,255,0.85)';
+  const FEMALE_CLR = 'rgba(239,68,157,0.75)';
+  const SEG_COLORS = ['var(--v2-a1)','var(--v2-green)','var(--v2-amber)','#a78bfa','#06b6d4','#f97316'];
+
+  // ── 1. Multi-radius comparison table ─────────────────────────────────────
+  const radiiHtml = (a1.multi_radius && a1.multi_radius.length) ? `
+    <div class="v2-exec-section">
+      <div class="v2-exec-section-title">📏 Multi-Radius Market Summary</div>
+      <div class="v2-table-wrap">
+        <table class="v2-table">
+          <thead><tr>
+            <th>Ring</th><th>Population</th><th>Households</th><th>Median HHI</th>
+            <th>HH w/ Children</th><th>Children &lt;5</th><th>Avg HH Size</th>
+          </tr></thead>
+          <tbody>
+            ${a1.multi_radius.map(r => `<tr>
+              <td><strong>${r.ring}</strong></td>
+              <td>${fmtN(r.population)}</td>
+              <td>${fmtN(r.households)}</td>
+              <td style="color:var(--v2-green);font-weight:700">${fmtD(r.median_hh_income)}</td>
+              <td>${r.pct_with_children != null ? r.pct_with_children + '%' : '—'}</td>
+              <td>${fmtN(r.pop_under5)}</td>
+              <td>${r.avg_hh_size || '—'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>` : '';
+
+  // ── 2. Age Pyramid + Generation Breakdown ─────────────────────────────────
+  const agePyramidHtml = a1.age_pyramid ? `
+    <div class="v2-card" style="padding:20px">
+      <div class="v2-label" style="margin-bottom:12px">🔺 Population Age Pyramid</div>
+      <div style="position:relative;height:320px">
+        <canvas id="v2-cp-age-chart"></canvas>
+      </div>
+      <div style="display:flex;gap:16px;justify-content:center;margin-top:10px;font-size:11px">
+        <span><span style="display:inline-block;width:12px;height:12px;background:${MALE_CLR};border-radius:2px;margin-right:4px"></span>Male</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:${FEMALE_CLR};border-radius:2px;margin-right:4px"></span>Female</span>
+      </div>
+    </div>` : '';
+
+  const genHtml = (a1.generation_breakdown && a1.generation_breakdown.length) ? `
+    <div class="v2-card" style="padding:20px">
+      <div class="v2-label" style="margin-bottom:14px">🌊 Generation Breakdown</div>
+      ${a1.generation_breakdown.map((g, i) => {
+        const col = SEG_COLORS[i % SEG_COLORS.length];
+        return `
+        <div style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;color:var(--v2-t1)">${g.gen}</span>
+            <span style="font-size:11px;color:var(--v2-t3)">${g.population_pct}% pop · ${g.households_pct}% HH</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+            <div style="background:var(--v2-s1);border-radius:3px;height:6px;overflow:hidden">
+              <div style="height:100%;width:${Math.min(100,(g.population_pct/30)*100)}%;background:${col};transition:width .8s ease"></div>
+            </div>
+            <div style="background:var(--v2-s1);border-radius:3px;height:6px;overflow:hidden">
+              <div style="height:100%;width:${Math.min(100,(g.households_pct/35)*100)}%;background:${col};opacity:.65;transition:width .8s ease"></div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+      <div style="display:flex;gap:16px;margin-top:6px;font-size:10px;color:var(--v2-t3)">
+        <span>■ Population %</span><span style="opacity:.65">■ Household %</span>
+      </div>
+    </div>` : '';
+
+  // ── 3. Education Attainment + Housing ─────────────────────────────────────
+  const ed = a1.education_attainment || {};
+  const eduLevels = [
+    {label:'Graduate / Professional', pct: ed.graduate_pct,      color:'var(--v2-a1)'},
+    {label:"Bachelor's Degree",       pct: ed.bachelors_pct,     color:'var(--v2-green)'},
+    {label:'Some College / Assoc.',   pct: (ed.some_college_pct||0)+(ed.associates_pct||0), color:'var(--v2-amber)'},
+    {label:'HS Diploma',              pct: ed.hs_grad_pct,       color:'rgba(245,158,11,.5)'},
+    {label:'Less than HS',            pct: ed.less_than_hs_pct,  color:'var(--v2-red)'},
+  ].filter(l => l.pct != null && l.pct > 0);
+
+  const eduHtml = eduLevels.length ? `
+    <div class="v2-card" style="padding:20px">
+      <div class="v2-label" style="margin-bottom:14px">🎓 Education Attainment${ed.radius_miles ? ` (${ed.radius_miles} mi radius)` : ''}</div>
+      ${eduLevels.map(l => `
+        <div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:12px;color:var(--v2-t2)">${l.label}</span>
+            <span style="font-size:12px;font-weight:700;color:var(--v2-t1)">${l.pct?.toFixed(1)}%</span>
+          </div>
+          <div style="background:var(--v2-s1);border-radius:4px;height:8px;overflow:hidden">
+            <div style="height:100%;width:${Math.min(100,l.pct||0)}%;background:${l.color};border-radius:4px;transition:width .8s ease"></div>
+          </div>
+        </div>`).join('')}
+      <div style="margin-top:8px;font-size:11px;color:var(--v2-green);font-weight:600">
+        ✓ ${((ed.bachelors_pct||0)+(ed.graduate_pct||0)).toFixed(1)}% hold a bachelor's degree or higher
+      </div>
+    </div>` : '';
+
+  const hd = a1.housing_detail || {};
+  const housingHtml = Object.keys(hd).length ? `
+    <div class="v2-card" style="padding:20px">
+      <div class="v2-label" style="margin-bottom:14px">🏠 Housing Profile</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        ${[
+          {ico:'💰', lbl:'Median Home Value', val: fmtD(hd.median_home_value)},
+          {ico:'📊', lbl:'Avg Home Value',    val: fmtD(hd.avg_home_value)},
+          {ico:'🔑', lbl:'Owner Occupied',    val: pct(hd.owner_occupied_pct)},
+          {ico:'🏢', lbl:'Renter Occupied',   val: pct(hd.renter_occupied_pct)},
+          {ico:'💵', lbl:'Median Gross Rent', val: fmtD(hd.median_gross_rent)},
+          {ico:'🏗', lbl:'Built 2010+',       val: pct(hd.built_2010_later_pct)},
+        ].map(k => `
+          <div style="background:var(--v2-s1);border-radius:8px;padding:10px">
+            <div style="font-size:16px;margin-bottom:2px">${k.ico}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--v2-t1)">${k.val}</div>
+            <div style="font-size:11px;color:var(--v2-t3)">${k.lbl}</div>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;border-radius:6px;overflow:hidden;height:10px;gap:2px">
+        <div style="flex:${hd.owner_occupied_pct||60};background:var(--v2-a1)"></div>
+        <div style="flex:${hd.renter_occupied_pct||40};background:var(--v2-amber)"></div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:6px;font-size:10px;color:var(--v2-t3)">
+        <span>■ Owner ${pct(hd.owner_occupied_pct)}</span>
+        <span style="color:var(--v2-amber)">■ Renter ${pct(hd.renter_occupied_pct)}</span>
+      </div>
+    </div>` : '';
+
+  // ── 4. Consumer Expenditure ────────────────────────────────────────────────
+  const ce = a1.consumer_expenditure;
+  const expHtml = (ce && ce.categories && ce.categories.length) ? `
+    <div class="v2-exec-section">
+      <div class="v2-exec-section-title">💳 Consumer Expenditure by Category${ce.radius_miles ? ` — ${ce.radius_miles} mi radius` : ''}</div>
+      ${ce.total_expenditure_millions ? `<div style="font-size:13px;color:var(--v2-t2);margin-bottom:12px">Total market expenditure: <strong style="color:var(--v2-t1);font-size:16px">$${Number(ce.total_expenditure_millions).toLocaleString()}M</strong></div>` : ''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+        <div>
+          ${ce.categories.map((c, i) => `
+            <div style="margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+                <span style="font-size:12px;color:var(--v2-t2)">${c.category}</span>
+                <span style="font-size:12px;font-weight:700;color:var(--v2-t1)">$${Number(c.amount_millions).toLocaleString()}M <span style="font-weight:400;color:var(--v2-t3)">${c.pct_of_total}%</span></span>
+              </div>
+              <div style="background:var(--v2-s1);border-radius:4px;height:7px;overflow:hidden">
+                <div style="height:100%;width:${Math.min(100,c.pct_of_total/35*100)}%;background:${SEG_COLORS[i%SEG_COLORS.length]};border-radius:4px;transition:width .8s ease"></div>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div style="position:relative;height:220px">
+          <canvas id="v2-cp-exp-chart"></canvas>
+        </div>
+      </div>
+    </div>` : '';
+
+  // ── 5. Lifestyle Segments ─────────────────────────────────────────────────
+  const segHtml = (a1.lifestyle_segments && a1.lifestyle_segments.length) ? `
+    <div class="v2-exec-section">
+      <div class="v2-exec-section-title">🌆 Lifestyle & Tapestry Segments</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+        ${a1.lifestyle_segments.map((s, i) => `
+          <div class="v2-card" style="padding:14px;border-top:3px solid ${SEG_COLORS[i%SEG_COLORS.length]}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+              <div style="font-size:13px;font-weight:700;color:var(--v2-t1);line-height:1.3">${s.segment}</div>
+              <span class="v2-badge" style="background:${SEG_COLORS[i%SEG_COLORS.length]}22;color:${SEG_COLORS[i%SEG_COLORS.length]};flex-shrink:0;margin-left:6px">${s.pct}%</span>
+            </div>
+            <div style="font-size:11px;color:var(--v2-t3);line-height:1.4">${s.description || ''}</div>
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  // ── 6. Population Projections ─────────────────────────────────────────────
+  const projHtml = (a1.population_projections && a1.population_projections.length >= 3) ? `
+    <div class="v2-exec-section">
+      <div class="v2-exec-section-title">📈 Population Growth Trend & Projections</div>
+      <div style="position:relative;height:200px">
+        <canvas id="v2-cp-proj-chart"></canvas>
+      </div>
+    </div>` : '';
+
+  // ── 7. Occupation / Location Quotients ────────────────────────────────────
+  const lqHtml = (a1.occupation_lq && a1.occupation_lq.length) ? `
+    <div class="v2-exec-section">
+      <div class="v2-exec-section-title">💼 Workforce by Occupation & Location Quotient vs US</div>
+      <div class="v2-table-wrap">
+        <table class="v2-table">
+          <thead><tr>
+            <th>Occupation</th><th>Area %</th><th>US Avg %</th>
+            <th>Location Quotient</th><th>Relative to US</th>
+          </tr></thead>
+          <tbody>
+            ${a1.occupation_lq.map(o => {
+              const lq = o.lq || (o.area_pct / (o.us_pct || 1));
+              const lqColor = lq >= 1.5 ? 'var(--v2-green)' : lq >= 0.75 ? 'var(--v2-amber)' : 'var(--v2-red)';
+              const lqLabel = lq >= 2 ? '⬆ Very High' : lq >= 1.25 ? '↑ Above avg' : lq >= 0.75 ? '→ Average' : '↓ Below avg';
+              return `<tr>
+                <td><strong>${o.occupation}</strong></td>
+                <td>${o.area_pct}%</td>
+                <td style="color:var(--v2-t3)">${o.us_pct}%</td>
+                <td><span style="font-weight:800;color:${lqColor}">${lq.toFixed(2)}x</span></td>
+                <td style="font-size:12px;color:${lqColor}">${lqLabel}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--v2-t3)">LQ &gt; 1.0 = occupation is more concentrated here than US average. LQ &gt; 2.0 = major local specialty.</div>
+    </div>` : '';
+
+  // ── 8. Language Spoken + Daytime Population ────────────────────────────────
+  const langHtml = (a1.language_spoken && a1.language_spoken.length) ? `
+    <div class="v2-card" style="padding:20px">
+      <div class="v2-label" style="margin-bottom:14px">🌍 Languages Spoken at Home</div>
+      ${a1.language_spoken.map((l, i) => `
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:12px;color:var(--v2-t2)">${l.language}</span>
+            <span style="font-size:12px;font-weight:700;color:var(--v2-t1)">${l.pct}%</span>
+          </div>
+          <div style="background:var(--v2-s1);border-radius:4px;height:7px;overflow:hidden">
+            <div style="height:100%;width:${Math.min(100,l.pct)}%;background:${SEG_COLORS[i%SEG_COLORS.length]};border-radius:4px;transition:width .8s ease"></div>
+          </div>
+        </div>`).join('')}
+    </div>` : '';
+
+  const dp = a1.daytime_population || {};
+  const dayHtml = Object.keys(dp).length ? `
+    <div class="v2-card" style="padding:20px">
+      <div class="v2-label" style="margin-bottom:14px">☀️ Daytime vs. Residential Population</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${[
+          {ico:'🏠', lbl:'Residential', val: fmtN(dp.residential_pop), color:'var(--v2-a1)'},
+          {ico:'☀️', lbl:'Daytime',     val: fmtN(dp.daytime_pop),     color:'var(--v2-green)'},
+          {ico:'💼', lbl:'Workers In',  val: fmtN(dp.workers_present), color:'var(--v2-amber)'},
+          {ico:'🏡', lbl:'Work @ Home', val: fmtN(dp.workers_at_home), color:'rgba(167,139,250,.9)'},
+        ].map(k => `
+          <div style="text-align:center;padding:12px;background:var(--v2-s1);border-radius:8px;border-top:2px solid ${k.color}">
+            <div style="font-size:20px;margin-bottom:2px">${k.ico}</div>
+            <div style="font-size:18px;font-weight:800;color:${k.color}">${k.val}</div>
+            <div style="font-size:11px;color:var(--v2-t3)">${k.lbl}</div>
+          </div>`).join('')}
+      </div>
+      ${dp.daytime_to_residential_ratio ? `<div style="margin-top:12px;padding:8px 12px;background:var(--v2-s1);border-radius:6px;font-size:12px">
+        Daytime/Residential ratio: <strong style="color:${dp.daytime_to_residential_ratio >= 1 ? 'var(--v2-green)' : 'var(--v2-amber)'}">
+        ${dp.daytime_to_residential_ratio}x</strong>
+        ${dp.daytime_to_residential_ratio >= 1 ? ' — positive commuter flow into area' : ' — more residents than daytime workers'}
+      </div>` : ''}
+    </div>` : '';
+
+  return `
+    ${radiiHtml}
+    <div class="v2-exec-section">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        ${agePyramidHtml}
+        ${genHtml}
+      </div>
+    </div>
+    <div class="v2-exec-section">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        ${eduHtml}
+        ${housingHtml}
+      </div>
+    </div>
+    ${expHtml}
+    ${segHtml}
+    ${projHtml}
+    ${lqHtml}
+    <div class="v2-exec-section">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        ${langHtml}
+        ${dayHtml}
+      </div>
+    </div>
+  `;
+}
+
+function v2InitCommunityCharts() {
+  const a1 = (typeof R !== 'undefined' && R.a1) ? R.a1 : {};
+  if (!a1) return;
+
+  // ── Age Pyramid ────────────────────────────────────────────────────────────
+  const ageCtx = document.getElementById('v2-cp-age-chart');
+  if (ageCtx && a1.age_pyramid) {
+    killChart('v2-cp-age-chart');
+    const brackets = a1.age_pyramid.map(b => b.bracket);
+    const males    = a1.age_pyramid.map(b => -(b.male || 0));   // negative → left side
+    const females  = a1.age_pyramid.map(b =>  (b.female || 0)); // positive → right side
+    const maxVal   = Math.max(...a1.age_pyramid.flatMap(b => [b.male||0, b.female||0]));
+    charts['v2-cp-age-chart'] = new Chart(ageCtx, {
+      type: 'bar',
+      data: {
+        labels: brackets,
+        datasets: [
+          {label:'Male',   data: males,   backgroundColor:'rgba(74,158,255,0.85)', borderWidth:0, borderRadius:2},
+          {label:'Female', data: females, backgroundColor:'rgba(239,68,157,0.75)', borderWidth:0, borderRadius:2},
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + Math.abs(ctx.raw).toLocaleString() } }
+        },
+        scales: {
+          x: {
+            stacked: false,
+            ticks: { color:'#8a8d96', callback: v => Math.abs(v).toLocaleString() },
+            grid:  { color:'#2a2d35' },
+            min: -maxVal * 1.1,
+            max:  maxVal * 1.1,
+          },
+          y: { ticks: { color:'#8a8d96', font:{size:9} }, grid: { color:'#2a2d35' } }
+        }
+      }
+    });
+  }
+
+  // ── Consumer Expenditure Doughnut ──────────────────────────────────────────
+  const expCtx = document.getElementById('v2-cp-exp-chart');
+  if (expCtx && a1.consumer_expenditure && a1.consumer_expenditure.categories) {
+    killChart('v2-cp-exp-chart');
+    const cats   = a1.consumer_expenditure.categories;
+    const COLORS = ['rgba(74,158,255,0.85)','rgba(61,214,140,0.85)','rgba(245,158,11,0.85)',
+                    'rgba(167,139,250,0.85)','rgba(6,182,212,0.85)','rgba(249,115,22,0.85)',
+                    'rgba(239,68,68,0.85)', 'rgba(234,179,8,0.85)', 'rgba(20,184,166,0.85)'];
+    charts['v2-cp-exp-chart'] = new Chart(expCtx, {
+      type: 'doughnut',
+      data: {
+        labels: cats.map(c => c.category),
+        datasets: [{
+          data: cats.map(c => c.amount_millions),
+          backgroundColor: COLORS,
+          borderWidth: 1,
+          borderColor: '#1a1d24',
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ' $' + ctx.raw + 'M (' + cats[ctx.dataIndex]?.pct_of_total + '%)' } }
+        }
+      }
+    });
+  }
+
+  // ── Population Projections Line ────────────────────────────────────────────
+  const projCtx = document.getElementById('v2-cp-proj-chart');
+  if (projCtx && a1.population_projections) {
+    killChart('v2-cp-proj-chart');
+    const actual    = a1.population_projections.filter(p => p.year <= 2024);
+    const projected = a1.population_projections.filter(p => p.year >  2024);
+    charts['v2-cp-proj-chart'] = new Chart(projCtx, {
+      type: 'line',
+      data: {
+        labels: a1.population_projections.map(p => p.year),
+        datasets: [
+          {
+            label: 'Actual',
+            data: a1.population_projections.map(p => p.year <= 2024 ? p.population : null),
+            borderColor: 'rgba(74,158,255,1)',
+            backgroundColor: 'rgba(74,158,255,0.15)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointBackgroundColor: 'rgba(74,158,255,1)',
+            borderWidth: 2,
+          },
+          {
+            label: 'Projected',
+            data: a1.population_projections.map((p, i, arr) => {
+              if (p.year >= 2024) return p.population;
+              if (p.year === arr.filter(x => x.year <= 2024).slice(-1)[0]?.year) return p.population;
+              return null;
+            }),
+            borderColor: 'rgba(61,214,140,1)',
+            backgroundColor: 'rgba(61,214,140,0.08)',
+            fill: true,
+            borderDash: [5,4],
+            tension: 0.3,
+            pointRadius: 4,
+            pointBackgroundColor: 'rgba(61,214,140,1)',
+            borderWidth: 2,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color:'#8a8d96', font:{size:11} } },
+          tooltip: { callbacks: { label: ctx => ' ' + ctx.raw?.toLocaleString() + ' people' } }
+        },
+        scales: {
+          x: { ticks: { color:'#8a8d96' }, grid: { color:'#2a2d35' } },
+          y: { ticks: { color:'#8a8d96', callback: v => (v/1000).toFixed(0)+'K' }, grid: { color:'#2a2d35' } }
+        }
+      }
+    });
+  }
 }
 
 // ── MARKET ────────────────────────────────────────────────────────────────

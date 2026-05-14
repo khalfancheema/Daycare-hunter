@@ -272,6 +272,87 @@ function getDemoData(agentNum, industry) {
       summary: 'Johns Creek metro has 47,200 children under age 6 within a 15-mile radius. Median household income is $127,400 — 62% above national average. 74% of households with children have dual incomes, creating strong childcare demand.',
       population_under_6: 47200, median_income: 127400, households_with_children: 19800,
       dual_income_pct: 74, subsidy_eligible_pct: 18,
+      age_pyramid: [
+        {bracket:'0-4',   male:2820, female:2710},
+        {bracket:'5-9',   male:3140, female:3050},
+        {bracket:'10-14', male:3280, female:3190},
+        {bracket:'15-19', male:2940, female:2830},
+        {bracket:'20-24', male:2610, female:2540},
+        {bracket:'25-29', male:3820, female:3760},
+        {bracket:'30-34', male:5240, female:5110},
+        {bracket:'35-39', male:5680, female:5540},
+        {bracket:'40-44', male:5120, female:5010},
+        {bracket:'45-49', male:4640, female:4580},
+        {bracket:'50-54', male:3980, female:4120},
+        {bracket:'55-59', male:3240, female:3480},
+        {bracket:'60-64', male:2560, female:2900},
+        {bracket:'65-69', male:1820, female:2260},
+        {bracket:'70-74', male:1240, female:1740},
+        {bracket:'75+',   male: 820, female:1380}
+      ],
+      generation_breakdown: [
+        {gen:'Gen Alpha (0-12)',   population_pct:17.2, households_pct:20.8},
+        {gen:'Gen Z (13-28)',      population_pct:13.4, households_pct:10.6},
+        {gen:'Millennial (29-44)', population_pct:26.8, households_pct:34.2},
+        {gen:'Gen X (45-60)',      population_pct:23.6, households_pct:26.4},
+        {gen:'Boomer (61-79)',     population_pct:15.8, households_pct: 7.2},
+        {gen:'Silent (80+)',       population_pct: 3.2, households_pct: 0.8}
+      ],
+      multi_radius: [
+        {ring:'1 mi', population: 9840,  households:  3420, median_hh_income:154000, pct_with_children:42, pop_under5: 1180, avg_hh_size:2.88},
+        {ring:'3 mi', population:52600,  households: 18200, median_hh_income:138900, pct_with_children:40, pop_under5: 6240, avg_hh_size:2.89},
+        {ring:'5 mi', population:134200, households: 46800, median_hh_income:127400, pct_with_children:41, pop_under5:15800, avg_hh_size:2.87}
+      ],
+      consumer_expenditure: {
+        radius_miles: 5,
+        total_expenditure_millions: 8110,
+        categories: [
+          {category:'Housing',               amount_millions:2840, pct_of_total:35.0},
+          {category:'Transportation',        amount_millions:1140, pct_of_total:14.1},
+          {category:'Food at Home',          amount_millions: 810, pct_of_total:10.0},
+          {category:'Healthcare',            amount_millions: 620, pct_of_total: 7.6},
+          {category:'Education & Childcare', amount_millions: 490, pct_of_total: 6.0},
+          {category:'Food Away from Home',   amount_millions: 480, pct_of_total: 5.9},
+          {category:'Entertainment',         amount_millions: 340, pct_of_total: 4.2},
+          {category:'Personal Care',         amount_millions: 180, pct_of_total: 2.2},
+          {category:'Other',                 amount_millions:1210, pct_of_total:14.9}
+        ]
+      },
+      lifestyle_segments: [
+        {segment:'Savvy Suburbanites',         pct:18.4, description:'Established upper-middle-class families, homeowners, education-focused'},
+        {segment:'Professional Pride',         pct:14.2, description:'Younger professionals, dual-income, high education, tech-forward'},
+        {segment:'Bright Young Professionals', pct:11.8, description:'Recent college grads building careers, renter households'},
+        {segment:'In Style',                   pct: 9.6, description:'Upper-middle urban lifestyle, brand conscious, high disposable income'},
+        {segment:'Family Foundations',         pct: 7.3, description:'Young families prioritizing schools, safety, and suburban amenities'}
+      ],
+      population_projections: [
+        {year:2020, population:41200},
+        {year:2021, population:43800},
+        {year:2022, population:46100},
+        {year:2023, population:47800},
+        {year:2024, population:49200},
+        {year:2025, population:51000},
+        {year:2030, population:58400}
+      ],
+      occupation_lq: [
+        {occupation:'Computer & Math',          area_pct:12.4, us_pct: 3.1, lq:4.00},
+        {occupation:'Business & Financial',     area_pct: 8.6, us_pct: 5.3, lq:1.62},
+        {occupation:'Management',               area_pct: 7.2, us_pct: 5.8, lq:1.24},
+        {occupation:'Healthcare Practitioners', area_pct: 6.8, us_pct: 6.3, lq:1.08},
+        {occupation:'Education & Training',     area_pct: 5.4, us_pct: 6.1, lq:0.89},
+        {occupation:'Sales & Related',          area_pct: 9.2, us_pct:10.1, lq:0.91},
+        {occupation:'Service Occupations',      area_pct:11.8, us_pct:17.4, lq:0.68}
+      ],
+      education_attainment: {radius_miles:3, less_than_hs_pct:2.4, hs_grad_pct:8.6, some_college_pct:14.2, associates_pct:5.8, bachelors_pct:38.4, graduate_pct:30.6},
+      housing_detail: {median_home_value:548000, avg_home_value:624000, owner_occupied_pct:72.4, renter_occupied_pct:27.6, median_gross_rent:1840, built_2010_later_pct:28.2, built_2000_2009_pct:34.6},
+      language_spoken: [
+        {language:'English only',  pct:58.4},
+        {language:'Asian/Pacific', pct:22.8},
+        {language:'Spanish',       pct:12.6},
+        {language:'Indo-European', pct: 4.2},
+        {language:'Other',         pct: 2.0}
+      ],
+      daytime_population: {residential_pop:49200, daytime_pop:54800, daytime_to_residential_ratio:1.11, workers_present:28400, workers_at_home:14600}
     },
     2: { // Gap Analysis
       cities: [
