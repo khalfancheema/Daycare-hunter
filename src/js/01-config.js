@@ -208,7 +208,7 @@ const PROVIDERS = {
   anthropic: {
     label: 'Anthropic (Claude)',
     url: 'https://api.anthropic.com/v1/messages',
-    model_default: 'claude-sonnet-4-5',
+    model_default: 'claude-sonnet-4-6',
     headers: key => ({'x-api-key':key,'anthropic-version':'2023-06-01','Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'}),
     buildBody: (system,user,model) => ({model,max_tokens:8192,system,messages:[{role:'user',content:user}]}),
     extractText: d => (d.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n'),

@@ -9,7 +9,11 @@ function v2ShowExecution() {
 
   // Try to pull milestones from Agent 10 (Project Plan)
   const milestones = _toArr(R?.a10?.milestones || R?.a10?.phases || []);
-  const checklist  = _toArr(R?.a10?.launch_checklist || R?.a10?.checklist || []);
+  // checklist_phases is [{phase, items:[{task,owner,critical}]}] — flatten to item list
+  const _cpArr = _toArr(R?.a10?.checklist_phases || R?.a10?.launch_checklist || R?.a10?.checklist || []);
+  const checklist = _cpArr.length && _cpArr[0]?.items
+    ? _cpArr.flatMap(p => _toArr(p.items))
+    : _cpArr;
   const permits    = _toArr(R?.a5?.requirements || R?.a5?.checklist || []);
 
   const phases = milestones.length ? milestones : v2DefaultExecPhases(ind.label);

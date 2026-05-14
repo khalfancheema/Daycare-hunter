@@ -14,7 +14,7 @@ async function runAgent10Parts(a3,a4,a5,a7,a9) {
   const ctx7 = ctx(a7,['summary','scenarios','startup_breakdown','total_startup_cost']);
   const ctx9 = ctx(a9,['executive_summary','financial_plan','operations_plan']);
 
-  if(demoMode&&typeof getDemoData==='function'){const _d=getDemoData(10);if(_d){R.a10=_d;try{renderAgent10(_d);}catch(e){}setDot(10,'done');showOut(10);return JSON.stringify(_d);}}
+  if(demoMode&&typeof getDemoData==='function'){const _d=getDemoData(10);if(_d){R.a10=_d;try{renderProjectPlan(_d);}catch(e){}setDot(10,'done');showOut(10);return _d;}}
   // ── Part 1 of 3: All 5 Project Phases (Gantt) ───────────
   $('10-gantt-c').innerHTML = subProgress(1,3,'Project Phases & Gantt Chart');
   const sys1 = `You are a senior ${ind.unit} project manager with 15+ years experience on commercial launches. Return JSON only.`;
