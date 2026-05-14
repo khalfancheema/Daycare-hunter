@@ -11,6 +11,17 @@ async function runAgent17() {
   const out = $('out-17');
   if (out) out.innerHTML = `<div style="padding:16px">${subProgress(1, 1, 'Collecting & validating sources…')}</div>`;
 
+  // Demo mode early-return (parity with all other agents)
+  if (demoMode && typeof getDemoData === 'function') {
+    const _d = getDemoData(17);
+    if (_d) {
+      R.a17 = _d;
+      try { renderAgent17(_d); } catch(e) {}
+      setDot(17, 'done');
+      return JSON.stringify(_d);
+    }
+  }
+
   const ind = industry();
 
   // ── Collect partial data from completed agents ──────────

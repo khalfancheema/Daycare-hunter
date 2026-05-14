@@ -50,8 +50,8 @@ function v2StartDemo() {
     experience: 'some',
     goal: 'open',
   };
-  // Activate demo mode in v1
-  demoMode = true;
+  // Activate demo mode in v1 (window-scoped to avoid strict-mode ReferenceError)
+  try { demoMode = true; } catch(e) { window.demoMode = true; }
   const demoBtn = document.getElementById('demoBtn');
   if (demoBtn) {
     demoBtn.style.background = 'var(--amber-dim)';

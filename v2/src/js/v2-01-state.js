@@ -149,8 +149,9 @@ window._v2AbortCtrl = new AbortController();
 
 function v2StopPipeline() {
   // 1. Signal pipeline loop to exit at next checkpoint
-  stopRequested = true;
-  running = false;
+  // Guard against ReferenceError when v1 globals not yet loaded
+  try { stopRequested = true; } catch(e) { window.stopRequested = true; }
+  try { running = false; } catch(e) { window.running = false; }
 
   // 2. Abort any in-flight API fetch immediately
   if (window._v2AbortCtrl) {

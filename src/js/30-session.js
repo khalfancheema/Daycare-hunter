@@ -69,8 +69,14 @@ function sessionRestore() {
   }
   if ($('grades') && d.grades) $('grades').value = d.grades;
 
-  // Restore R object
-  if (d.R) { try { Object.assign(R, d.R); } catch(e) {} }
+  // Restore R object — clear stale keys first so a smaller saved session
+  // doesn't leave keys from a previous larger run.
+  if (d.R) {
+    try {
+      Object.keys(R).forEach(k => { delete R[k]; });
+      Object.assign(R, d.R);
+    } catch(e) {}
+  }
 
   // Restore rendered HTML into agent output panels
   if (d.html) {
@@ -80,7 +86,9 @@ function sessionRestore() {
       const dot  = $('dot-'  + n);
       if (out) {
         out.innerHTML = html;
-        out.classList.add('visible');
+        // Use 'show' class to match what tab()/agent-out:show CSS expects.
+        // (Older code used 'visible' which the rest of the UI doesn't react to.)
+        out.classList.add('show');
       }
       if (card) card.classList.add('done');
       if (dot)  dot.className = 'agent-dot done';
@@ -164,7 +172,7 @@ function copyShareableLink() {
     if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = '🔗 Copy Link', 2200); }
   };
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(done).catch(() => { prompt('Copy this URL:', url); });
+    navigator.clipboard.writeText(url).then(done).catch(() => { prompt('Copy this URL:', url); done(); });
   } else {
     prompt('Copy this URL:', url);
     done();

@@ -20,10 +20,10 @@ function setDot(n,state){
     }
   }
 }
-function showOut(id){$('out-'+id).className='agent-out show'}
-function setProgress(p,t){$('progressFill').style.width=p+'%';$('progressText').textContent=t}
-function showErr(m){const e=$('errorBanner');e.textContent=m;e.className='error-banner show'}
-function hideErr(){$('errorBanner').className='error-banner'}
+function showOut(id){const el=$('out-'+id);if(el)el.className='agent-out show'}
+function setProgress(p,t){const f=$('progressFill');if(f)f.style.width=p+'%';const x=$('progressText');if(x)x.textContent=t}
+function showErr(m){const e=$('errorBanner');if(!e)return;e.textContent=m;e.className='error-banner show'}
+function hideErr(){const e=$('errorBanner');if(e)e.className='error-banner'}
 
 function tab(aid, tid) {
   const out=$('out-'+aid);
@@ -113,7 +113,7 @@ CRITICAL — DATA INTEGRITY (strictly enforced):
       const raw = await claude(strictSystem, user + (attempt > 1 ? '\n\nRemember: respond with ONLY the JSON object, nothing else.' : ''));
       const d = parseJSON(raw);
       if (d) { setCache(system, user, d); return d; }
-      console.warn(`Attempt ${attempt} parse fail. Raw:`, raw.substring(0, 200));
+      console.warn(`Attempt ${attempt} parse fail. Raw:`, (raw||'').substring(0, 200));
     } catch(e) {
       if (attempt === 3) throw e;
       console.warn(`Attempt ${attempt} API error:`, e.message);

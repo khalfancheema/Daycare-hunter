@@ -182,7 +182,7 @@ function printAgentData() {
   var meta = AGENT_META[n] || { name:'Agent '+n, ico:'🤖' };
   var srcOut = document.getElementById('out-'+n);
   var w = window.open('','_blank');
-  if (!w) return;
+  if (!w) { if (typeof showErr === 'function') showErr('Pop-up blocked — allow pop-ups for this site to print agent reports.'); return; }
   var content = '';
   if (srcOut) {
     var panels = srcOut.querySelectorAll('.panel');
@@ -217,7 +217,7 @@ function printAgentData() {
     +content+jsonBlob+'</body></html>');
   w.document.close();
   w.focus();
-  setTimeout(function(){ w.print(); }, 400);
+  setTimeout(function(){ try { w.print(); } catch(e) {} }, 400);
 }
 
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeAgentModal(); });

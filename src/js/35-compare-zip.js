@@ -8,7 +8,7 @@
 // ══════════════════════════════════════════════════════════
 
 async function runZipComparison() {
-  const zip2 = $('compareZipInput')?.value.trim();
+  const zip2 = ($('compareZipInput')?.value || '').trim();
   if (!zip2 || !/^\d{5}$/.test(zip2)) {
     showErr('Enter a valid 5-digit ZIP code for comparison.');
     return;

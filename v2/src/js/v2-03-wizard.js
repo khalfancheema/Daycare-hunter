@@ -108,7 +108,7 @@ function v2WizRenderStep() {
       <div class="v2-field" id="wiz-loc-zip-row" style="display:${locMode==='zip'?'block':'none'}">
         <label>ZIP Code</label>
         <input class="v2-input" id="wiz-zip" type="text" maxlength="5" placeholder="e.g. 30097" value="${d.zip||''}"
-          oninput="V2.wizard.data.zip=this.value;if(typeof v2LookupZIP==='function')v2LookupZIP(this.value);if(typeof v2ShowWizardZIPStats==='function')v2ShowWizardZIPStats(this.value)" />
+          oninput="V2.wizard.data.zip=this.value;if(this._zipDeb)clearTimeout(this._zipDeb);const v=this.value;this._zipDeb=setTimeout(()=>{if(typeof v2LookupZIP==='function')v2LookupZIP(v);if(typeof v2ShowWizardZIPStats==='function')v2ShowWizardZIPStats(v);},350)" />
         <div id="wiz-zip-preview" style="font-size:12px;color:var(--v2-t2);margin-top:4px;min-height:16px">${d.zipLabel||''}</div>
         <div id="wiz-zip-stats"></div>
       </div>
@@ -390,18 +390,25 @@ function v2LaunchPipeline() {
   if (toggleBtn) toggleBtn.textContent = '💬 AI Answers';
 
   // Add opening copilot message (widget will be opened at pipeline complete)
-  v2ChatMsg('ai', `🚀 Starting full analysis for your ${ind.label} in ZIP ${d.zip||'30097'}.<br><br>I'll run all 17 research agents — demographics, compliance, real estate, financials, and more. ${demoMode ? 'Demo mode: instant results.' : 'Live mode: ~5–8 minutes with API key.'}`);
+  const isDemo = typeof demoMode !== 'undefined' && demoMode;
+  v2ChatMsg('ai', `🚀 Starting full analysis for your ${ind.label} in ZIP ${d.zip||'30097'}.<br><br>I'll run all 17 research agents — demographics, compliance, real estate, financials, and more. ${isDemo ? 'Demo mode: instant results.' : 'Live mode: ~5–8 minutes with API key.'}`);
 
   // F14: Request notification permission before pipeline starts
   if (typeof v2RequestNotificationPermission === 'function') v2RequestNotificationPermission();
 
   // Run the pipeline
   setTimeout(() => {
-    stopRequested = false;
+    // If user clicked Stop during the 800ms warm-up, do NOT start the pipeline
+    if (typeof stopRequested !== 'undefined' && stopRequested) {
+      v2ChatMsg('ai', '⬛ Analysis cancelled before start.');
+      return;
+    }
+    try { stopRequested = false; } catch(e) { window.stopRequested = false; }
     // Fresh abort controller for this run — allows stop button to kill in-flight fetches
     window._v2AbortCtrl = new AbortController();
     const stopBtn = document.getElementById('v2-copilot-stop');
     if (stopBtn) { stopBtn.textContent = '⬛ Stop'; stopBtn.disabled = false; }
-    runPipeline();
+    if (typeof runPipeline === 'function') runPipeline();
+    else v2ChatMsg('ai', '⚠ Pipeline not loaded. Reload the page.');
   }, 800);
 }

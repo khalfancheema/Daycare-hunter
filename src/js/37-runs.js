@@ -59,7 +59,7 @@ function loadNamedRun(id) {
   if (!run) return false;
   // Restore inputs
   const zi = $('zip'); if(zi) zi.value = run.zip || '';
-  const ind = $('industrySelect'); if(ind) { ind.value = run.industry || 'daycare'; onIndustryChange(); }
+  const ind = $('industrySelect'); if(ind) { ind.value = run.industry || 'daycare'; if(typeof onIndustryChange==='function') onIndustryChange(); }
   const ra = $('radius'); if(ra) ra.value = run.radius || '40';
   const ca = $('capacity'); if(ca) ca.value = run.capacity || '75';
   const bu = $('budget'); if(bu) bu.value = run.budget || '600000';
@@ -89,6 +89,12 @@ function loadNamedRun(id) {
 function deleteNamedRun(id) {
   const runs = _getRuns().filter(r => r.id !== id);
   _saveRuns(runs);
+  renderRunsPanel();
+}
+
+function clearAllNamedRuns() {
+  if (!confirm('Clear all saved runs?')) return;
+  try { localStorage.removeItem(RUNS_STORE_KEY); } catch(e) {}
   renderRunsPanel();
 }
 
@@ -147,7 +153,7 @@ function renderRunsPanel() {
   <div class="runs-panel-inner">
     <div class="runs-header">
       <span>Saved Runs (${runs.length}/${MAX_NAMED_RUNS})</span>
-      <button class="runs-clear-btn" onclick="if(confirm('Clear all saved runs?')){localStorage.removeItem(RUNS_STORE_KEY);renderRunsPanel();}">Clear All</button>
+      <button class="runs-clear-btn" onclick="clearAllNamedRuns()">Clear All</button>
     </div>
     <div class="runs-list">${rows}</div>
     <div class="runs-hint">Tip: Save before changing inputs to compare conservative vs aggressive budget scenarios side by side.</div>

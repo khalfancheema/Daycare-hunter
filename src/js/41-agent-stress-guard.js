@@ -242,8 +242,8 @@ Include 5 distinct audience segments with messaging tailored to specific competi
  */
 const _origRunAgent14 = typeof runAgent14 === 'function' ? runAgent14 : null;
 if (typeof runAgent14 === 'function') {
-  const _baseRunAgent14 = runAgent14;
-  runAgent14 = async function(RFull) {
+  const _baseRunAgent14 = window.runAgent14;
+  window.runAgent14 = async function(RFull) {
     // Extract only the summary fields from each agent — drastically reduces input
     const slim = {};
     for (let i = 1; i <= 17; i++) {
@@ -265,8 +265,8 @@ if (typeof runAgent14 === 'function') {
 // We patch claudeJSON itself to add token-size monitoring and warnings.
 (function _patchClaudeJSON() {
   if (typeof claudeJSON !== 'function') return;
-  const _origClaudeJSON = claudeJSON;
-  claudeJSON = async function(system, user) {
+  const _origClaudeJSON = window.claudeJSON;
+  window.claudeJSON = async function(system, user) {
     const totalChars = (system || '').length + (user || '').length;
     if (totalChars > 100000) {
       console.warn(`[StressGuard] Large claudeJSON call: ${totalChars} chars (~${Math.round(totalChars/4)} tokens). Consider sub-agents.`);

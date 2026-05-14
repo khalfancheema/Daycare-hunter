@@ -93,18 +93,18 @@ function exportAgentPDF(n) {
   if (!out) { alert('No data yet for Agent '+n+' — run the pipeline first.'); return; }
   var ind = industry();
   var w = window.open('', '_blank');
-  if (!w) return;
+  if (!w) { if (typeof showErr === 'function') showErr('Pop-up blocked — allow pop-ups to export as PDF.'); return; }
   var cloned = out.cloneNode(true);
   // Show all panels in print view
   cloned.querySelectorAll('.panel').forEach(function(p){ p.style.display='block'; });
   cloned.querySelectorAll('.tabs,.raw-toggle,.raw-data-wrap,.rerun-btn,.expand-btn,.export-dropdown').forEach(function(el){ el.style.display='none'; });
   w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+info.ico+' '+info.name+'</title><style>'+_lightCSS()+'</style></head><body>'+
     '<h1>'+info.ico+' '+info.name+'</h1>'+
-    '<div class="subtitle">'+ind.label+' Analysis · ZIP '+zip()+' · '+new Date().toLocaleDateString()+'</div>'+
+    '<div class="subtitle">'+(ind&&ind.label||'')+' Analysis · ZIP '+zip()+' · '+new Date().toLocaleDateString()+'</div>'+
     cloned.innerHTML+
     '</body></html>');
   w.document.close();
-  setTimeout(function(){ w.focus(); w.print(); }, 600);
+  setTimeout(function(){ try { w.focus(); w.print(); } catch(e) {} }, 600);
 }
 
 // ── Word (.doc download) ────────────────────────────────────
@@ -127,7 +127,7 @@ function exportAgentWord(n) {
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = info.name.toLowerCase().replace(/\s+/g,'-') + '-' + zip() + '.doc';
-  a.click();
+  document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
 }
 
@@ -168,7 +168,7 @@ function exportAgentExcel(n) {
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = info.name.toLowerCase().replace(/\s+/g,'-') + '-' + zip() + '.csv';
-  a.click();
+  document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
 }
 
@@ -238,7 +238,7 @@ function exportAgentSlides(n) {
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = info.name.toLowerCase().replace(/\s+/g,'-') + '-slides-' + zip() + '.html';
-  a.click();
+  document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
 }
 
@@ -315,8 +315,10 @@ function runIndustryComparison() {
     return;
   }
 
+  if (typeof INDUSTRIES === 'undefined') { alert('Industry config not loaded.'); return; }
   var ind1 = INDUSTRIES[ind1Key];
   var ind2 = INDUSTRIES[ind2Key];
+  if (!ind1 || !ind2) { alert('Industry not found in config.'); return; }
   var panel = document.getElementById('comparePanel');
   if (!panel) return;
 

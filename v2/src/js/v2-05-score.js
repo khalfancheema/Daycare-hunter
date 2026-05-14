@@ -7,19 +7,22 @@ function v2CalcScore() {
   // Agent 2: Gap analysis — top city gap score (0–10 → 0–25 pts)
   if (R.a2) {
     const cities = R.a2.cities || [];
-    const topGap = Math.max(...cities.map(c => c.gap_score || 0), 0);
+    const topGap = Math.max(...cities.map(c => Number(c.gap_score) || 0), 0);
     score  += (topGap / 10) * 25;
     weight += 25;
   }
 
   // Agent 7: Financial — base-case monthly net (0–25 pts)
+  // Break-even speed bonus only applies when net is positive — a money-losing
+  // business that "breaks even" at month 10 still loses money for years.
   if (R.a7) {
     const scenarios = _toArr(R.a7.scenarios);
     const base = scenarios.find(s => (s.name||'').toLowerCase().includes('base')) || scenarios[1] || {};
     const net  = base.monthly_net || 0;
     const be   = base.breakeven_months || 36;
-    const finScore = Math.max(0, Math.min(25, (net > 0 ? 15 : 5) + (be < 18 ? 10 : be < 24 ? 6 : be < 36 ? 3 : 0)));
-    score  += finScore;
+    const profPts = net > 0 ? 15 : 5;
+    const bePts   = net > 0 ? (be < 18 ? 10 : be < 24 ? 6 : be < 36 ? 3 : 0) : 0;
+    score  += Math.max(0, Math.min(25, profPts + bePts));
     weight += 25;
   }
 
@@ -36,14 +39,15 @@ function v2CalcScore() {
   }
 
   // Agent 6: Competitive intel — market saturation
+  // Skip the component entirely when no city data exists — don't fabricate
+  // an "average of 5" that gives 10/15 to an unanalyzed market.
   if (R.a6) {
     const cities = _toArr(R.a6.cities || R.a6.by_city || []);
-    const avgComp = cities.length
-      ? cities.reduce((s,c)=>s+(c.competitor_count||c.total_competitors||5),0)/cities.length
-      : 5;
-    const compScore = Math.max(0, Math.min(15, 15 - avgComp));
-    score  += compScore;
-    weight += 15;
+    if (cities.length) {
+      const avgComp = cities.reduce((s,c)=>s+(Number(c.competitor_count||c.total_competitors)||0),0)/cities.length;
+      score  += Math.max(0, Math.min(15, 15 - avgComp));
+      weight += 15;
+    }
   }
 
   // Agent 5: Compliance — timeline (simpler = better)
@@ -55,7 +59,10 @@ function v2CalcScore() {
   }
 
   if (weight === 0) return 0;
-  return Math.round((score / weight) * 100);
+  // Score is on a fixed 100-point scale (Gap25+Fin25+Verdict20+Comp15+Compl15).
+  // Do NOT normalize by `weight` — that would let a partial pipeline run show
+  // 100/100 from a single high-scoring agent. Return raw earned points.
+  return Math.round(score);
 }
 
 // Returns per-component breakdown matching v2CalcScore() exactly

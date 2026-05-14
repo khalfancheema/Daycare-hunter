@@ -301,12 +301,17 @@ function v2RenderEnrollmentRamp() {
         <!-- revenue line -->
         <path d="${revPath}" stroke="#6366f1" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
         <!-- data points -->
-        ${projs.map((p,i) => `
+        ${projs.map((p,i) => {
+          // Escape quotes in month label and ensure numeric fields are finite to
+          // avoid inline-handler parse errors when AI returns odd data.
+          const m = String(p.month||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+          const rev = Number(p.rev)||0, exp = Number(p.exp)||0, cum = Number(p.cum)||0;
+          return `
           <circle cx="${toX(i)}" cy="${toY(p.rev)}" r="3" fill="#6366f1"
-            style="cursor:pointer" onclick="v2OpenBreakEvenMonthDetail('${p.month}',${p.rev},${p.exp},${p.cum})"
-            title="${p.month}: Rev $${p.rev.toLocaleString()}"/>
-          <text x="${toX(i)}" y="${padT+cH+12}" font-size="8" fill="var(--v2-t3)" text-anchor="middle">${p.month}</text>
-        `).join('')}
+            style="cursor:pointer" onclick="v2OpenBreakEvenMonthDetail('${m}',${rev},${exp},${cum})"
+            title="${m}: Rev $${rev.toLocaleString()}"/>
+          <text x="${toX(i)}" y="${padT+cH+12}" font-size="8" fill="var(--v2-t3)" text-anchor="middle">${m}</text>
+        `;}).join('')}
       </svg>
       <div style="font-size:10px;color:var(--v2-t3);margin-top:4px">
         Click any data point to see the full P&amp;L breakdown for that month
@@ -321,34 +326,43 @@ function v2RenderLeaseSlider(a7) {
   const leaseItem = ops.find(o => (o.item||'').toLowerCase().includes('lease'));
   const baseLease = leaseItem ? leaseItem.amount : 10800;
   const sqft = 6000;
-  const basePsf = (baseLease / sqft * 12).toFixed(2);
+  const basePsfRaw = baseLease / sqft * 12;
+  // Auto-extend slider range so the actual base rent always fits
+  const minPsf = Math.min(8, Math.floor(basePsfRaw * 0.7));
+  const maxPsf = Math.max(28, Math.ceil(basePsfRaw * 1.4));
+  const basePsf = basePsfRaw.toFixed(2);
   const scenarios = a7.scenarios || [];
   const base = scenarios.find(s => (s.name||'').toLowerCase().includes('base')) || scenarios[0] || {};
   const baseRev = base.monthly_revenue || 138000;
   const baseExp = base.monthly_expenses || 108400;
+  // Use real startup cost when available so break-even sensitivity is meaningful
+  const startup = (typeof R !== 'undefined' && R.a7?.total_startup_cost)
+    || (typeof V2 !== 'undefined' && V2.run?.budget)
+    || 600000;
 
   return `
     <div style="margin-top:16px;padding:14px;background:rgba(99,102,241,.06);border-radius:10px;border:1px solid rgba(99,102,241,.15)">
       <div style="font-size:12px;font-weight:600;margin-bottom:10px">🏗️ Lease Rate Sensitivity — $/sqft/year</div>
       <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:11px;color:var(--v2-t3)">$12/sqft</span>
-        <input type="range" id="v2-lease-slider" min="12" max="22" step="0.5" value="${basePsf}"
+        <span style="font-size:11px;color:var(--v2-t3)">$${minPsf}/sqft</span>
+        <input type="range" id="v2-lease-slider" min="${minPsf}" max="${maxPsf}" step="0.5" value="${basePsf}"
           style="flex:1;accent-color:#6366f1"
-          oninput="v2UpdateLeaseCalc(this.value,${sqft},${baseRev},${baseExp},${baseLease})">
-        <span style="font-size:11px;color:var(--v2-t3)">$22/sqft</span>
+          oninput="v2UpdateLeaseCalc(this.value,${sqft},${baseRev},${baseExp},${baseLease},${startup})">
+        <span style="font-size:11px;color:var(--v2-t3)">$${maxPsf}/sqft</span>
       </div>
       <div id="v2-lease-output" style="margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-        ${_v2LeaseCalcHTML(parseFloat(basePsf), sqft, baseRev, baseExp, baseLease)}
+        ${_v2LeaseCalcHTML(parseFloat(basePsf), sqft, baseRev, baseExp, baseLease, startup)}
       </div>
     </div>`;
 }
 
-function _v2LeaseCalcHTML(psf, sqft, baseRev, baseExp, baseLease) {
+function _v2LeaseCalcHTML(psf, sqft, baseRev, baseExp, baseLease, startup) {
   const newLease = Math.round(psf * sqft / 12);
   const delta = newLease - baseLease;
   const newExp = baseExp + delta;
   const newNet = baseRev - newExp;
-  const beMonths = newNet > 0 ? Math.round(600000 / newNet) : 99;
+  const cap = startup || 600000;
+  const beMonths = newNet > 0 ? Math.round(cap / newNet) : 99;
   const deltaColor = delta > 0 ? '#ef4444' : '#22c55e';
   return `
     <div class="v2-lease-stat"><div class="v2-stat-mini-label">Lease/mo</div><div class="v2-stat-mini-val">$${newLease.toLocaleString()}</div></div>
@@ -357,9 +371,9 @@ function _v2LeaseCalcHTML(psf, sqft, baseRev, baseExp, baseLease) {
     <div class="v2-lease-stat"><div class="v2-stat-mini-label">Break-Even</div><div class="v2-stat-mini-val">Mo.${beMonths > 60 ? '60+' : beMonths}</div></div>`;
 }
 
-function v2UpdateLeaseCalc(psf, sqft, baseRev, baseExp, baseLease) {
+function v2UpdateLeaseCalc(psf, sqft, baseRev, baseExp, baseLease, startup) {
   const out = document.getElementById('v2-lease-output');
-  if (out) out.innerHTML = _v2LeaseCalcHTML(parseFloat(psf), sqft, baseRev, baseExp, baseLease);
+  if (out) out.innerHTML = _v2LeaseCalcHTML(parseFloat(psf), sqft, baseRev, baseExp, baseLease, startup);
 }
 
 function v2OpenBreakEvenMonthDetail(month, rev, exp, cum) {
@@ -428,8 +442,11 @@ function v2RenderRiskScored() {
     const prob = _V2_RISK_PROB[r.severity] || 0.35;
     const impact = _V2_RISK_IMPACT[r.severity] || 2;
     const score = (prob * impact * 10).toFixed(1);
-    const trigger = _V2_RISK_TRIGGERS[i % _V2_RISK_TRIGGERS.length];
-    const cost = _V2_RISK_COSTS[i % _V2_RISK_COSTS.length];
+    // Only use real trigger/cost from AI — never fabricate
+    const trigger = r.trigger || r.early_warning || null;
+    const cost = (typeof r.mitigation_cost === 'number') ? r.mitigation_cost
+               : (typeof r.cost === 'number')             ? r.cost
+               : null;
     const color = r.severity === 'High' ? '#ef4444' : r.severity === 'Medium' ? '#f59e0b' : '#22c55e';
     return { ...r, prob, impact, score: parseFloat(score), trigger, cost, color };
   }).sort((a,b) => b.score - a.score);
@@ -455,11 +472,11 @@ function v2RenderRiskScored() {
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
             <div style="font-size:10px;color:var(--v2-t3)">Probability<br><strong style="color:var(--v2-t1);font-size:11px">${(r.prob*100).toFixed(0)}%</strong></div>
             <div style="font-size:10px;color:var(--v2-t3)">Impact<br><strong style="color:var(--v2-t1);font-size:11px">${r.impact}/3</strong></div>
-            <div style="font-size:10px;color:var(--v2-t3)">Mitigation Cost<br><strong style="color:var(--v2-amber);font-size:11px">$${r.cost.toLocaleString()}</strong></div>
+            <div style="font-size:10px;color:var(--v2-t3)">Mitigation Cost<br><strong style="color:var(--v2-amber);font-size:11px">${r.cost!=null?'$'+r.cost.toLocaleString():'—'}</strong></div>
           </div>
-          <div style="font-size:11px;padding:6px 8px;background:rgba(245,158,11,.07);border-radius:6px;border-left:3px solid ${r.color};margin-bottom:6px">
+          ${r.trigger?`<div style="font-size:11px;padding:6px 8px;background:rgba(245,158,11,.07);border-radius:6px;border-left:3px solid ${r.color};margin-bottom:6px">
             <span style="color:var(--v2-t3)">Trigger: </span>${r.trigger}
-          </div>
+          </div>`:''}
           <div style="font-size:11px;color:var(--v2-t2);line-height:1.4"><span style="color:var(--v2-t3)">Mitigation: </span>${r.mitigation}</div>
         </div>`).join('')}
     </div>`;
@@ -621,15 +638,23 @@ function v2RenderScoreRunDiff() {
 
   const components = ['Gap','Financials','AI Verdict','Competition','Compliance'];
   const weights = [25,25,20,15,15];
-  const rows = components.map((name,i) => {
-    const syntheticDelta = (Math.random()*6-3).toFixed(1);
-    const d = parseFloat(syntheticDelta);
+  const keys = ['gap','financials','verdict','competition','compliance'];
+  const curBd = current.breakdown || {};
+  const prevBd = prev.breakdown || {};
+  // Only render per-component rows when we have real saved breakdowns for both runs
+  const hasBd = keys.some(k => curBd[k] != null) && keys.some(k => prevBd[k] != null);
+  const rows = hasBd ? components.map((name,i) => {
+    const k = keys[i];
+    const cur = Number(curBd[k]);
+    const pre = Number(prevBd[k]);
+    if (!isFinite(cur) || !isFinite(pre)) return '';
+    const d = +(cur - pre).toFixed(1);
     const c = d > 0 ? '#22c55e' : d < 0 ? '#ef4444' : 'var(--v2-t3)';
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px;border-bottom:1px solid var(--v2-border)">
       <span style="color:var(--v2-t2)">${name} <span style="font-size:10px;color:var(--v2-t3)">(${weights[i]}pt)</span></span>
       <span style="color:${c};font-weight:600">${d>0?'+':''}${d} pts</span>
     </div>`;
-  }).join('');
+  }).join('') : '<div style="font-size:11px;color:var(--v2-t3);padding:6px 0">Per-component change unavailable — save runs with score breakdowns to see deltas.</div>';
 
   return `
     <div class="v2-card" style="padding:16px;margin-top:16px;border:1px solid rgba(99,102,241,.2)">

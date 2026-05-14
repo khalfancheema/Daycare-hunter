@@ -31,11 +31,14 @@ async function claudeStream(system, user, onChunk) {
     stream: true
   };
 
-  const res = await fetch(p.url, {
+  const sig = window._v2AbortCtrl?.signal;
+  const fetchOpts = {
     method: 'POST',
     headers: p.headers(k),
     body: JSON.stringify(body)
-  });
+  };
+  if (sig && !sig.aborted) fetchOpts.signal = sig;
+  const res = await fetch(p.url, fetchOpts);
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -70,8 +73,10 @@ async function claudeStream(system, user, onChunk) {
             lastFlush = now;
             onChunk(fullText);
           }
+        } else if (evt.type === 'message_delta' && evt.delta?.stop_reason === 'max_tokens') {
+          throw new Error('Response truncated at max_tokens');
         }
-      } catch(_) {}
+      } catch(e) { if (e.message && e.message.indexOf('truncated')>=0) throw e; }
     }
   }
 

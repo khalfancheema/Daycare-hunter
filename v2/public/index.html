@@ -4113,10 +4113,10 @@ function setDot(n,state){
     }
   }
 }
-function showOut(id){$('out-'+id).className='agent-out show'}
-function setProgress(p,t){$('progressFill').style.width=p+'%';$('progressText').textContent=t}
-function showErr(m){const e=$('errorBanner');e.textContent=m;e.className='error-banner show'}
-function hideErr(){$('errorBanner').className='error-banner'}
+function showOut(id){const el=$('out-'+id);if(el)el.className='agent-out show'}
+function setProgress(p,t){const f=$('progressFill');if(f)f.style.width=p+'%';const x=$('progressText');if(x)x.textContent=t}
+function showErr(m){const e=$('errorBanner');if(!e)return;e.textContent=m;e.className='error-banner show'}
+function hideErr(){const e=$('errorBanner');if(e)e.className='error-banner'}
 
 function tab(aid, tid) {
   const out=$('out-'+aid);
@@ -4206,7 +4206,7 @@ CRITICAL — DATA INTEGRITY (strictly enforced):
       const raw = await claude(strictSystem, user + (attempt > 1 ? '\n\nRemember: respond with ONLY the JSON object, nothing else.' : ''));
       const d = parseJSON(raw);
       if (d) { setCache(system, user, d); return d; }
-      console.warn(`Attempt ${attempt} parse fail. Raw:`, raw.substring(0, 200));
+      console.warn(`Attempt ${attempt} parse fail. Raw:`, (raw||'').substring(0, 200));
     } catch(e) {
       if (attempt === 3) throw e;
       console.warn(`Attempt ${attempt} API error:`, e.message);
@@ -7768,7 +7768,7 @@ function printAgentData() {
   var meta = AGENT_META[n] || { name:'Agent '+n, ico:'🤖' };
   var srcOut = document.getElementById('out-'+n);
   var w = window.open('','_blank');
-  if (!w) return;
+  if (!w) { if (typeof showErr === 'function') showErr('Pop-up blocked — allow pop-ups for this site to print agent reports.'); return; }
   var content = '';
   if (srcOut) {
     var panels = srcOut.querySelectorAll('.panel');
@@ -7803,7 +7803,7 @@ function printAgentData() {
     +content+jsonBlob+'</body></html>');
   w.document.close();
   w.focus();
-  setTimeout(function(){ w.print(); }, 400);
+  setTimeout(function(){ try { w.print(); } catch(e) {} }, 400);
 }
 
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeAgentModal(); });
@@ -8858,6 +8858,17 @@ async function runAgent17() {
   const out = $('out-17');
   if (out) out.innerHTML = `<div style="padding:16px">${subProgress(1, 1, 'Collecting & validating sources…')}</div>`;
 
+  // Demo mode early-return (parity with all other agents)
+  if (demoMode && typeof getDemoData === 'function') {
+    const _d = getDemoData(17);
+    if (_d) {
+      R.a17 = _d;
+      try { renderAgent17(_d); } catch(e) {}
+      setDot(17, 'done');
+      return JSON.stringify(_d);
+    }
+  }
+
   const ind = industry();
 
   // ── Collect partial data from completed agents ──────────
@@ -9189,18 +9200,18 @@ function exportAgentPDF(n) {
   if (!out) { alert('No data yet for Agent '+n+' — run the pipeline first.'); return; }
   var ind = industry();
   var w = window.open('', '_blank');
-  if (!w) return;
+  if (!w) { if (typeof showErr === 'function') showErr('Pop-up blocked — allow pop-ups to export as PDF.'); return; }
   var cloned = out.cloneNode(true);
   // Show all panels in print view
   cloned.querySelectorAll('.panel').forEach(function(p){ p.style.display='block'; });
   cloned.querySelectorAll('.tabs,.raw-toggle,.raw-data-wrap,.rerun-btn,.expand-btn,.export-dropdown').forEach(function(el){ el.style.display='none'; });
   w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+info.ico+' '+info.name+'</title><style>'+_lightCSS()+'</style></head><body>'+
     '<h1>'+info.ico+' '+info.name+'</h1>'+
-    '<div class="subtitle">'+ind.label+' Analysis · ZIP '+zip()+' · '+new Date().toLocaleDateString()+'</div>'+
+    '<div class="subtitle">'+(ind&&ind.label||'')+' Analysis · ZIP '+zip()+' · '+new Date().toLocaleDateString()+'</div>'+
     cloned.innerHTML+
     '</body></html>');
   w.document.close();
-  setTimeout(function(){ w.focus(); w.print(); }, 600);
+  setTimeout(function(){ try { w.focus(); w.print(); } catch(e) {} }, 600);
 }
 
 // ── Word (.doc download) ────────────────────────────────────
@@ -9223,7 +9234,7 @@ function exportAgentWord(n) {
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = info.name.toLowerCase().replace(/\s+/g,'-') + '-' + zip() + '.doc';
-  a.click();
+  document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
 }
 
@@ -9264,7 +9275,7 @@ function exportAgentExcel(n) {
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = info.name.toLowerCase().replace(/\s+/g,'-') + '-' + zip() + '.csv';
-  a.click();
+  document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
 }
 
@@ -9334,7 +9345,7 @@ function exportAgentSlides(n) {
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = info.name.toLowerCase().replace(/\s+/g,'-') + '-slides-' + zip() + '.html';
-  a.click();
+  document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
 }
 
@@ -9411,8 +9422,10 @@ function runIndustryComparison() {
     return;
   }
 
+  if (typeof INDUSTRIES === 'undefined') { alert('Industry config not loaded.'); return; }
   var ind1 = INDUSTRIES[ind1Key];
   var ind2 = INDUSTRIES[ind2Key];
+  if (!ind1 || !ind2) { alert('Industry not found in config.'); return; }
   var panel = document.getElementById('comparePanel');
   if (!panel) return;
 
@@ -9561,8 +9574,14 @@ function sessionRestore() {
   }
   if ($('grades') && d.grades) $('grades').value = d.grades;
 
-  // Restore R object
-  if (d.R) { try { Object.assign(R, d.R); } catch(e) {} }
+  // Restore R object — clear stale keys first so a smaller saved session
+  // doesn't leave keys from a previous larger run.
+  if (d.R) {
+    try {
+      Object.keys(R).forEach(k => { delete R[k]; });
+      Object.assign(R, d.R);
+    } catch(e) {}
+  }
 
   // Restore rendered HTML into agent output panels
   if (d.html) {
@@ -9572,7 +9591,9 @@ function sessionRestore() {
       const dot  = $('dot-'  + n);
       if (out) {
         out.innerHTML = html;
-        out.classList.add('visible');
+        // Use 'show' class to match what tab()/agent-out:show CSS expects.
+        // (Older code used 'visible' which the rest of the UI doesn't react to.)
+        out.classList.add('show');
       }
       if (card) card.classList.add('done');
       if (dot)  dot.className = 'agent-dot done';
@@ -9656,7 +9677,7 @@ function copyShareableLink() {
     if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = '🔗 Copy Link', 2200); }
   };
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(done).catch(() => { prompt('Copy this URL:', url); });
+    navigator.clipboard.writeText(url).then(done).catch(() => { prompt('Copy this URL:', url); done(); });
   } else {
     prompt('Copy this URL:', url);
     done();
@@ -10136,11 +10157,14 @@ async function claudeStream(system, user, onChunk) {
     stream: true
   };
 
-  const res = await fetch(p.url, {
+  const sig = window._v2AbortCtrl?.signal;
+  const fetchOpts = {
     method: 'POST',
     headers: p.headers(k),
     body: JSON.stringify(body)
-  });
+  };
+  if (sig && !sig.aborted) fetchOpts.signal = sig;
+  const res = await fetch(p.url, fetchOpts);
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -10175,8 +10199,10 @@ async function claudeStream(system, user, onChunk) {
             lastFlush = now;
             onChunk(fullText);
           }
+        } else if (evt.type === 'message_delta' && evt.delta?.stop_reason === 'max_tokens') {
+          throw new Error('Response truncated at max_tokens');
         }
-      } catch(_) {}
+      } catch(e) { if (e.message && e.message.indexOf('truncated')>=0) throw e; }
     }
   }
 
@@ -10443,7 +10469,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ══════════════════════════════════════════════════════════
 
 async function runZipComparison() {
-  const zip2 = $('compareZipInput')?.value.trim();
+  const zip2 = ($('compareZipInput')?.value || '').trim();
   if (!zip2 || !/^\d{5}$/.test(zip2)) {
     showErr('Enter a valid 5-digit ZIP code for comparison.');
     return;
@@ -11603,7 +11629,7 @@ function loadNamedRun(id) {
   if (!run) return false;
   // Restore inputs
   const zi = $('zip'); if(zi) zi.value = run.zip || '';
-  const ind = $('industrySelect'); if(ind) { ind.value = run.industry || 'daycare'; onIndustryChange(); }
+  const ind = $('industrySelect'); if(ind) { ind.value = run.industry || 'daycare'; if(typeof onIndustryChange==='function') onIndustryChange(); }
   const ra = $('radius'); if(ra) ra.value = run.radius || '40';
   const ca = $('capacity'); if(ca) ca.value = run.capacity || '75';
   const bu = $('budget'); if(bu) bu.value = run.budget || '600000';
@@ -11633,6 +11659,12 @@ function loadNamedRun(id) {
 function deleteNamedRun(id) {
   const runs = _getRuns().filter(r => r.id !== id);
   _saveRuns(runs);
+  renderRunsPanel();
+}
+
+function clearAllNamedRuns() {
+  if (!confirm('Clear all saved runs?')) return;
+  try { localStorage.removeItem(RUNS_STORE_KEY); } catch(e) {}
   renderRunsPanel();
 }
 
@@ -11691,7 +11723,7 @@ function renderRunsPanel() {
   <div class="runs-panel-inner">
     <div class="runs-header">
       <span>Saved Runs (${runs.length}/${MAX_NAMED_RUNS})</span>
-      <button class="runs-clear-btn" onclick="if(confirm('Clear all saved runs?')){localStorage.removeItem(RUNS_STORE_KEY);renderRunsPanel();}">Clear All</button>
+      <button class="runs-clear-btn" onclick="clearAllNamedRuns()">Clear All</button>
     </div>
     <div class="runs-list">${rows}</div>
     <div class="runs-hint">Tip: Save before changing inputs to compare conservative vs aggressive budget scenarios side by side.</div>
@@ -12449,8 +12481,8 @@ Include 5 distinct audience segments with messaging tailored to specific competi
  */
 const _origRunAgent14 = typeof runAgent14 === 'function' ? runAgent14 : null;
 if (typeof runAgent14 === 'function') {
-  const _baseRunAgent14 = runAgent14;
-  runAgent14 = async function(RFull) {
+  const _baseRunAgent14 = window.runAgent14;
+  window.runAgent14 = async function(RFull) {
     // Extract only the summary fields from each agent — drastically reduces input
     const slim = {};
     for (let i = 1; i <= 17; i++) {
@@ -12472,8 +12504,8 @@ if (typeof runAgent14 === 'function') {
 // We patch claudeJSON itself to add token-size monitoring and warnings.
 (function _patchClaudeJSON() {
   if (typeof claudeJSON !== 'function') return;
-  const _origClaudeJSON = claudeJSON;
-  claudeJSON = async function(system, user) {
+  const _origClaudeJSON = window.claudeJSON;
+  window.claudeJSON = async function(system, user) {
     const totalChars = (system || '').length + (user || '').length;
     if (totalChars > 100000) {
       console.warn(`[StressGuard] Large claudeJSON call: ${totalChars} chars (~${Math.round(totalChars/4)} tokens). Consider sub-agents.`);
@@ -12673,8 +12705,9 @@ window._v2AbortCtrl = new AbortController();
 
 function v2StopPipeline() {
   // 1. Signal pipeline loop to exit at next checkpoint
-  stopRequested = true;
-  running = false;
+  // Guard against ReferenceError when v1 globals not yet loaded
+  try { stopRequested = true; } catch(e) { window.stopRequested = true; }
+  try { running = false; } catch(e) { window.running = false; }
 
   // 2. Abort any in-flight API fetch immediately
   if (window._v2AbortCtrl) {
@@ -12999,8 +13032,8 @@ function v2StartDemo() {
     experience: 'some',
     goal: 'open',
   };
-  // Activate demo mode in v1
-  demoMode = true;
+  // Activate demo mode in v1 (window-scoped to avoid strict-mode ReferenceError)
+  try { demoMode = true; } catch(e) { window.demoMode = true; }
   const demoBtn = document.getElementById('demoBtn');
   if (demoBtn) {
     demoBtn.style.background = 'var(--amber-dim)';
@@ -13120,7 +13153,7 @@ function v2WizRenderStep() {
       <div class="v2-field" id="wiz-loc-zip-row" style="display:${locMode==='zip'?'block':'none'}">
         <label>ZIP Code</label>
         <input class="v2-input" id="wiz-zip" type="text" maxlength="5" placeholder="e.g. 30097" value="${d.zip||''}"
-          oninput="V2.wizard.data.zip=this.value;if(typeof v2LookupZIP==='function')v2LookupZIP(this.value);if(typeof v2ShowWizardZIPStats==='function')v2ShowWizardZIPStats(this.value)" />
+          oninput="V2.wizard.data.zip=this.value;if(this._zipDeb)clearTimeout(this._zipDeb);const v=this.value;this._zipDeb=setTimeout(()=>{if(typeof v2LookupZIP==='function')v2LookupZIP(v);if(typeof v2ShowWizardZIPStats==='function')v2ShowWizardZIPStats(v);},350)" />
         <div id="wiz-zip-preview" style="font-size:12px;color:var(--v2-t2);margin-top:4px;min-height:16px">${d.zipLabel||''}</div>
         <div id="wiz-zip-stats"></div>
       </div>
@@ -13402,19 +13435,26 @@ function v2LaunchPipeline() {
   if (toggleBtn) toggleBtn.textContent = '💬 AI Answers';
 
   // Add opening copilot message (widget will be opened at pipeline complete)
-  v2ChatMsg('ai', `🚀 Starting full analysis for your ${ind.label} in ZIP ${d.zip||'30097'}.<br><br>I'll run all 17 research agents — demographics, compliance, real estate, financials, and more. ${demoMode ? 'Demo mode: instant results.' : 'Live mode: ~5–8 minutes with API key.'}`);
+  const isDemo = typeof demoMode !== 'undefined' && demoMode;
+  v2ChatMsg('ai', `🚀 Starting full analysis for your ${ind.label} in ZIP ${d.zip||'30097'}.<br><br>I'll run all 17 research agents — demographics, compliance, real estate, financials, and more. ${isDemo ? 'Demo mode: instant results.' : 'Live mode: ~5–8 minutes with API key.'}`);
 
   // F14: Request notification permission before pipeline starts
   if (typeof v2RequestNotificationPermission === 'function') v2RequestNotificationPermission();
 
   // Run the pipeline
   setTimeout(() => {
-    stopRequested = false;
+    // If user clicked Stop during the 800ms warm-up, do NOT start the pipeline
+    if (typeof stopRequested !== 'undefined' && stopRequested) {
+      v2ChatMsg('ai', '⬛ Analysis cancelled before start.');
+      return;
+    }
+    try { stopRequested = false; } catch(e) { window.stopRequested = false; }
     // Fresh abort controller for this run — allows stop button to kill in-flight fetches
     window._v2AbortCtrl = new AbortController();
     const stopBtn = document.getElementById('v2-copilot-stop');
     if (stopBtn) { stopBtn.textContent = '⬛ Stop'; stopBtn.disabled = false; }
-    runPipeline();
+    if (typeof runPipeline === 'function') runPipeline();
+    else v2ChatMsg('ai', '⚠ Pipeline not loaded. Reload the page.');
   }, 800);
 }
 
@@ -13476,6 +13516,9 @@ function v2ChatMsg(role, html) {
 const _v1SetDot = typeof setDot !== 'undefined' ? setDot : null;
 // We override after v1 loads via the v2 init
 function v2HookPipeline() {
+  // Idempotency guard — prevents exponential wrapping on hot-reload
+  if (window._v2HookedPipeline) return;
+  window._v2HookedPipeline = true;
   // Patch setDot to also update v2 sidebar
   const origSetDot = window.setDot;
   window.setDot = function(n, state) {
@@ -13498,8 +13541,10 @@ function v2HookPipeline() {
     if (fill) fill.style.transform = `scaleX(${p / 100})`;
     if (lbl)  lbl.textContent = t || '';
     // Fallback: when pipeline reports 100%, force any stuck agent rows to error
-    // so allDone check passes even if an agent never called setDot('error')
-    if (p >= 100 && !_v2PipelineCompleted) {
+    // so allDone check passes even if an agent never called setDot('error').
+    // Skip when user has already navigated away from copilot — avoids
+    // toast spam on the wizard or dashboard screen.
+    if (p >= 100 && !_v2PipelineCompleted && V2.screen === 'copilot') {
       setTimeout(() => {
         V2_AGENTS.forEach(a => {
           const row = document.getElementById(`v2-ar-${a.id}`);
@@ -13808,19 +13853,22 @@ function v2CalcScore() {
   // Agent 2: Gap analysis — top city gap score (0–10 → 0–25 pts)
   if (R.a2) {
     const cities = R.a2.cities || [];
-    const topGap = Math.max(...cities.map(c => c.gap_score || 0), 0);
+    const topGap = Math.max(...cities.map(c => Number(c.gap_score) || 0), 0);
     score  += (topGap / 10) * 25;
     weight += 25;
   }
 
   // Agent 7: Financial — base-case monthly net (0–25 pts)
+  // Break-even speed bonus only applies when net is positive — a money-losing
+  // business that "breaks even" at month 10 still loses money for years.
   if (R.a7) {
     const scenarios = _toArr(R.a7.scenarios);
     const base = scenarios.find(s => (s.name||'').toLowerCase().includes('base')) || scenarios[1] || {};
     const net  = base.monthly_net || 0;
     const be   = base.breakeven_months || 36;
-    const finScore = Math.max(0, Math.min(25, (net > 0 ? 15 : 5) + (be < 18 ? 10 : be < 24 ? 6 : be < 36 ? 3 : 0)));
-    score  += finScore;
+    const profPts = net > 0 ? 15 : 5;
+    const bePts   = net > 0 ? (be < 18 ? 10 : be < 24 ? 6 : be < 36 ? 3 : 0) : 0;
+    score  += Math.max(0, Math.min(25, profPts + bePts));
     weight += 25;
   }
 
@@ -13837,14 +13885,15 @@ function v2CalcScore() {
   }
 
   // Agent 6: Competitive intel — market saturation
+  // Skip the component entirely when no city data exists — don't fabricate
+  // an "average of 5" that gives 10/15 to an unanalyzed market.
   if (R.a6) {
     const cities = _toArr(R.a6.cities || R.a6.by_city || []);
-    const avgComp = cities.length
-      ? cities.reduce((s,c)=>s+(c.competitor_count||c.total_competitors||5),0)/cities.length
-      : 5;
-    const compScore = Math.max(0, Math.min(15, 15 - avgComp));
-    score  += compScore;
-    weight += 15;
+    if (cities.length) {
+      const avgComp = cities.reduce((s,c)=>s+(Number(c.competitor_count||c.total_competitors)||0),0)/cities.length;
+      score  += Math.max(0, Math.min(15, 15 - avgComp));
+      weight += 15;
+    }
   }
 
   // Agent 5: Compliance — timeline (simpler = better)
@@ -13856,7 +13905,10 @@ function v2CalcScore() {
   }
 
   if (weight === 0) return 0;
-  return Math.round((score / weight) * 100);
+  // Score is on a fixed 100-point scale (Gap25+Fin25+Verdict20+Comp15+Compl15).
+  // Do NOT normalize by `weight` — that would let a partial pipeline run show
+  // 100/100 from a single high-scoring agent. Return raw earned points.
+  return Math.round(score);
 }
 
 // Returns per-component breakdown matching v2CalcScore() exactly
@@ -19752,12 +19804,17 @@ function v2RenderEnrollmentRamp() {
         <!-- revenue line -->
         <path d="${revPath}" stroke="#6366f1" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
         <!-- data points -->
-        ${projs.map((p,i) => `
+        ${projs.map((p,i) => {
+          // Escape quotes in month label and ensure numeric fields are finite to
+          // avoid inline-handler parse errors when AI returns odd data.
+          const m = String(p.month||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+          const rev = Number(p.rev)||0, exp = Number(p.exp)||0, cum = Number(p.cum)||0;
+          return `
           <circle cx="${toX(i)}" cy="${toY(p.rev)}" r="3" fill="#6366f1"
-            style="cursor:pointer" onclick="v2OpenBreakEvenMonthDetail('${p.month}',${p.rev},${p.exp},${p.cum})"
-            title="${p.month}: Rev $${p.rev.toLocaleString()}"/>
-          <text x="${toX(i)}" y="${padT+cH+12}" font-size="8" fill="var(--v2-t3)" text-anchor="middle">${p.month}</text>
-        `).join('')}
+            style="cursor:pointer" onclick="v2OpenBreakEvenMonthDetail('${m}',${rev},${exp},${cum})"
+            title="${m}: Rev $${rev.toLocaleString()}"/>
+          <text x="${toX(i)}" y="${padT+cH+12}" font-size="8" fill="var(--v2-t3)" text-anchor="middle">${m}</text>
+        `;}).join('')}
       </svg>
       <div style="font-size:10px;color:var(--v2-t3);margin-top:4px">
         Click any data point to see the full P&amp;L breakdown for that month
@@ -19772,34 +19829,43 @@ function v2RenderLeaseSlider(a7) {
   const leaseItem = ops.find(o => (o.item||'').toLowerCase().includes('lease'));
   const baseLease = leaseItem ? leaseItem.amount : 10800;
   const sqft = 6000;
-  const basePsf = (baseLease / sqft * 12).toFixed(2);
+  const basePsfRaw = baseLease / sqft * 12;
+  // Auto-extend slider range so the actual base rent always fits
+  const minPsf = Math.min(8, Math.floor(basePsfRaw * 0.7));
+  const maxPsf = Math.max(28, Math.ceil(basePsfRaw * 1.4));
+  const basePsf = basePsfRaw.toFixed(2);
   const scenarios = a7.scenarios || [];
   const base = scenarios.find(s => (s.name||'').toLowerCase().includes('base')) || scenarios[0] || {};
   const baseRev = base.monthly_revenue || 138000;
   const baseExp = base.monthly_expenses || 108400;
+  // Use real startup cost when available so break-even sensitivity is meaningful
+  const startup = (typeof R !== 'undefined' && R.a7?.total_startup_cost)
+    || (typeof V2 !== 'undefined' && V2.run?.budget)
+    || 600000;
 
   return `
     <div style="margin-top:16px;padding:14px;background:rgba(99,102,241,.06);border-radius:10px;border:1px solid rgba(99,102,241,.15)">
       <div style="font-size:12px;font-weight:600;margin-bottom:10px">🏗️ Lease Rate Sensitivity — $/sqft/year</div>
       <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:11px;color:var(--v2-t3)">$12/sqft</span>
-        <input type="range" id="v2-lease-slider" min="12" max="22" step="0.5" value="${basePsf}"
+        <span style="font-size:11px;color:var(--v2-t3)">$${minPsf}/sqft</span>
+        <input type="range" id="v2-lease-slider" min="${minPsf}" max="${maxPsf}" step="0.5" value="${basePsf}"
           style="flex:1;accent-color:#6366f1"
-          oninput="v2UpdateLeaseCalc(this.value,${sqft},${baseRev},${baseExp},${baseLease})">
-        <span style="font-size:11px;color:var(--v2-t3)">$22/sqft</span>
+          oninput="v2UpdateLeaseCalc(this.value,${sqft},${baseRev},${baseExp},${baseLease},${startup})">
+        <span style="font-size:11px;color:var(--v2-t3)">$${maxPsf}/sqft</span>
       </div>
       <div id="v2-lease-output" style="margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-        ${_v2LeaseCalcHTML(parseFloat(basePsf), sqft, baseRev, baseExp, baseLease)}
+        ${_v2LeaseCalcHTML(parseFloat(basePsf), sqft, baseRev, baseExp, baseLease, startup)}
       </div>
     </div>`;
 }
 
-function _v2LeaseCalcHTML(psf, sqft, baseRev, baseExp, baseLease) {
+function _v2LeaseCalcHTML(psf, sqft, baseRev, baseExp, baseLease, startup) {
   const newLease = Math.round(psf * sqft / 12);
   const delta = newLease - baseLease;
   const newExp = baseExp + delta;
   const newNet = baseRev - newExp;
-  const beMonths = newNet > 0 ? Math.round(600000 / newNet) : 99;
+  const cap = startup || 600000;
+  const beMonths = newNet > 0 ? Math.round(cap / newNet) : 99;
   const deltaColor = delta > 0 ? '#ef4444' : '#22c55e';
   return `
     <div class="v2-lease-stat"><div class="v2-stat-mini-label">Lease/mo</div><div class="v2-stat-mini-val">$${newLease.toLocaleString()}</div></div>
@@ -19808,9 +19874,9 @@ function _v2LeaseCalcHTML(psf, sqft, baseRev, baseExp, baseLease) {
     <div class="v2-lease-stat"><div class="v2-stat-mini-label">Break-Even</div><div class="v2-stat-mini-val">Mo.${beMonths > 60 ? '60+' : beMonths}</div></div>`;
 }
 
-function v2UpdateLeaseCalc(psf, sqft, baseRev, baseExp, baseLease) {
+function v2UpdateLeaseCalc(psf, sqft, baseRev, baseExp, baseLease, startup) {
   const out = document.getElementById('v2-lease-output');
-  if (out) out.innerHTML = _v2LeaseCalcHTML(parseFloat(psf), sqft, baseRev, baseExp, baseLease);
+  if (out) out.innerHTML = _v2LeaseCalcHTML(parseFloat(psf), sqft, baseRev, baseExp, baseLease, startup);
 }
 
 function v2OpenBreakEvenMonthDetail(month, rev, exp, cum) {
@@ -19879,8 +19945,11 @@ function v2RenderRiskScored() {
     const prob = _V2_RISK_PROB[r.severity] || 0.35;
     const impact = _V2_RISK_IMPACT[r.severity] || 2;
     const score = (prob * impact * 10).toFixed(1);
-    const trigger = _V2_RISK_TRIGGERS[i % _V2_RISK_TRIGGERS.length];
-    const cost = _V2_RISK_COSTS[i % _V2_RISK_COSTS.length];
+    // Only use real trigger/cost from AI — never fabricate
+    const trigger = r.trigger || r.early_warning || null;
+    const cost = (typeof r.mitigation_cost === 'number') ? r.mitigation_cost
+               : (typeof r.cost === 'number')             ? r.cost
+               : null;
     const color = r.severity === 'High' ? '#ef4444' : r.severity === 'Medium' ? '#f59e0b' : '#22c55e';
     return { ...r, prob, impact, score: parseFloat(score), trigger, cost, color };
   }).sort((a,b) => b.score - a.score);
@@ -19906,11 +19975,11 @@ function v2RenderRiskScored() {
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
             <div style="font-size:10px;color:var(--v2-t3)">Probability<br><strong style="color:var(--v2-t1);font-size:11px">${(r.prob*100).toFixed(0)}%</strong></div>
             <div style="font-size:10px;color:var(--v2-t3)">Impact<br><strong style="color:var(--v2-t1);font-size:11px">${r.impact}/3</strong></div>
-            <div style="font-size:10px;color:var(--v2-t3)">Mitigation Cost<br><strong style="color:var(--v2-amber);font-size:11px">$${r.cost.toLocaleString()}</strong></div>
+            <div style="font-size:10px;color:var(--v2-t3)">Mitigation Cost<br><strong style="color:var(--v2-amber);font-size:11px">${r.cost!=null?'$'+r.cost.toLocaleString():'—'}</strong></div>
           </div>
-          <div style="font-size:11px;padding:6px 8px;background:rgba(245,158,11,.07);border-radius:6px;border-left:3px solid ${r.color};margin-bottom:6px">
+          ${r.trigger?`<div style="font-size:11px;padding:6px 8px;background:rgba(245,158,11,.07);border-radius:6px;border-left:3px solid ${r.color};margin-bottom:6px">
             <span style="color:var(--v2-t3)">Trigger: </span>${r.trigger}
-          </div>
+          </div>`:''}
           <div style="font-size:11px;color:var(--v2-t2);line-height:1.4"><span style="color:var(--v2-t3)">Mitigation: </span>${r.mitigation}</div>
         </div>`).join('')}
     </div>`;
@@ -20072,15 +20141,23 @@ function v2RenderScoreRunDiff() {
 
   const components = ['Gap','Financials','AI Verdict','Competition','Compliance'];
   const weights = [25,25,20,15,15];
-  const rows = components.map((name,i) => {
-    const syntheticDelta = (Math.random()*6-3).toFixed(1);
-    const d = parseFloat(syntheticDelta);
+  const keys = ['gap','financials','verdict','competition','compliance'];
+  const curBd = current.breakdown || {};
+  const prevBd = prev.breakdown || {};
+  // Only render per-component rows when we have real saved breakdowns for both runs
+  const hasBd = keys.some(k => curBd[k] != null) && keys.some(k => prevBd[k] != null);
+  const rows = hasBd ? components.map((name,i) => {
+    const k = keys[i];
+    const cur = Number(curBd[k]);
+    const pre = Number(prevBd[k]);
+    if (!isFinite(cur) || !isFinite(pre)) return '';
+    const d = +(cur - pre).toFixed(1);
     const c = d > 0 ? '#22c55e' : d < 0 ? '#ef4444' : 'var(--v2-t3)';
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px;border-bottom:1px solid var(--v2-border)">
       <span style="color:var(--v2-t2)">${name} <span style="font-size:10px;color:var(--v2-t3)">(${weights[i]}pt)</span></span>
       <span style="color:${c};font-weight:600">${d>0?'+':''}${d} pts</span>
     </div>`;
-  }).join('');
+  }).join('') : '<div style="font-size:11px;color:var(--v2-t3);padding:6px 0">Per-component change unavailable — save runs with score breakdowns to see deltas.</div>';
 
   return `
     <div class="v2-card" style="padding:16px;margin-top:16px;border:1px solid rgba(99,102,241,.2)">
@@ -20834,11 +20911,13 @@ function v2CheckSingleLink(name, url) {
   fetch(url, { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal })
     .then(() => {
       clearTimeout(timer);
-      // no-cors always resolves (opaque) if network reached the server
+      // no-cors always resolves (opaque) — server was reachable, but real
+      // HTTP status (200/404/500) is hidden. Label accordingly.
       dot.style.background = '#22c55e';
-      lbl.textContent = '✓ Live';
+      lbl.textContent = '✓ Reachable';
       lbl.style.color = '#22c55e';
-      _V2_LINK_STATUS_CACHE[name] = 'live';
+      lbl.title = 'Server responded. HTTP status hidden by CORS.';
+      _V2_LINK_STATUS_CACHE[name] = 'reachable';
     })
     .catch(err => {
       clearTimeout(timer);
@@ -21224,13 +21303,17 @@ function v2RenderCapacityUtilization() {
 // ── 6. ONE-CLICK SINGLE-AGENT RE-RUN ─────────────────────────────────────────
 
 // Maps agent tab names to the agent index used by the pipeline
+// Maps agent tab names to the agent index used by the pipeline
+// Indices must match v1 INDUSTRIES pipeline: 1=Demographics, 2=Gap, 3=Site,
+// 4=RealEstate, 5=Compliance, 6=Competitor, 7=Financials, 8=Verdict,
+// 9=BusinessPlan, 10=ProjectPlan, 11=MarketMap, 12=Grants
 const _V2_AGENT_INDEX = {
   market:      2,
+  realestate:  4,
+  compliance:  5,
   competition: 6,
   financials:  7,
   risks:       8,
-  compliance:  10,
-  realestate:  11,
   grants:      12,
 };
 
@@ -21257,11 +21340,23 @@ function v2ReRunAgent(panelName, agentIndex) {
   // Navigate to the classic view pipeline to re-run just this agent
   // Uses the existing runAgent / runPipelineFrom infrastructure from v1
   if (typeof runPipelineFrom === 'function') {
-    runPipelineFrom(agentIndex);
-    if (statusEl) {
-      setTimeout(() => {
-        statusEl.innerHTML = `<span style="color:#22c55e">✓ Agent ${agentIndex} queued. Check the Classic View pipeline status.</span>`;
-      }, 500);
+    if (!confirm(`Re-run from Agent ${agentIndex} onward? This will call the API and may consume tokens.`)) {
+      if (statusEl) statusEl.innerHTML = '';
+      return;
+    }
+    try {
+      const result = runPipelineFrom(agentIndex);
+      if (statusEl) statusEl.innerHTML = `<span style="color:#22c55e">✓ Agent ${agentIndex} dispatched. Watch the Classic View pipeline.</span>`;
+      // If result is a promise, surface completion / errors
+      if (result && typeof result.then === 'function') {
+        result.then(() => {
+          if (statusEl) statusEl.innerHTML = `<span style="color:#22c55e">✓ Agent ${agentIndex} completed.</span>`;
+        }).catch(err => {
+          if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444">✗ Agent ${agentIndex} failed: ${err.message||'unknown error'}</span>`;
+        });
+      }
+    } catch (err) {
+      if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444">✗ Failed to dispatch: ${err.message||'unknown'}</span>`;
     }
     return;
   }
@@ -21377,6 +21472,9 @@ function v2ReRunAgent(panelName, agentIndex) {
 
 (function() {
   if (typeof v2RenderDashboard !== 'function') return;
+  // Idempotency guard — if module evaluated twice (HMR, double-script-include)
+  // we must not double-wrap or render-call stack explodes.
+  if (v2RenderDashboard._v14Wrapped) return;
   const _base14 = v2RenderDashboard;
 
   v2RenderDashboard = function(run) {
@@ -21420,6 +21518,7 @@ function v2ReRunAgent(panelName, agentIndex) {
     // E. Inject competitor pins onto heat map (after short delay for SVG render)
     setTimeout(v2InjectCompetitorPins, 600);
   };
+  v2RenderDashboard._v14Wrapped = true;
 })();
 
 

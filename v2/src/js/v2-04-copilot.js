@@ -55,6 +55,9 @@ function v2ChatMsg(role, html) {
 const _v1SetDot = typeof setDot !== 'undefined' ? setDot : null;
 // We override after v1 loads via the v2 init
 function v2HookPipeline() {
+  // Idempotency guard — prevents exponential wrapping on hot-reload
+  if (window._v2HookedPipeline) return;
+  window._v2HookedPipeline = true;
   // Patch setDot to also update v2 sidebar
   const origSetDot = window.setDot;
   window.setDot = function(n, state) {
@@ -77,8 +80,10 @@ function v2HookPipeline() {
     if (fill) fill.style.transform = `scaleX(${p / 100})`;
     if (lbl)  lbl.textContent = t || '';
     // Fallback: when pipeline reports 100%, force any stuck agent rows to error
-    // so allDone check passes even if an agent never called setDot('error')
-    if (p >= 100 && !_v2PipelineCompleted) {
+    // so allDone check passes even if an agent never called setDot('error').
+    // Skip when user has already navigated away from copilot — avoids
+    // toast spam on the wizard or dashboard screen.
+    if (p >= 100 && !_v2PipelineCompleted && V2.screen === 'copilot') {
       setTimeout(() => {
         V2_AGENTS.forEach(a => {
           const row = document.getElementById(`v2-ar-${a.id}`);

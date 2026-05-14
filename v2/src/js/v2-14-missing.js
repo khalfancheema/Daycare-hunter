@@ -77,11 +77,13 @@ function v2CheckSingleLink(name, url) {
   fetch(url, { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal })
     .then(() => {
       clearTimeout(timer);
-      // no-cors always resolves (opaque) if network reached the server
+      // no-cors always resolves (opaque) — server was reachable, but real
+      // HTTP status (200/404/500) is hidden. Label accordingly.
       dot.style.background = '#22c55e';
-      lbl.textContent = '✓ Live';
+      lbl.textContent = '✓ Reachable';
       lbl.style.color = '#22c55e';
-      _V2_LINK_STATUS_CACHE[name] = 'live';
+      lbl.title = 'Server responded. HTTP status hidden by CORS.';
+      _V2_LINK_STATUS_CACHE[name] = 'reachable';
     })
     .catch(err => {
       clearTimeout(timer);
@@ -467,13 +469,17 @@ function v2RenderCapacityUtilization() {
 // ── 6. ONE-CLICK SINGLE-AGENT RE-RUN ─────────────────────────────────────────
 
 // Maps agent tab names to the agent index used by the pipeline
+// Maps agent tab names to the agent index used by the pipeline
+// Indices must match v1 INDUSTRIES pipeline: 1=Demographics, 2=Gap, 3=Site,
+// 4=RealEstate, 5=Compliance, 6=Competitor, 7=Financials, 8=Verdict,
+// 9=BusinessPlan, 10=ProjectPlan, 11=MarketMap, 12=Grants
 const _V2_AGENT_INDEX = {
   market:      2,
+  realestate:  4,
+  compliance:  5,
   competition: 6,
   financials:  7,
   risks:       8,
-  compliance:  10,
-  realestate:  11,
   grants:      12,
 };
 
@@ -500,11 +506,23 @@ function v2ReRunAgent(panelName, agentIndex) {
   // Navigate to the classic view pipeline to re-run just this agent
   // Uses the existing runAgent / runPipelineFrom infrastructure from v1
   if (typeof runPipelineFrom === 'function') {
-    runPipelineFrom(agentIndex);
-    if (statusEl) {
-      setTimeout(() => {
-        statusEl.innerHTML = `<span style="color:#22c55e">✓ Agent ${agentIndex} queued. Check the Classic View pipeline status.</span>`;
-      }, 500);
+    if (!confirm(`Re-run from Agent ${agentIndex} onward? This will call the API and may consume tokens.`)) {
+      if (statusEl) statusEl.innerHTML = '';
+      return;
+    }
+    try {
+      const result = runPipelineFrom(agentIndex);
+      if (statusEl) statusEl.innerHTML = `<span style="color:#22c55e">✓ Agent ${agentIndex} dispatched. Watch the Classic View pipeline.</span>`;
+      // If result is a promise, surface completion / errors
+      if (result && typeof result.then === 'function') {
+        result.then(() => {
+          if (statusEl) statusEl.innerHTML = `<span style="color:#22c55e">✓ Agent ${agentIndex} completed.</span>`;
+        }).catch(err => {
+          if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444">✗ Agent ${agentIndex} failed: ${err.message||'unknown error'}</span>`;
+        });
+      }
+    } catch (err) {
+      if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444">✗ Failed to dispatch: ${err.message||'unknown'}</span>`;
     }
     return;
   }
@@ -620,6 +638,9 @@ function v2ReRunAgent(panelName, agentIndex) {
 
 (function() {
   if (typeof v2RenderDashboard !== 'function') return;
+  // Idempotency guard — if module evaluated twice (HMR, double-script-include)
+  // we must not double-wrap or render-call stack explodes.
+  if (v2RenderDashboard._v14Wrapped) return;
   const _base14 = v2RenderDashboard;
 
   v2RenderDashboard = function(run) {
@@ -663,4 +684,5 @@ function v2ReRunAgent(panelName, agentIndex) {
     // E. Inject competitor pins onto heat map (after short delay for SVG render)
     setTimeout(v2InjectCompetitorPins, 600);
   };
+  v2RenderDashboard._v14Wrapped = true;
 })();
