@@ -37,77 +37,20 @@ Return ONLY:
   },
   "listings": [
     {
-      "id":1,"address":"4920 Peachtree Pkwy, Suwanee, GA 30024","city":"Suwanee",
-      "property_type":"Freestanding Retail","sqft":8400,"monthly_rent":13800,"price_per_sqft":1.64,
-      "zoning":"C-1","outdoor_space_available":true,"outdoor_sqft_est":5200,
-      "suitable_for_daycare":true,"buildout_cost_est":180000,
-      "source":"LoopNet","listing_url":"https://www.loopnet.com/search/commercial-real-estate/suwanee-ga/for-lease/",
-      "broker_name":"Marcus & Millichap Atlanta","broker_phone":"404-XXX-XXXX","broker_email":"",
-      "availability":"Available Now","score":91,"notes":"End of life retail, great parking, playground area possible"
-    },
-    {
-      "id":2,"address":"State Bridge Rd & Medlock Bridge Rd, Johns Creek, GA 30022","city":"Johns Creek",
-      "property_type":"Office/Retail Conversion","sqft":7800,"monthly_rent":11500,"price_per_sqft":1.47,
-      "zoning":"O-I","outdoor_space_available":true,"outdoor_sqft_est":4000,
-      "suitable_for_daycare":true,"buildout_cost_est":220000,
-      "source":"Crexi","listing_url":"https://www.crexi.com/lease/properties?address=Johns%20Creek%2C%20GA",
-      "broker_name":"CBRE Atlanta","broker_phone":"404-XXX-XXXX","broker_email":"",
-      "availability":"Q2 2026","score":87,"notes":"Former medical office, strong O-I zoning for childcare"
-    },
-    {
-      "id":3,"address":"Peachtree Industrial Blvd, Sugar Hill, GA 30518","city":"Sugar Hill",
-      "property_type":"Flex/Retail","sqft":7200,"monthly_rent":9200,"price_per_sqft":1.28,
-      "zoning":"C-1","outdoor_space_available":true,"outdoor_sqft_est":4800,
-      "suitable_for_daycare":true,"buildout_cost_est":155000,
-      "source":"LoopNet","listing_url":"https://www.loopnet.com/search/commercial-real-estate/sugar-hill-ga/for-lease/",
-      "broker_name":"Colliers International Atlanta","broker_phone":"404-XXX-XXXX","broker_email":"",
-      "availability":"Available Now","score":84,"notes":"New flex development, developer open to childcare tenant"
-    },
-    {
-      "id":4,"address":"Buford Dr / Hamilton Mill Rd, Buford, GA 30519","city":"Buford",
-      "property_type":"Strip Mall End-Cap","sqft":6900,"monthly_rent":8400,"price_per_sqft":1.22,
-      "zoning":"C-2","outdoor_space_available":true,"outdoor_sqft_est":3600,
-      "suitable_for_daycare":true,"buildout_cost_est":148000,
-      "source":"BizBuySell","listing_url":"https://www.bizbuysell.com/georgia/child-care-businesses-for-sale/",
-      "broker_name":"Re/Max Commercial","broker_phone":"770-XXX-XXXX","broker_email":"",
-      "availability":"Immediate","score":80,"notes":"Former childcare facility — existing build-out saves cost"
-    },
-    {
-      "id":5,"address":"Mathis Airport Pkwy, Cumming, GA 30041","city":"Cumming",
-      "property_type":"Professional Retail","sqft":7100,"monthly_rent":9800,"price_per_sqft":1.38,
-      "zoning":"C-1 (Forsyth Co.)","outdoor_space_available":true,"outdoor_sqft_est":4200,
-      "suitable_for_daycare":true,"buildout_cost_est":165000,
-      "source":"Crexi","listing_url":"https://www.crexi.com/lease/properties?address=Cumming%2C%20GA",
-      "broker_name":"NAI Brannen Goddard","broker_phone":"770-XXX-XXXX","broker_email":"",
-      "availability":"Q1 2026","score":76,"notes":"Forsyth County — verify daycare use permitted in C-1"
-    },
-    {
-      "id":6,"address":"Athens Hwy / Hwy 316 Corridor, Winder, GA 30680","city":"Winder (Barrow Co.)",
-      "property_type":"Freestanding Retail / Strip Anchor","sqft":6500,"monthly_rent":5800,"price_per_sqft":0.89,
-      "zoning":"C-1 (Barrow Co.)","outdoor_space_available":true,"outdoor_sqft_est":5500,
-      "suitable_for_daycare":true,"buildout_cost_est":130000,
-      "source":"LoopNet","listing_url":"https://www.loopnet.com/search/commercial-real-estate/winder-ga/for-lease/",
-      "broker_name":"Coldwell Banker Commercial – Athens","broker_phone":"706-XXX-XXXX","broker_email":"",
-      "availability":"Available Now","score":78,"notes":"Lowest rent in search area; Barrow County fastest-growing, zero competition — first-mover advantage"
-    },
-    {
-      "id":7,"address":"Auburn Rd / Hwy 316 interchange, Auburn, GA 30011","city":"Auburn (Barrow Co.)",
-      "property_type":"New Retail Pad / Build-to-Suit","sqft":6200,"monthly_rent":5200,"price_per_sqft":0.84,
-      "zoning":"C-1 (Barrow Co.)","outdoor_space_available":true,"outdoor_sqft_est":6000,
-      "suitable_for_daycare":true,"buildout_cost_est":145000,
-      "source":"Crexi","listing_url":"https://www.crexi.com/lease/properties?address=Auburn%2C%20GA",
-      "broker_name":"Barrow County Development Authority","broker_phone":"770-307-3021","broker_email":"bda@barrowga.org",
-      "availability":"Negotiable / Build-to-suit","score":75,"notes":"Barrow County Development Authority actively recruits childcare businesses — contact them directly for incentives"
+      "id": 1, "address": "Full street address, City, ST ZIP", "city": "City name",
+      "property_type": "Freestanding Retail|Office Conversion|Strip Mall End-Cap|Flex/Retail|Build-to-Suit",
+      "sqft": 0, "monthly_rent": 0, "price_per_sqft": 0.00,
+      "zoning": "C-1|C-2|O-I|PUD", "outdoor_space_available": true, "outdoor_sqft_est": 0,
+      "suitable_for_daycare": true, "buildout_cost_est": 0,
+      "source": "LoopNet|BizBuySell|Crexi|CoStar",
+      "listing_url": "https://www.loopnet.com/search/commercial-real-estate/city-st/for-lease/",
+      "broker_name": "Broker name", "broker_phone": "XXX-XXX-XXXX", "broker_email": "email or empty string",
+      "availability": "Available Now|Immediate|Q1 2026|Negotiable",
+      "score": 0, "notes": "Key notes about the property"
     }
   ],
   "by_city_summary": [
-    {"city":"Suwanee","avg_rent_sqft":1.60,"available_listings_est":4,"best_zoning":"C-1","market_note":"Competitive but available"},
-    {"city":"Sugar Hill","avg_rent_sqft":1.25,"available_listings_est":6,"best_zoning":"C-1/PUD","market_note":"New inventory coming online"},
-    {"city":"Johns Creek","avg_rent_sqft":1.50,"available_listings_est":3,"best_zoning":"O-I/C-1","market_note":"Tight, move quickly"},
-    {"city":"Buford","avg_rent_sqft":1.20,"available_listings_est":8,"best_zoning":"C-1/C-2","market_note":"Most affordable Gwinnett option"},
-    {"city":"Cumming","avg_rent_sqft":1.38,"available_listings_est":5,"best_zoning":"C-1","market_note":"Forsyth County rules apply"},
-    {"city":"Winder (Barrow)","avg_rent_sqft":0.89,"available_listings_est":7,"best_zoning":"C-1","market_note":"Lowest rents — first-mover opportunity"},
-    {"city":"Auburn (Barrow)","avg_rent_sqft":0.84,"available_listings_est":4,"best_zoning":"C-1","market_note":"County Dev. Authority offers incentives"}
+    {"city": "City name", "avg_rent_sqft": 0.00, "available_listings_est": 0, "best_zoning": "C-1", "market_note": "Brief market note"}
   ]
 }`;
   try {

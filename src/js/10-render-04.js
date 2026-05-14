@@ -62,33 +62,27 @@ Return ONLY:
   "ndcp_source": "National Database of Childcare Prices, DOL Women's Bureau 2022",
   "cities": [
     {
-      "city": "City A", "rank": 1,
-      "demand_score": 9, "supply_score": 3, "gap_score": 9,
-      "unserved_children": 580, "licensed_centers_count": 8, "total_licensed_capacity_est": 480,
-      "children_under5_census": 3900, "demand_to_supply_ratio": 4.8,
-      "income_tier": "Premium",
-      "recommended_tuition_infant": 2050, "recommended_tuition_preschool": 1650,
-      "ndcp_county_median_infant": 1820, "pricing_premium_vs_market_pct": 12,
-      "head_start_slots": 120, "subsidized_slots_est": 80,
+      "city": "City name", "rank": 1,
+      "demand_score": 0, "supply_score": 0, "gap_score": 0,
+      "unserved_children": 0, "licensed_centers_count": 0, "total_licensed_capacity_est": 0,
+      "children_under5_census": 0, "demand_to_supply_ratio": 0.0,
+      "income_tier": "Premium|Mid-Market|Affordable",
+      "recommended_tuition_infant": 0, "recommended_tuition_preschool": 0,
+      "ndcp_county_median_infant": 0, "pricing_premium_vs_market_pct": 0,
+      "head_start_slots": 0, "subsidized_slots_est": 0,
       "is_desert": true,
-      "priority": "Critical Opportunity",
-      "rationale": "High demand, critically low supply",
-      "why_gap": "3,900 children under 5 per Census ACS 2022 vs 8 licensed centers with ~480 total capacity per state CAPS database. Demand-to-supply ratio of 4.8:1 exceeds Child Care Aware desert threshold (3:1). Only 120 Head Start slots serve income-qualified families. Net gap of 3,420+ unserved children, growing at 4.2%/yr per Census PEP.",
+      "priority": "Critical Opportunity|High Opportunity|Moderate|Saturated",
+      "rationale": "1-sentence reason",
+      "why_gap": "2-3 sentences citing data sources with specific numbers",
       "data_points": [
-        {"label": "Children Under 5", "value": "3,900", "source": "US Census ACS 2022 Table B01001"},
-        {"label": "Licensed Centers", "value": "8", "source": "State CAPS licensing database"},
-        {"label": "Total Licensed Capacity", "value": "~480 slots", "source": "State CAPS + Google Maps"},
-        {"label": "Demand:Supply Ratio", "value": "4.8:1", "source": "Derived (CAPS + Census)"},
-        {"label": "Head Start Slots", "value": "120", "source": "eclkc.acf.hhs.gov locator"},
-        {"label": "NDCP Median Infant Rate", "value": "$1,820/mo", "source": "DOL NDCP 2022"},
-        {"label": "Child Care Desert", "value": "Yes — exceeds 3:1 threshold", "source": "Child Care Aware of America"}
+        {"label": "Metric name", "value": "Formatted value", "source": "Source name"}
       ],
-      "sources": ["US Census ACS 2022 (B01001)", "State CAPS licensing database", "NDCP DOL 2022", "Head Start locator eclkc.acf.hhs.gov", "Child Care Aware of America", "Google Maps business search"]
+      "sources": ["Source 1", "Source 2"]
     }
   ],
   "age_gaps": [
-    {"age": "${ind.tiers[0]||'Tier 1'}", "demand_idx": 95, "supply_idx": 42, "gap": 53, "source": "Census S0901 + State CAPS"},
-    {"age": "${ind.tiers[1]||'Tier 2'}", "demand_idx": 82, "supply_idx": 71, "gap": 11, "source": "Census ACS + NCES enrollment"}
+    {"age": "${ind.tiers[0]||'Tier 1'}", "demand_idx": 0, "supply_idx": 0, "gap": 0, "source": "Source name"},
+    {"age": "${ind.tiers[1]||'Tier 2'}", "demand_idx": 0, "supply_idx": 0, "gap": 0, "source": "Source name"}
   ]
 }
 

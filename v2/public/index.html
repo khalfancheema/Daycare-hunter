@@ -5171,33 +5171,27 @@ Return ONLY:
   "ndcp_source": "National Database of Childcare Prices, DOL Women's Bureau 2022",
   "cities": [
     {
-      "city": "City A", "rank": 1,
-      "demand_score": 9, "supply_score": 3, "gap_score": 9,
-      "unserved_children": 580, "licensed_centers_count": 8, "total_licensed_capacity_est": 480,
-      "children_under5_census": 3900, "demand_to_supply_ratio": 4.8,
-      "income_tier": "Premium",
-      "recommended_tuition_infant": 2050, "recommended_tuition_preschool": 1650,
-      "ndcp_county_median_infant": 1820, "pricing_premium_vs_market_pct": 12,
-      "head_start_slots": 120, "subsidized_slots_est": 80,
+      "city": "City name", "rank": 1,
+      "demand_score": 0, "supply_score": 0, "gap_score": 0,
+      "unserved_children": 0, "licensed_centers_count": 0, "total_licensed_capacity_est": 0,
+      "children_under5_census": 0, "demand_to_supply_ratio": 0.0,
+      "income_tier": "Premium|Mid-Market|Affordable",
+      "recommended_tuition_infant": 0, "recommended_tuition_preschool": 0,
+      "ndcp_county_median_infant": 0, "pricing_premium_vs_market_pct": 0,
+      "head_start_slots": 0, "subsidized_slots_est": 0,
       "is_desert": true,
-      "priority": "Critical Opportunity",
-      "rationale": "High demand, critically low supply",
-      "why_gap": "3,900 children under 5 per Census ACS 2022 vs 8 licensed centers with ~480 total capacity per state CAPS database. Demand-to-supply ratio of 4.8:1 exceeds Child Care Aware desert threshold (3:1). Only 120 Head Start slots serve income-qualified families. Net gap of 3,420+ unserved children, growing at 4.2%/yr per Census PEP.",
+      "priority": "Critical Opportunity|High Opportunity|Moderate|Saturated",
+      "rationale": "1-sentence reason",
+      "why_gap": "2-3 sentences citing data sources with specific numbers",
       "data_points": [
-        {"label": "Children Under 5", "value": "3,900", "source": "US Census ACS 2022 Table B01001"},
-        {"label": "Licensed Centers", "value": "8", "source": "State CAPS licensing database"},
-        {"label": "Total Licensed Capacity", "value": "~480 slots", "source": "State CAPS + Google Maps"},
-        {"label": "Demand:Supply Ratio", "value": "4.8:1", "source": "Derived (CAPS + Census)"},
-        {"label": "Head Start Slots", "value": "120", "source": "eclkc.acf.hhs.gov locator"},
-        {"label": "NDCP Median Infant Rate", "value": "$1,820/mo", "source": "DOL NDCP 2022"},
-        {"label": "Child Care Desert", "value": "Yes — exceeds 3:1 threshold", "source": "Child Care Aware of America"}
+        {"label": "Metric name", "value": "Formatted value", "source": "Source name"}
       ],
-      "sources": ["US Census ACS 2022 (B01001)", "State CAPS licensing database", "NDCP DOL 2022", "Head Start locator eclkc.acf.hhs.gov", "Child Care Aware of America", "Google Maps business search"]
+      "sources": ["Source 1", "Source 2"]
     }
   ],
   "age_gaps": [
-    {"age": "${ind.tiers[0]||'Tier 1'}", "demand_idx": 95, "supply_idx": 42, "gap": 53, "source": "Census S0901 + State CAPS"},
-    {"age": "${ind.tiers[1]||'Tier 2'}", "demand_idx": 82, "supply_idx": 71, "gap": 11, "source": "Census ACS + NCES enrollment"}
+    {"age": "${ind.tiers[0]||'Tier 1'}", "demand_idx": 0, "supply_idx": 0, "gap": 0, "source": "Source name"},
+    {"age": "${ind.tiers[1]||'Tier 2'}", "demand_idx": 0, "supply_idx": 0, "gap": 0, "source": "Source name"}
   ]
 }
 
@@ -5348,92 +5342,23 @@ Return ONLY:
   "summary": "5-sentence site selection strategy",
   "locations": [
     {
-      "rank":1,"city":"Suwanee","submarket":"Suwanee Town Center / Peachtree Pkwy corridor",
-      "overall_score":92,
-      "scores":{"demand":94,"competition":88,"demographics":96,"real_estate":82,"regulatory":90,"walkability":45,"transit":22,"schools":78},
-      "capacity_recommended":90,"target_infant_tuition":2050,"target_preschool_tuition":1650,
-      "risk":"Low","timeline_months":14,
-      "children_under5_nearby":3900,"competitors_within_2mi":2,
-      "sqft_needed":8000,"est_monthly_rent_range":"$11,000-$14,000",
-      "ideal_property_type":"Freestanding commercial, end-cap retail, or former restaurant",
-      "zoning_needed":"C-1 or C-2",
-      "pros":["Fastest-growing ZIP in Gwinnett","Premium income demographics","Only 2 competitors within 2 miles","Strong town center foot traffic"],
-      "cons":["Higher lease rates","Land becoming scarce","Premium build-out expectations"],
-      "reasoning":"Ranked #1 because Census ACS 2022 shows 3,900 children under 5 within 2 miles (highest in search area) against only 2 licensed competitors with combined capacity of ~180. Median household income of $112,000 supports premium tuition. Suwanee is the fastest-growing ZIP in Gwinnett County (7.2% 5yr growth per Census). The Peachtree Pkwy corridor has 28,000+ daily traffic count and mixed-use zoning actively welcomes childcare tenants. Risk is Low because zoning is already permitted use and the city has a proactive business licensing office.",
-      "walk_score": 45,
-      "walk_score_label": "Car-Dependent",
-      "transit_score": 22,
-      "transit_description": "GRTA Xpress bus 1.2mi; no rail",
-      "nearest_school_name": "Roberts Elementary",
-      "nearest_school_rating": 9,
-      "nearest_school_distance_mi": 0.8,
-      "school_avg_rating_2mi": 8.2,
-      "reasoning_sources":["US Census Bureau ACS 2022 (B01001, B19013)","Georgia CAPS licensing database","Google Maps competitor search","Gwinnett County GIS traffic data","Suwanee City business development office"]
-    },
-    {
-      "rank":2,"city":"Sugar Hill","submarket":"Sugar Hill Town Center / Ga-20 corridor",
-      "overall_score":87,
-      "scores":{"demand":88,"competition":90,"demographics":84,"real_estate":86,"regulatory":88},
-      "capacity_recommended":75,"target_infant_tuition":1900,"target_preschool_tuition":1500,
-      "risk":"Low-Medium","timeline_months":13,
-      "children_under5_nearby":2200,"competitors_within_2mi":1,
-      "sqft_needed":7000,"est_monthly_rent_range":"$8,000-$10,500",
-      "ideal_property_type":"Retail strip, flex space, new mixed-use development",
-      "zoning_needed":"C-1 or PUD",
-      "pros":["City actively recruiting family amenities","Lowest competition in the corridor","New residential development drives demand"],
-      "cons":["Smaller existing population base","Newer, unproven market"]
-    },
-    {
-      "rank":3,"city":"Johns Creek","submarket":"State Bridge / McGinnis Ferry corridor",
-      "overall_score":84,
-      "scores":{"demand":88,"competition":78,"demographics":96,"real_estate":74,"regulatory":88},
-      "capacity_recommended":80,"target_infant_tuition":2200,"target_preschool_tuition":1800,
-      "risk":"Medium","timeline_months":16,
-      "children_under5_nearby":4800,"competitors_within_2mi":4,
-      "sqft_needed":7500,"est_monthly_rent_range":"$10,500-$13,500",
-      "ideal_property_type":"Office conversion, freestanding retail",
-      "zoning_needed":"O-I or C-1",
-      "pros":["Highest income demographics in area","Premium tuition possible","Large population base"],
-      "cons":["More established competition","Higher lease rates","Fulton County regulations slightly stricter"]
-    },
-    {
-      "rank":4,"city":"Buford","submarket":"Hamilton Mill / Bona Rd corridor",
-      "overall_score":80,
-      "scores":{"demand":82,"competition":90,"demographics":76,"real_estate":88,"regulatory":85},
-      "capacity_recommended":75,"target_infant_tuition":1750,"target_preschool_tuition":1380,
-      "risk":"Medium","timeline_months":12,
-      "children_under5_nearby":2500,"competitors_within_2mi":1,
-      "sqft_needed":6800,"est_monthly_rent_range":"$7,500-$9,500",
-      "ideal_property_type":"Strip mall end-cap, freestanding, church conversion",
-      "zoning_needed":"C-1 or C-2",
-      "pros":["Very low competition","Most affordable rents","Gwinnett's fastest-growing residential pocket"],
-      "cons":["Lower income than Suwanee/JC","Smaller current population","Fewer walk-in amenities"]
-    },
-    {
-      "rank":5,"city":"Cumming","submarket":"GA-400 / Keith Bridge Rd corridor",
-      "overall_score":77,
-      "scores":{"demand":82,"competition":80,"demographics":80,"real_estate":78,"regulatory":75},
-      "capacity_recommended":70,"target_infant_tuition":1850,"target_preschool_tuition":1480,
-      "risk":"Medium","timeline_months":15,
-      "children_under5_nearby":3100,"competitors_within_2mi":3,
-      "sqft_needed":6500,"est_monthly_rent_range":"$8,500-$11,000",
-      "ideal_property_type":"Retail, flex, professional office conversion",
-      "zoning_needed":"C-1 (Forsyth County)",
-      "pros":["Forsyth County boom market","Strong income growth","Willing to pay for quality"],
-      "cons":["Different county regulations (Forsyth)","Separate licensing jurisdiction","Slightly longer commute from base"]
-    },
-    {
-      "rank":6,"city":"Winder / Auburn","submarket":"Barrow County – Hwy 316 / Athens Hwy corridor",
-      "overall_score":74,
-      "scores":{"demand":85,"competition":96,"demographics":62,"real_estate":90,"regulatory":72},
-      "capacity_recommended":65,"target_infant_tuition":1400,"target_preschool_tuition":1100,
-      "risk":"Medium","timeline_months":13,
-      "children_under5_nearby":2400,"competitors_within_2mi":1,
-      "sqft_needed":6200,"est_monthly_rent_range":"$5,500-$7,500",
-      "ideal_property_type":"Freestanding retail, former bank or restaurant, strip anchor",
-      "zoning_needed":"C-1 or R-C (Barrow County)",
-      "pros":["Extremely underserved — only 4-6 licensed centers in entire county","Lowest rents in the metro area","Fastest population growth rate (22%+ in Auburn)","First-mover advantage in a high-growth corridor"],
-      "cons":["Lower income demographics than Gwinnett","Separate Barrow County zoning and permitting process","Smaller existing population base","Less brand recognition for premium childcare"]
+      "rank": 1, "city": "City name", "submarket": "Submarket / corridor description",
+      "overall_score": 0,
+      "scores": {"demand": 0, "competition": 0, "demographics": 0, "real_estate": 0, "regulatory": 0, "walkability": 0, "transit": 0, "schools": 0},
+      "capacity_recommended": 0, "target_infant_tuition": 0, "target_preschool_tuition": 0,
+      "risk": "Low|Low-Medium|Medium|High", "timeline_months": 0,
+      "children_under5_nearby": 0, "competitors_within_2mi": 0,
+      "sqft_needed": 0, "est_monthly_rent_range": "$X,000-$X,000",
+      "ideal_property_type": "Property type description",
+      "zoning_needed": "Zone type",
+      "pros": ["Pro 1", "Pro 2", "Pro 3"],
+      "cons": ["Con 1", "Con 2"],
+      "reasoning": "2-3 sentence analysis citing specific Census/licensing data and traffic counts",
+      "walk_score": 0, "walk_score_label": "Car-Dependent|Bikeable|Very Walkable",
+      "transit_score": 0, "transit_description": "Transit options description",
+      "nearest_school_name": "School name", "nearest_school_rating": 0, "nearest_school_distance_mi": 0.0,
+      "school_avg_rating_2mi": 0.0,
+      "reasoning_sources": ["Source 1", "Source 2"]
     }
   ]
 }`;
@@ -5578,77 +5503,20 @@ Return ONLY:
   },
   "listings": [
     {
-      "id":1,"address":"4920 Peachtree Pkwy, Suwanee, GA 30024","city":"Suwanee",
-      "property_type":"Freestanding Retail","sqft":8400,"monthly_rent":13800,"price_per_sqft":1.64,
-      "zoning":"C-1","outdoor_space_available":true,"outdoor_sqft_est":5200,
-      "suitable_for_daycare":true,"buildout_cost_est":180000,
-      "source":"LoopNet","listing_url":"https://www.loopnet.com/search/commercial-real-estate/suwanee-ga/for-lease/",
-      "broker_name":"Marcus & Millichap Atlanta","broker_phone":"404-XXX-XXXX","broker_email":"",
-      "availability":"Available Now","score":91,"notes":"End of life retail, great parking, playground area possible"
-    },
-    {
-      "id":2,"address":"State Bridge Rd & Medlock Bridge Rd, Johns Creek, GA 30022","city":"Johns Creek",
-      "property_type":"Office/Retail Conversion","sqft":7800,"monthly_rent":11500,"price_per_sqft":1.47,
-      "zoning":"O-I","outdoor_space_available":true,"outdoor_sqft_est":4000,
-      "suitable_for_daycare":true,"buildout_cost_est":220000,
-      "source":"Crexi","listing_url":"https://www.crexi.com/lease/properties?address=Johns%20Creek%2C%20GA",
-      "broker_name":"CBRE Atlanta","broker_phone":"404-XXX-XXXX","broker_email":"",
-      "availability":"Q2 2026","score":87,"notes":"Former medical office, strong O-I zoning for childcare"
-    },
-    {
-      "id":3,"address":"Peachtree Industrial Blvd, Sugar Hill, GA 30518","city":"Sugar Hill",
-      "property_type":"Flex/Retail","sqft":7200,"monthly_rent":9200,"price_per_sqft":1.28,
-      "zoning":"C-1","outdoor_space_available":true,"outdoor_sqft_est":4800,
-      "suitable_for_daycare":true,"buildout_cost_est":155000,
-      "source":"LoopNet","listing_url":"https://www.loopnet.com/search/commercial-real-estate/sugar-hill-ga/for-lease/",
-      "broker_name":"Colliers International Atlanta","broker_phone":"404-XXX-XXXX","broker_email":"",
-      "availability":"Available Now","score":84,"notes":"New flex development, developer open to childcare tenant"
-    },
-    {
-      "id":4,"address":"Buford Dr / Hamilton Mill Rd, Buford, GA 30519","city":"Buford",
-      "property_type":"Strip Mall End-Cap","sqft":6900,"monthly_rent":8400,"price_per_sqft":1.22,
-      "zoning":"C-2","outdoor_space_available":true,"outdoor_sqft_est":3600,
-      "suitable_for_daycare":true,"buildout_cost_est":148000,
-      "source":"BizBuySell","listing_url":"https://www.bizbuysell.com/georgia/child-care-businesses-for-sale/",
-      "broker_name":"Re/Max Commercial","broker_phone":"770-XXX-XXXX","broker_email":"",
-      "availability":"Immediate","score":80,"notes":"Former childcare facility — existing build-out saves cost"
-    },
-    {
-      "id":5,"address":"Mathis Airport Pkwy, Cumming, GA 30041","city":"Cumming",
-      "property_type":"Professional Retail","sqft":7100,"monthly_rent":9800,"price_per_sqft":1.38,
-      "zoning":"C-1 (Forsyth Co.)","outdoor_space_available":true,"outdoor_sqft_est":4200,
-      "suitable_for_daycare":true,"buildout_cost_est":165000,
-      "source":"Crexi","listing_url":"https://www.crexi.com/lease/properties?address=Cumming%2C%20GA",
-      "broker_name":"NAI Brannen Goddard","broker_phone":"770-XXX-XXXX","broker_email":"",
-      "availability":"Q1 2026","score":76,"notes":"Forsyth County — verify daycare use permitted in C-1"
-    },
-    {
-      "id":6,"address":"Athens Hwy / Hwy 316 Corridor, Winder, GA 30680","city":"Winder (Barrow Co.)",
-      "property_type":"Freestanding Retail / Strip Anchor","sqft":6500,"monthly_rent":5800,"price_per_sqft":0.89,
-      "zoning":"C-1 (Barrow Co.)","outdoor_space_available":true,"outdoor_sqft_est":5500,
-      "suitable_for_daycare":true,"buildout_cost_est":130000,
-      "source":"LoopNet","listing_url":"https://www.loopnet.com/search/commercial-real-estate/winder-ga/for-lease/",
-      "broker_name":"Coldwell Banker Commercial – Athens","broker_phone":"706-XXX-XXXX","broker_email":"",
-      "availability":"Available Now","score":78,"notes":"Lowest rent in search area; Barrow County fastest-growing, zero competition — first-mover advantage"
-    },
-    {
-      "id":7,"address":"Auburn Rd / Hwy 316 interchange, Auburn, GA 30011","city":"Auburn (Barrow Co.)",
-      "property_type":"New Retail Pad / Build-to-Suit","sqft":6200,"monthly_rent":5200,"price_per_sqft":0.84,
-      "zoning":"C-1 (Barrow Co.)","outdoor_space_available":true,"outdoor_sqft_est":6000,
-      "suitable_for_daycare":true,"buildout_cost_est":145000,
-      "source":"Crexi","listing_url":"https://www.crexi.com/lease/properties?address=Auburn%2C%20GA",
-      "broker_name":"Barrow County Development Authority","broker_phone":"770-307-3021","broker_email":"bda@barrowga.org",
-      "availability":"Negotiable / Build-to-suit","score":75,"notes":"Barrow County Development Authority actively recruits childcare businesses — contact them directly for incentives"
+      "id": 1, "address": "Full street address, City, ST ZIP", "city": "City name",
+      "property_type": "Freestanding Retail|Office Conversion|Strip Mall End-Cap|Flex/Retail|Build-to-Suit",
+      "sqft": 0, "monthly_rent": 0, "price_per_sqft": 0.00,
+      "zoning": "C-1|C-2|O-I|PUD", "outdoor_space_available": true, "outdoor_sqft_est": 0,
+      "suitable_for_daycare": true, "buildout_cost_est": 0,
+      "source": "LoopNet|BizBuySell|Crexi|CoStar",
+      "listing_url": "https://www.loopnet.com/search/commercial-real-estate/city-st/for-lease/",
+      "broker_name": "Broker name", "broker_phone": "XXX-XXX-XXXX", "broker_email": "email or empty string",
+      "availability": "Available Now|Immediate|Q1 2026|Negotiable",
+      "score": 0, "notes": "Key notes about the property"
     }
   ],
   "by_city_summary": [
-    {"city":"Suwanee","avg_rent_sqft":1.60,"available_listings_est":4,"best_zoning":"C-1","market_note":"Competitive but available"},
-    {"city":"Sugar Hill","avg_rent_sqft":1.25,"available_listings_est":6,"best_zoning":"C-1/PUD","market_note":"New inventory coming online"},
-    {"city":"Johns Creek","avg_rent_sqft":1.50,"available_listings_est":3,"best_zoning":"O-I/C-1","market_note":"Tight, move quickly"},
-    {"city":"Buford","avg_rent_sqft":1.20,"available_listings_est":8,"best_zoning":"C-1/C-2","market_note":"Most affordable Gwinnett option"},
-    {"city":"Cumming","avg_rent_sqft":1.38,"available_listings_est":5,"best_zoning":"C-1","market_note":"Forsyth County rules apply"},
-    {"city":"Winder (Barrow)","avg_rent_sqft":0.89,"available_listings_est":7,"best_zoning":"C-1","market_note":"Lowest rents — first-mover opportunity"},
-    {"city":"Auburn (Barrow)","avg_rent_sqft":0.84,"available_listings_est":4,"best_zoning":"C-1","market_note":"County Dev. Authority offers incentives"}
+    {"city": "City name", "avg_rent_sqft": 0.00, "available_listings_est": 0, "best_zoning": "C-1", "market_note": "Brief market note"}
   ]
 }`;
   try {
@@ -6791,17 +6659,93 @@ function buildDirections(d) {
 async function runAgent12(a3,a5) {
   setDot(12,'running');
   const ind=industry();
-  const sys=`You are a grant research specialist for ${ind.unit} businesses. Search for real, current grant and subsidy programs. Respond JSON only.`;
-  const usr=`Search for all available grants, subsidies, and funding incentives for opening a ${ind.unit} near ZIP ${zip()}. Regulatory body: ${ind.regulatory}. Search for SBA programs, USDA Rural Development grants, local county business incentives, industry-specific subsidies (${ind.grants}), and federal small business grants applicable to ${ind.unit} businesses.
+
+  if (demoMode && typeof getDemoData === 'function') {
+    const _d = getDemoData(12);
+    if (_d) { R.a12 = _d; try { buildGrants(_d); } catch(e){} setDot(12,'done'); showOut(12); return JSON.stringify(_d); }
+  }
+
+  // ── Part A: Overview + grants summary table ───────────────
+  const sysA=`You are a grant research specialist for ${ind.unit} businesses. Search for real, current grant and subsidy programs. Respond JSON only.`;
+  const usrA=`Search for all available grants, subsidies, and funding incentives for opening a ${ind.unit} near ZIP ${zip()}. Regulatory body: ${ind.regulatory}. Search for: SBA programs, USDA Rural Development, local county business incentives, industry subsidies (${ind.grants}), and federal small business grants.
+
 Return ONLY:
-{"summary":"5-sentence summary of funding landscape","total_potential_funding":287000,"caps_program":{"program_name":"Georgia Childcare and Parent Services (CAPS)","administered_by":"Georgia DECAL","website":"https://decal.ga.gov/Families/CAPS.aspx","phone":"1-877-255-2277","what_it_is":"State subsidy program paying childcare costs for income-eligible families. Guaranteed monthly payment to provider from state.","benefit_to_provider":"Guaranteed payment per enrolled CAPS child. CAPS families fill hard-to-fill slots with zero collection risk.","current_rates_gwinnett":[{"age_group":"Infant (0-12 mo)","daily_rate":37.50,"monthly_est":813,"notes":"Gwinnett County Rate A — 2024 schedule"},{"age_group":"Toddler (1-2 yr)","daily_rate":32.00,"monthly_est":694,"notes":"Gwinnett Rate A"},{"age_group":"Preschool (3 yr)","daily_rate":28.00,"monthly_est":607,"notes":"Gwinnett Rate A"},{"age_group":"Pre-K (4 yr)","daily_rate":25.00,"monthly_est":542,"notes":"Gwinnett Rate A"}],"current_rates_barrow":[{"age_group":"Infant (0-12 mo)","daily_rate":28.00,"monthly_est":607,"notes":"Barrow County Rate B"},{"age_group":"Toddler (1-2 yr)","daily_rate":24.00,"monthly_est":520,"notes":"Barrow Rate B"},{"age_group":"Preschool (3 yr)","daily_rate":20.00,"monthly_est":433,"notes":"Barrow Rate B"},{"age_group":"Pre-K (4 yr)","daily_rate":18.00,"monthly_est":390,"notes":"Barrow Rate B"}],"eligibility_for_provider":"Active DECAL license + Quality Rated 2-star minimum","how_to_apply":"Complete CAPS Provider Agreement at decal.ga.gov after licensing","revenue_impact":"15 CAPS children @ avg $650/mo = $9,750/month guaranteed revenue ($117K/yr)"},"georgia_pre_k":{"program_name":"Georgia Pre-K Program","administered_by":"Georgia DECAL","website":"https://www.decal.ga.gov/prek/","phone":"404-656-5957","what_it_is":"State-funded Pre-K for all Georgia 4-year-olds. State pays provider per enrolled Pre-K child per year.","annual_revenue_per_class":84000,"class_size":20,"eligibility":"DECAL license + Quality Rated 2-star + classroom assessment","website_apply":"https://www.decal.ga.gov/prek/ApplyToBeAProvider.aspx","notes":"One Pre-K class adds $84K/yr in guaranteed state revenue. Apply by February each year for fall enrollment."},"federal_grants":[{"name":"USDA Child & Adult Care Food Program (CACFP)","agency":"USDA / Georgia DOE","website":"https://www.gadoe.org/School-Improvement/Federal-Programs/Pages/CACFP.aspx","phone":"404-657-8000","amount_available":"$10,000–$14,000 annually","direct_apply":true,"apply_url":"https://www.gadoe.org/School-Improvement/Federal-Programs/Pages/CACFP.aspx","notes":"Meal reimbursement for breakfast, lunch, snacks. Barrow County may qualify for Tier 1 (higher rate). Apply after licensing."},{"name":"USDA Rural Development Community Facilities Grant","agency":"USDA Rural Development","website":"https://www.rd.usda.gov/programs-services/community-facilities/community-facilities-direct-loan-grant-program","phone":"706-546-2136","amount_available":"$25,000–$150,000 (Barrow County locations)","direct_apply":true,"apply_url":"https://www.rd.usda.gov/ga","notes":"Barrow County childcare centers may qualify. Contact Athens USDA office. No repayment required for grant portion.","eligibility_zip":"Winder GA 30680 and Auburn GA 30011 — confirm rural designation with USDA"},{"name":"SBA Microloan Program","agency":"SBA / ACE Georgia","website":"https://www.sba.gov/funding-programs/loans/microloans","amount_available":"Up to $50,000 at below-market rates","direct_apply":true,"apply_url":"https://aceloans.org","notes":"Georgia intermediary: ACE Loans (aceloans.org) 770-527-6100. For startups needing supplemental capital."},{"name":"HHS Child Care Stabilization Grant","agency":"HHS / ACF","website":"https://www.acf.hhs.gov/occ/child-care-stabilization-grants","amount_available":"$10,000–$50,000 if re-authorized in 2026","direct_apply":true,"notes":"Monitor acf.hhs.gov for renewal. Previously covered payroll, rent, equipment for new providers under American Rescue Plan."}],"barrow_county_incentives":[{"name":"Barrow County Development Authority","contact":"Barrow County Development Authority","phone":"770-307-3021","email":"bda@barrowga.org","website":"https://www.barrowga.org/economic-development/","incentives":["Property tax abatement up to 5 years for qualifying new businesses","Potential permit fee waivers","Site preparation assistance","Childcare declared workforce priority sector in Barrow County Strategic Plan 2024"],"notes":"Contact BDA before signing any lease. They may negotiate incentives with landlord or county commission directly."},{"name":"Georgia Job Tax Credit","agency":"Georgia Dept of Revenue","website":"https://dor.georgia.gov/job-tax-credit","amount":"$1,250–$3,500 per new full-time job (Barrow County Tier 3)","notes":"16 staff × $1,250 = up to $20,000 state tax credit Year 1. File Form IT-CA.","apply_url":"https://dor.georgia.gov/job-tax-credit"},{"name":"Winder Downtown Development Authority","contact":"Winder DDA","phone":"770-867-3106","website":"https://www.cityofwinder.com/development-authority/","incentives":["Façade grant up to $10,000","TIF district benefits","Sign grant up to $2,000"],"notes":"If locating in or near Winder downtown corridor."}],"quality_rated_benefits":{"program":"Georgia Quality Rated","website":"https://qualityrated.decal.ga.gov","benefits_by_star":[{"stars":1,"benefits":"CAPS eligible","additional_per_child":0},{"stars":2,"benefits":"Georgia Pre-K eligible, enhanced CAPS rate, workforce grants","additional_per_child":1.50},{"stars":3,"benefits":"Maximum CAPS rate, employer partnerships, enhanced Pre-K slot priority","additional_per_child":3.00},{"stars":4,"benefits":"National accreditation support, maximum state benefits","additional_per_child":4.50}],"recommendation":"Target 2-star at opening, 3-star by Year 2"},"all_grants_table":[{"program":"Georgia CAPS Subsidy","type":"Ongoing Revenue","amount_est":"$117,000/yr (15 CAPS kids)","deadline":"After licensing","probability":"High","action_required":"DECAL license + Quality Rated 2-star"},{"program":"Georgia Pre-K Slot","type":"Annual Revenue","amount_est":"$84,000/yr","deadline":"Apply by February","probability":"Medium-High","action_required":"Apply to DECAL after licensing"},{"program":"CACFP Meals","type":"Ongoing Revenue","amount_est":"$10,000–$14,000/yr","deadline":"Any time","probability":"High","action_required":"Enroll with Georgia DOE CACFP"},{"program":"USDA Rural Dev Grant","type":"One-Time Grant","amount_est":"$25,000–$150,000","deadline":"Rolling","probability":"High (Barrow Co.)","action_required":"Call Athens USDA 706-546-2136"},{"program":"Barrow Co. Tax Abatement","type":"Tax Savings","amount_est":"$5,000–$20,000/yr","deadline":"Before opening","probability":"High (Barrow)","action_required":"Contact BDA 770-307-3021 before lease"},{"program":"Georgia Job Tax Credit","type":"Tax Credit","amount_est":"Up to $20,000 Yr 1","deadline":"With tax return","probability":"High (Barrow)","action_required":"File Form IT-CA with GA Dept of Revenue"},{"program":"SBA Microloan","type":"Loan","amount_est":"Up to $50,000","deadline":"Rolling","probability":"Medium","action_required":"Apply at aceloans.org"},{"program":"Childcare Stabilization Grant","type":"Grant","amount_est":"$10,000–$50,000","deadline":"TBD 2026","probability":"Medium","action_required":"Monitor acf.hhs.gov"},{"program":"Winder DDA Façade Grant","type":"One-Time Grant","amount_est":"Up to $10,000","deadline":"Rolling","probability":"High (Winder)","action_required":"Contact Winder DDA 770-867-3106"},{"program":"DECAL Workforce Grant","type":"Per-staff grant","amount_est":"Up to $2,000/teacher","deadline":"As announced","probability":"Medium","action_required":"Monitor decal.ga.gov"}]}`;
+{
+  "summary": "5-sentence summary of funding landscape citing specific programs and amounts",
+  "total_potential_funding": 0,
+  "all_grants_table": [
+    {
+      "program": "Program name", "type": "Ongoing Revenue|One-Time Grant|Tax Credit|Tax Savings|Loan",
+      "amount_est": "$X,000/yr or range", "deadline": "Rolling|After licensing|Date",
+      "probability": "High|Medium-High|Medium|Low", "action_required": "Specific next action"
+    }
+  ]
+}
+Include 8-12 real programs for ZIP ${zip()} state: state industry subsidy, state pre-k/quality program, CACFP meals, USDA Rural Dev grant, SBA microloan, state job tax credit, county development authority incentives, local DDA grants, federal stabilization grants. Use real program names and dollar amounts.`;
+
+  // ── Part B: Program details (non-blocking post-render) ────
+  async function _runAgent12PartB(data) {
+    const progList = (data.all_grants_table||[]).map(g=>g.program).slice(0,10).join('\n');
+    const sysB=`You are a grant research specialist. Respond JSON only.`;
+    const usrB=`For a ${ind.unit} near ZIP ${zip()}, provide detailed info for these programs:
+
+${progList}
+
+Return ONLY:
+{
+  "industry_subsidy": {
+    "program_name": "Name", "administered_by": "Agency", "website": "https://...", "phone": "XXX-XXX-XXXX",
+    "what_it_is": "2-sentence description", "benefit_to_provider": "Key benefit",
+    "revenue_impact": "Revenue impact estimate",
+    "current_rates": [{"age_group": "Group", "daily_rate": 0, "monthly_est": 0, "notes": "Note"}],
+    "eligibility_for_provider": "Requirements", "how_to_apply": "Process"
+  },
+  "state_program": {
+    "program_name": "Name", "administered_by": "Agency", "website": "https://...", "phone": "XXX",
+    "what_it_is": "Description", "annual_revenue_per_class": 0, "class_size": 0,
+    "eligibility": "Requirements", "website_apply": "https://...", "notes": "Important note"
+  },
+  "federal_grants": [
+    {
+      "name": "Grant name", "agency": "Agency", "website": "https://...", "phone": "XXX-XXX-XXXX",
+      "amount_available": "$X,000 range", "direct_apply": true, "apply_url": "https://...", "notes": "Notes"
+    }
+  ],
+  "local_incentives": [
+    {
+      "name": "Program name", "contact": "Org name", "phone": "XXX-XXX-XXXX",
+      "website": "https://...", "incentives": ["Incentive 1", "Incentive 2"], "notes": "Notes"
+    }
+  ],
+  "quality_rated_benefits": {
+    "program": "Quality rating program name", "website": "https://...",
+    "benefits_by_star": [{"stars": 1, "benefits": "Benefits", "additional_per_child": 0}],
+    "recommendation": "Target X-star at opening"
+  }
+}
+Use REAL URLs, phone numbers, and dollar amounts for ZIP ${zip()} state.`;
+    try {
+      const partB = await claudeJSON(sysB, usrB);
+      if (!partB) return;
+      if (partB.industry_subsidy) data.caps_program = partB.industry_subsidy;
+      if (partB.state_program) data.georgia_pre_k = partB.state_program;
+      if (partB.federal_grants) data.federal_grants = partB.federal_grants;
+      if (partB.local_incentives) { data.local_incentives = partB.local_incentives; data.barrow_county_incentives = partB.local_incentives; }
+      if (partB.quality_rated_benefits) data.quality_rated_benefits = partB.quality_rated_benefits;
+      buildGrants(data);
+    } catch(e2) { console.warn('Agent 12 Part B failed:', e2.message); }
+  }
+
   try {
-    _setDemoKey(12);
-    let d=await claudeJSON(sys,usr);
-    if(!d) { console.warn('Agent 12 fallback'); d={summary:'Grant data unavailable.',total_potential_funding:0,federal_grants:[],all_grants_table:[]}; }
-    R.a12=d;
+    let d = await claudeJSON(sysA, usrA);
+    if(!d) { console.warn('Agent 12 fallback'); d=getFallback12(); }
+    R.a12 = d;
     buildGrants(d);
     setDot(12,'done'); showOut(12);
+    // Part B: enrich with program details (non-blocking)
+    if (!demoMode) {
+      _runAgent12PartB(d).catch(e=>console.warn('Agent 12 Part B err:', e.message));
+    }
     return JSON.stringify(d);
   } catch(e){setDot(12,'error');showOut(12);$('12-sum-t').textContent='Error: '+e.message;throw e}
 }
@@ -6860,8 +6804,10 @@ function buildGrants(d) {
     }
   } else if(d.industry_subsidies) {
     (d.industry_subsidies||[]).forEach(g=>{ch+=buildGrantCard(g);});
+  } else if(d.state_grants) {
+    (d.state_grants||[]).forEach(g=>{ch+=buildGrantCard(g);});
   } else {
-    ch=`<div style="font-size:13px;color:var(--muted);padding:16px">Industry-specific subsidy details will appear here after running the pipeline.</div>`;
+    ch=`<div style="font-size:13px;color:var(--muted);padding:16px">⏳ Loading program details… (run pipeline for full data)</div>`;
   }
   $('12-caps-c').innerHTML=ch;
 
@@ -6894,10 +6840,10 @@ function buildGrants(d) {
     <div style="font-size:22px;font-weight:700;font-family:'Syne',sans-serif;color:var(--green)">$${total.toLocaleString()}</div>
   </div>
   <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Program</th><th>Type</th><th>Estimated Amount</th><th>Deadline</th><th>Probability</th><th>Next Action</th></tr></thead><tbody>`;
-  (d.all_grants_table||[]).forEach(g=>{
-    const pb=g.probability.startsWith('High')?'b-green':g.probability.startsWith('Medium')?'b-amber':'b-red';
-    const tb=g.type.includes('Revenue')||g.type.includes('Grant')?'b-green':g.type.includes('Tax')?'b-amber':'b-blue';
-    tbl+=`<tr><td><strong>${g.program}</strong></td><td><span class="badge ${tb}">${g.type}</span></td><td style="color:var(--green);font-weight:600">${g.amount_est}</td><td style="font-size:11px;color:var(--muted)">${g.deadline}</td><td><span class="badge ${pb}">${g.probability}</span></td><td style="font-size:11px;color:var(--muted)">${g.action_required}</td></tr>`;
+  (d.all_grants_table||d.grants_table||[]).forEach(g=>{
+    const pb=(g.probability||'').startsWith('High')?'b-green':(g.probability||'').startsWith('Medium')?'b-amber':'b-red';
+    const tb=(g.type||'').includes('Revenue')||(g.type||'').includes('Grant')?'b-green':(g.type||'').includes('Tax')?'b-amber':'b-blue';
+    tbl+=`<tr><td><strong>${g.program||g.name||''}</strong></td><td><span class="badge ${tb}">${g.type||''}</span></td><td style="color:var(--green);font-weight:600">${g.amount_est||g.amount_range||g.amount||''}</td><td style="font-size:11px;color:var(--muted)">${g.deadline||''}</td><td><span class="badge ${pb}">${g.probability||''}</span></td><td style="font-size:11px;color:var(--muted)">${g.action_required||g.notes||''}</td></tr>`;
   });
   tbl+=`</tbody></table></div>`;
   $('12-tbl-c').innerHTML=tbl;

@@ -1,17 +1,93 @@
 async function runAgent12(a3,a5) {
   setDot(12,'running');
   const ind=industry();
-  const sys=`You are a grant research specialist for ${ind.unit} businesses. Search for real, current grant and subsidy programs. Respond JSON only.`;
-  const usr=`Search for all available grants, subsidies, and funding incentives for opening a ${ind.unit} near ZIP ${zip()}. Regulatory body: ${ind.regulatory}. Search for SBA programs, USDA Rural Development grants, local county business incentives, industry-specific subsidies (${ind.grants}), and federal small business grants applicable to ${ind.unit} businesses.
+
+  if (demoMode && typeof getDemoData === 'function') {
+    const _d = getDemoData(12);
+    if (_d) { R.a12 = _d; try { buildGrants(_d); } catch(e){} setDot(12,'done'); showOut(12); return JSON.stringify(_d); }
+  }
+
+  // ── Part A: Overview + grants summary table ───────────────
+  const sysA=`You are a grant research specialist for ${ind.unit} businesses. Search for real, current grant and subsidy programs. Respond JSON only.`;
+  const usrA=`Search for all available grants, subsidies, and funding incentives for opening a ${ind.unit} near ZIP ${zip()}. Regulatory body: ${ind.regulatory}. Search for: SBA programs, USDA Rural Development, local county business incentives, industry subsidies (${ind.grants}), and federal small business grants.
+
 Return ONLY:
-{"summary":"5-sentence summary of funding landscape","total_potential_funding":287000,"caps_program":{"program_name":"Georgia Childcare and Parent Services (CAPS)","administered_by":"Georgia DECAL","website":"https://decal.ga.gov/Families/CAPS.aspx","phone":"1-877-255-2277","what_it_is":"State subsidy program paying childcare costs for income-eligible families. Guaranteed monthly payment to provider from state.","benefit_to_provider":"Guaranteed payment per enrolled CAPS child. CAPS families fill hard-to-fill slots with zero collection risk.","current_rates_gwinnett":[{"age_group":"Infant (0-12 mo)","daily_rate":37.50,"monthly_est":813,"notes":"Gwinnett County Rate A — 2024 schedule"},{"age_group":"Toddler (1-2 yr)","daily_rate":32.00,"monthly_est":694,"notes":"Gwinnett Rate A"},{"age_group":"Preschool (3 yr)","daily_rate":28.00,"monthly_est":607,"notes":"Gwinnett Rate A"},{"age_group":"Pre-K (4 yr)","daily_rate":25.00,"monthly_est":542,"notes":"Gwinnett Rate A"}],"current_rates_barrow":[{"age_group":"Infant (0-12 mo)","daily_rate":28.00,"monthly_est":607,"notes":"Barrow County Rate B"},{"age_group":"Toddler (1-2 yr)","daily_rate":24.00,"monthly_est":520,"notes":"Barrow Rate B"},{"age_group":"Preschool (3 yr)","daily_rate":20.00,"monthly_est":433,"notes":"Barrow Rate B"},{"age_group":"Pre-K (4 yr)","daily_rate":18.00,"monthly_est":390,"notes":"Barrow Rate B"}],"eligibility_for_provider":"Active DECAL license + Quality Rated 2-star minimum","how_to_apply":"Complete CAPS Provider Agreement at decal.ga.gov after licensing","revenue_impact":"15 CAPS children @ avg $650/mo = $9,750/month guaranteed revenue ($117K/yr)"},"georgia_pre_k":{"program_name":"Georgia Pre-K Program","administered_by":"Georgia DECAL","website":"https://www.decal.ga.gov/prek/","phone":"404-656-5957","what_it_is":"State-funded Pre-K for all Georgia 4-year-olds. State pays provider per enrolled Pre-K child per year.","annual_revenue_per_class":84000,"class_size":20,"eligibility":"DECAL license + Quality Rated 2-star + classroom assessment","website_apply":"https://www.decal.ga.gov/prek/ApplyToBeAProvider.aspx","notes":"One Pre-K class adds $84K/yr in guaranteed state revenue. Apply by February each year for fall enrollment."},"federal_grants":[{"name":"USDA Child & Adult Care Food Program (CACFP)","agency":"USDA / Georgia DOE","website":"https://www.gadoe.org/School-Improvement/Federal-Programs/Pages/CACFP.aspx","phone":"404-657-8000","amount_available":"$10,000–$14,000 annually","direct_apply":true,"apply_url":"https://www.gadoe.org/School-Improvement/Federal-Programs/Pages/CACFP.aspx","notes":"Meal reimbursement for breakfast, lunch, snacks. Barrow County may qualify for Tier 1 (higher rate). Apply after licensing."},{"name":"USDA Rural Development Community Facilities Grant","agency":"USDA Rural Development","website":"https://www.rd.usda.gov/programs-services/community-facilities/community-facilities-direct-loan-grant-program","phone":"706-546-2136","amount_available":"$25,000–$150,000 (Barrow County locations)","direct_apply":true,"apply_url":"https://www.rd.usda.gov/ga","notes":"Barrow County childcare centers may qualify. Contact Athens USDA office. No repayment required for grant portion.","eligibility_zip":"Winder GA 30680 and Auburn GA 30011 — confirm rural designation with USDA"},{"name":"SBA Microloan Program","agency":"SBA / ACE Georgia","website":"https://www.sba.gov/funding-programs/loans/microloans","amount_available":"Up to $50,000 at below-market rates","direct_apply":true,"apply_url":"https://aceloans.org","notes":"Georgia intermediary: ACE Loans (aceloans.org) 770-527-6100. For startups needing supplemental capital."},{"name":"HHS Child Care Stabilization Grant","agency":"HHS / ACF","website":"https://www.acf.hhs.gov/occ/child-care-stabilization-grants","amount_available":"$10,000–$50,000 if re-authorized in 2026","direct_apply":true,"notes":"Monitor acf.hhs.gov for renewal. Previously covered payroll, rent, equipment for new providers under American Rescue Plan."}],"barrow_county_incentives":[{"name":"Barrow County Development Authority","contact":"Barrow County Development Authority","phone":"770-307-3021","email":"bda@barrowga.org","website":"https://www.barrowga.org/economic-development/","incentives":["Property tax abatement up to 5 years for qualifying new businesses","Potential permit fee waivers","Site preparation assistance","Childcare declared workforce priority sector in Barrow County Strategic Plan 2024"],"notes":"Contact BDA before signing any lease. They may negotiate incentives with landlord or county commission directly."},{"name":"Georgia Job Tax Credit","agency":"Georgia Dept of Revenue","website":"https://dor.georgia.gov/job-tax-credit","amount":"$1,250–$3,500 per new full-time job (Barrow County Tier 3)","notes":"16 staff × $1,250 = up to $20,000 state tax credit Year 1. File Form IT-CA.","apply_url":"https://dor.georgia.gov/job-tax-credit"},{"name":"Winder Downtown Development Authority","contact":"Winder DDA","phone":"770-867-3106","website":"https://www.cityofwinder.com/development-authority/","incentives":["Façade grant up to $10,000","TIF district benefits","Sign grant up to $2,000"],"notes":"If locating in or near Winder downtown corridor."}],"quality_rated_benefits":{"program":"Georgia Quality Rated","website":"https://qualityrated.decal.ga.gov","benefits_by_star":[{"stars":1,"benefits":"CAPS eligible","additional_per_child":0},{"stars":2,"benefits":"Georgia Pre-K eligible, enhanced CAPS rate, workforce grants","additional_per_child":1.50},{"stars":3,"benefits":"Maximum CAPS rate, employer partnerships, enhanced Pre-K slot priority","additional_per_child":3.00},{"stars":4,"benefits":"National accreditation support, maximum state benefits","additional_per_child":4.50}],"recommendation":"Target 2-star at opening, 3-star by Year 2"},"all_grants_table":[{"program":"Georgia CAPS Subsidy","type":"Ongoing Revenue","amount_est":"$117,000/yr (15 CAPS kids)","deadline":"After licensing","probability":"High","action_required":"DECAL license + Quality Rated 2-star"},{"program":"Georgia Pre-K Slot","type":"Annual Revenue","amount_est":"$84,000/yr","deadline":"Apply by February","probability":"Medium-High","action_required":"Apply to DECAL after licensing"},{"program":"CACFP Meals","type":"Ongoing Revenue","amount_est":"$10,000–$14,000/yr","deadline":"Any time","probability":"High","action_required":"Enroll with Georgia DOE CACFP"},{"program":"USDA Rural Dev Grant","type":"One-Time Grant","amount_est":"$25,000–$150,000","deadline":"Rolling","probability":"High (Barrow Co.)","action_required":"Call Athens USDA 706-546-2136"},{"program":"Barrow Co. Tax Abatement","type":"Tax Savings","amount_est":"$5,000–$20,000/yr","deadline":"Before opening","probability":"High (Barrow)","action_required":"Contact BDA 770-307-3021 before lease"},{"program":"Georgia Job Tax Credit","type":"Tax Credit","amount_est":"Up to $20,000 Yr 1","deadline":"With tax return","probability":"High (Barrow)","action_required":"File Form IT-CA with GA Dept of Revenue"},{"program":"SBA Microloan","type":"Loan","amount_est":"Up to $50,000","deadline":"Rolling","probability":"Medium","action_required":"Apply at aceloans.org"},{"program":"Childcare Stabilization Grant","type":"Grant","amount_est":"$10,000–$50,000","deadline":"TBD 2026","probability":"Medium","action_required":"Monitor acf.hhs.gov"},{"program":"Winder DDA Façade Grant","type":"One-Time Grant","amount_est":"Up to $10,000","deadline":"Rolling","probability":"High (Winder)","action_required":"Contact Winder DDA 770-867-3106"},{"program":"DECAL Workforce Grant","type":"Per-staff grant","amount_est":"Up to $2,000/teacher","deadline":"As announced","probability":"Medium","action_required":"Monitor decal.ga.gov"}]}`;
+{
+  "summary": "5-sentence summary of funding landscape citing specific programs and amounts",
+  "total_potential_funding": 0,
+  "all_grants_table": [
+    {
+      "program": "Program name", "type": "Ongoing Revenue|One-Time Grant|Tax Credit|Tax Savings|Loan",
+      "amount_est": "$X,000/yr or range", "deadline": "Rolling|After licensing|Date",
+      "probability": "High|Medium-High|Medium|Low", "action_required": "Specific next action"
+    }
+  ]
+}
+Include 8-12 real programs for ZIP ${zip()} state: state industry subsidy, state pre-k/quality program, CACFP meals, USDA Rural Dev grant, SBA microloan, state job tax credit, county development authority incentives, local DDA grants, federal stabilization grants. Use real program names and dollar amounts.`;
+
+  // ── Part B: Program details (non-blocking post-render) ────
+  async function _runAgent12PartB(data) {
+    const progList = (data.all_grants_table||[]).map(g=>g.program).slice(0,10).join('\n');
+    const sysB=`You are a grant research specialist. Respond JSON only.`;
+    const usrB=`For a ${ind.unit} near ZIP ${zip()}, provide detailed info for these programs:
+
+${progList}
+
+Return ONLY:
+{
+  "industry_subsidy": {
+    "program_name": "Name", "administered_by": "Agency", "website": "https://...", "phone": "XXX-XXX-XXXX",
+    "what_it_is": "2-sentence description", "benefit_to_provider": "Key benefit",
+    "revenue_impact": "Revenue impact estimate",
+    "current_rates": [{"age_group": "Group", "daily_rate": 0, "monthly_est": 0, "notes": "Note"}],
+    "eligibility_for_provider": "Requirements", "how_to_apply": "Process"
+  },
+  "state_program": {
+    "program_name": "Name", "administered_by": "Agency", "website": "https://...", "phone": "XXX",
+    "what_it_is": "Description", "annual_revenue_per_class": 0, "class_size": 0,
+    "eligibility": "Requirements", "website_apply": "https://...", "notes": "Important note"
+  },
+  "federal_grants": [
+    {
+      "name": "Grant name", "agency": "Agency", "website": "https://...", "phone": "XXX-XXX-XXXX",
+      "amount_available": "$X,000 range", "direct_apply": true, "apply_url": "https://...", "notes": "Notes"
+    }
+  ],
+  "local_incentives": [
+    {
+      "name": "Program name", "contact": "Org name", "phone": "XXX-XXX-XXXX",
+      "website": "https://...", "incentives": ["Incentive 1", "Incentive 2"], "notes": "Notes"
+    }
+  ],
+  "quality_rated_benefits": {
+    "program": "Quality rating program name", "website": "https://...",
+    "benefits_by_star": [{"stars": 1, "benefits": "Benefits", "additional_per_child": 0}],
+    "recommendation": "Target X-star at opening"
+  }
+}
+Use REAL URLs, phone numbers, and dollar amounts for ZIP ${zip()} state.`;
+    try {
+      const partB = await claudeJSON(sysB, usrB);
+      if (!partB) return;
+      if (partB.industry_subsidy) data.caps_program = partB.industry_subsidy;
+      if (partB.state_program) data.georgia_pre_k = partB.state_program;
+      if (partB.federal_grants) data.federal_grants = partB.federal_grants;
+      if (partB.local_incentives) { data.local_incentives = partB.local_incentives; data.barrow_county_incentives = partB.local_incentives; }
+      if (partB.quality_rated_benefits) data.quality_rated_benefits = partB.quality_rated_benefits;
+      buildGrants(data);
+    } catch(e2) { console.warn('Agent 12 Part B failed:', e2.message); }
+  }
+
   try {
-    _setDemoKey(12);
-    let d=await claudeJSON(sys,usr);
-    if(!d) { console.warn('Agent 12 fallback'); d={summary:'Grant data unavailable.',total_potential_funding:0,federal_grants:[],all_grants_table:[]}; }
-    R.a12=d;
+    let d = await claudeJSON(sysA, usrA);
+    if(!d) { console.warn('Agent 12 fallback'); d=getFallback12(); }
+    R.a12 = d;
     buildGrants(d);
     setDot(12,'done'); showOut(12);
+    // Part B: enrich with program details (non-blocking)
+    if (!demoMode) {
+      _runAgent12PartB(d).catch(e=>console.warn('Agent 12 Part B err:', e.message));
+    }
     return JSON.stringify(d);
   } catch(e){setDot(12,'error');showOut(12);$('12-sum-t').textContent='Error: '+e.message;throw e}
 }
@@ -70,8 +146,10 @@ function buildGrants(d) {
     }
   } else if(d.industry_subsidies) {
     (d.industry_subsidies||[]).forEach(g=>{ch+=buildGrantCard(g);});
+  } else if(d.state_grants) {
+    (d.state_grants||[]).forEach(g=>{ch+=buildGrantCard(g);});
   } else {
-    ch=`<div style="font-size:13px;color:var(--muted);padding:16px">Industry-specific subsidy details will appear here after running the pipeline.</div>`;
+    ch=`<div style="font-size:13px;color:var(--muted);padding:16px">⏳ Loading program details… (run pipeline for full data)</div>`;
   }
   $('12-caps-c').innerHTML=ch;
 
@@ -104,10 +182,10 @@ function buildGrants(d) {
     <div style="font-size:22px;font-weight:700;font-family:'Syne',sans-serif;color:var(--green)">$${total.toLocaleString()}</div>
   </div>
   <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Program</th><th>Type</th><th>Estimated Amount</th><th>Deadline</th><th>Probability</th><th>Next Action</th></tr></thead><tbody>`;
-  (d.all_grants_table||[]).forEach(g=>{
-    const pb=g.probability.startsWith('High')?'b-green':g.probability.startsWith('Medium')?'b-amber':'b-red';
-    const tb=g.type.includes('Revenue')||g.type.includes('Grant')?'b-green':g.type.includes('Tax')?'b-amber':'b-blue';
-    tbl+=`<tr><td><strong>${g.program}</strong></td><td><span class="badge ${tb}">${g.type}</span></td><td style="color:var(--green);font-weight:600">${g.amount_est}</td><td style="font-size:11px;color:var(--muted)">${g.deadline}</td><td><span class="badge ${pb}">${g.probability}</span></td><td style="font-size:11px;color:var(--muted)">${g.action_required}</td></tr>`;
+  (d.all_grants_table||d.grants_table||[]).forEach(g=>{
+    const pb=(g.probability||'').startsWith('High')?'b-green':(g.probability||'').startsWith('Medium')?'b-amber':'b-red';
+    const tb=(g.type||'').includes('Revenue')||(g.type||'').includes('Grant')?'b-green':(g.type||'').includes('Tax')?'b-amber':'b-blue';
+    tbl+=`<tr><td><strong>${g.program||g.name||''}</strong></td><td><span class="badge ${tb}">${g.type||''}</span></td><td style="color:var(--green);font-weight:600">${g.amount_est||g.amount_range||g.amount||''}</td><td style="font-size:11px;color:var(--muted)">${g.deadline||''}</td><td><span class="badge ${pb}">${g.probability||''}</span></td><td style="font-size:11px;color:var(--muted)">${g.action_required||g.notes||''}</td></tr>`;
   });
   tbl+=`</tbody></table></div>`;
   $('12-tbl-c').innerHTML=tbl;
