@@ -1,13 +1,57 @@
 async function runAgent11(a1,a2,a4) {
   setDot(11,'running');
   const ind=industry();
-  const sys=`You are a geographic data analyst. Respond with JSON only.`;
-  const usr=`Build geographic mapping data for cities within ${radius()} miles of ZIP ${zip()} for a ${ind.unit} site analysis.
-DEMOGRAPHICS: ${ctx(a1,['summary','cities'],1000)}
-GAP ANALYSIS: ${ctx(a2,['summary','cities','overall_opportunity_score'])}
-REAL ESTATE: ${ctx(a4,['summary','listings','by_city_summary'])}
-Return ONLY:
-{"center":{"lat":34.0020,"lng":-84.1455,"label":"ZIP 30097 — Duluth, GA"},"cities":[{"name":"Suwanee","county":"Gwinnett","lat":34.0512,"lng":-84.0710,"gap_score":9,"demand_score":9,"supply_score":3,"unserved_children":580,"median_income":112000,"competitor_count":2,"priority":"Critical Opportunity","recommended_action":"Open Here #1","real_estate_url":"https://www.loopnet.com/search/commercial-real-estate/suwanee-ga/for-lease/"},{"name":"Sugar Hill","county":"Gwinnett","lat":34.1118,"lng":-84.0541,"gap_score":8,"demand_score":8,"supply_score":3,"unserved_children":420,"median_income":89000,"competitor_count":1,"priority":"High Opportunity","recommended_action":"Open Here #2","real_estate_url":"https://www.loopnet.com/search/commercial-real-estate/sugar-hill-ga/for-lease/"},{"name":"Johns Creek","county":"Fulton","lat":34.0289,"lng":-84.1986,"gap_score":7,"demand_score":9,"supply_score":5,"unserved_children":390,"median_income":125000,"competitor_count":4,"priority":"High Opportunity","recommended_action":"Open Here #3","real_estate_url":"https://www.crexi.com/lease/properties?address=Johns+Creek%2C+GA"},{"name":"Buford","county":"Gwinnett","lat":34.1193,"lng":-83.9938,"gap_score":7,"demand_score":7,"supply_score":4,"unserved_children":310,"median_income":81000,"competitor_count":1,"priority":"High Opportunity","recommended_action":"Open Here #4","real_estate_url":"https://www.loopnet.com/search/commercial-real-estate/buford-ga/for-lease/"},{"name":"Cumming","county":"Forsyth","lat":34.2073,"lng":-84.1401,"gap_score":7,"demand_score":8,"supply_score":4,"unserved_children":350,"median_income":98000,"competitor_count":3,"priority":"Good Opportunity","recommended_action":"Consider #5","real_estate_url":"https://www.crexi.com/lease/properties?address=Cumming%2C+GA"},{"name":"Winder","county":"Barrow","lat":33.9937,"lng":-83.7196,"gap_score":9,"demand_score":8,"supply_score":2,"unserved_children":480,"median_income":52000,"competitor_count":1,"priority":"Critical — Underserved","recommended_action":"First-Mover Opportunity","real_estate_url":"https://www.loopnet.com/search/commercial-real-estate/winder-ga/for-lease/"},{"name":"Auburn","county":"Barrow","lat":34.0151,"lng":-83.8266,"gap_score":8,"demand_score":7,"supply_score":2,"unserved_children":310,"median_income":68000,"competitor_count":0,"priority":"High — Underserved","recommended_action":"Zero Competition","real_estate_url":"https://www.crexi.com/lease/properties?address=Auburn%2C+GA"},{"name":"Duluth","county":"Gwinnett","lat":34.0020,"lng":-84.1455,"gap_score":4,"demand_score":7,"supply_score":7,"unserved_children":160,"median_income":76000,"competitor_count":8,"priority":"Saturating","recommended_action":"Avoid — Competitive","real_estate_url":"https://www.loopnet.com/search/commercial-real-estate/duluth-ga/for-lease/"},{"name":"Lawrenceville","county":"Gwinnett","lat":33.9526,"lng":-83.9880,"gap_score":2,"demand_score":7,"supply_score":9,"unserved_children":80,"median_income":58000,"competitor_count":14,"priority":"Saturated","recommended_action":"Do Not Enter","real_estate_url":"https://www.loopnet.com/search/commercial-real-estate/lawrenceville-ga/for-lease/"},{"name":"Norcross","county":"Gwinnett","lat":33.9412,"lng":-84.2135,"gap_score":2,"demand_score":6,"supply_score":8,"unserved_children":70,"median_income":52000,"competitor_count":12,"priority":"Saturated","recommended_action":"Do Not Enter","real_estate_url":"https://www.loopnet.com/search/commercial-real-estate/norcross-ga/for-lease/"},{"name":"Alpharetta","county":"Fulton","lat":34.0754,"lng":-84.2941,"gap_score":5,"demand_score":8,"supply_score":6,"unserved_children":200,"median_income":120000,"competitor_count":7,"priority":"Moderate","recommended_action":"Premium niche possible","real_estate_url":"https://www.loopnet.com/search/commercial-real-estate/alpharetta-ga/for-lease/"}],"real_estate_pins":[{"label":"Suwanee – Peachtree Pkwy","lat":34.0480,"lng":-84.0690,"rent":13800,"sqft":8400,"url":"https://www.loopnet.com/search/commercial-real-estate/suwanee-ga/for-lease/"},{"label":"Sugar Hill – PI Blvd","lat":34.1090,"lng":-84.0520,"rent":9200,"sqft":7200,"url":"https://www.loopnet.com/search/commercial-real-estate/sugar-hill-ga/for-lease/"},{"label":"Buford – Hamilton Mill","lat":34.1170,"lng":-83.9910,"rent":8400,"sqft":6900,"url":"https://www.bizbuysell.com/georgia/child-care-businesses-for-sale/"},{"label":"Winder – Athens Hwy","lat":33.9910,"lng":-83.7210,"rent":5800,"sqft":6500,"url":"https://www.loopnet.com/search/commercial-real-estate/winder-ga/for-lease/"},{"label":"Auburn – Hwy 316","lat":34.0130,"lng":-83.8280,"rent":5200,"sqft":6200,"url":"https://www.crexi.com/lease/properties?address=Auburn%2C+GA"}],"directions":[{"from":"ZIP 30097 (Duluth)","to":"Suwanee Town Center","drive_mins":12,"miles":8.2,"google_url":"https://maps.google.com/?saddr=Duluth+GA+30097&daddr=Suwanee+Town+Center+Suwanee+GA"},{"from":"ZIP 30097 (Duluth)","to":"Sugar Hill City Hall","drive_mins":18,"miles":11.4,"google_url":"https://maps.google.com/?saddr=Duluth+GA+30097&daddr=Sugar+Hill+GA+30518"},{"from":"ZIP 30097 (Duluth)","to":"Johns Creek","drive_mins":14,"miles":9.8,"google_url":"https://maps.google.com/?saddr=Duluth+GA+30097&daddr=Johns+Creek+GA+30022"},{"from":"ZIP 30097 (Duluth)","to":"Buford / Hamilton Mill","drive_mins":22,"miles":14.1,"google_url":"https://maps.google.com/?saddr=Duluth+GA+30097&daddr=Hamilton+Mill+Buford+GA+30519"},{"from":"ZIP 30097 (Duluth)","to":"Winder, Barrow County","drive_mins":38,"miles":29.4,"google_url":"https://maps.google.com/?saddr=Duluth+GA+30097&daddr=Winder+GA+30680"},{"from":"ZIP 30097 (Duluth)","to":"Auburn, Barrow County","drive_mins":32,"miles":23.6,"google_url":"https://maps.google.com/?saddr=Duluth+GA+30097&daddr=Auburn+GA+30011"}]}`;
+
+  if (demoMode && typeof getDemoData === 'function') {
+    const _d = getDemoData(11);
+    if (_d) { R.a11 = _d; try { buildMap(_d); buildMapLegend(_d); buildDirections(_d); } catch(e){} setDot(11,'done'); showOut(11); return JSON.stringify(_d); }
+  }
+
+  // Extract city names from upstream data to drive real geographic analysis
+  const demoCities  = _toArr((typeof a1==='string'?JSON.parse(a1||'{}'):a1||{}).cities||[]).map(c=>c.city||c.name).filter(Boolean);
+  const gapCities   = _toArr((typeof a2==='string'?JSON.parse(a2||'{}'):a2||{}).cities||[]).map(c=>c.city||c.name).filter(Boolean);
+  const allCities   = [...new Set([...demoCities,...gapCities])].slice(0,12);
+  const cityContext = allCities.length ? `Known cities to map: ${allCities.join(', ')}` : `Search for cities within ${radius()} miles of ZIP ${zip()}`;
+
+  const sys=`You are a geographic data analyst. Provide REAL lat/lng coordinates and LoopNet/Crexi URLs for actual cities. Respond with JSON only.`;
+  const usr=`Build geographic mapping data for ${ind.unit} site analysis near ZIP ${zip()}.
+
+${cityContext}
+DEMOGRAPHICS: ${ctx(a1,['summary','cities'],600)}
+GAP ANALYSIS: ${ctx(a2,['summary','cities','overall_opportunity_score'],600)}
+REAL ESTATE: ${ctx(a4,['summary','by_city_summary'],400)}
+
+Return ONLY this JSON:
+{
+  "center": {"lat": 0.0000, "lng": 0.0000, "label": "ZIP ${zip()} — City, ST"},
+  "cities": [
+    {
+      "name": "City name", "county": "County name",
+      "lat": 0.0000, "lng": 0.0000,
+      "gap_score": 8, "demand_score": 8, "supply_score": 3,
+      "unserved_children": 400, "median_income": 95000, "competitor_count": 2,
+      "priority": "Critical Opportunity|High Opportunity|Moderate|Saturated",
+      "recommended_action": "Open Here #1",
+      "real_estate_url": "https://www.loopnet.com/search/commercial-real-estate/city-st/for-lease/"
+    }
+  ],
+  "real_estate_pins": [
+    {
+      "label": "Location label", "lat": 0.0000, "lng": 0.0000,
+      "rent": 12000, "sqft": 8000,
+      "url": "https://www.loopnet.com/search/commercial-real-estate/city-st/for-lease/"
+    }
+  ],
+  "directions": [
+    {
+      "from": "ZIP ${zip()} — City, ST",
+      "to": "Top city name",
+      "drive_mins": 15, "miles": 10.2,
+      "google_url": "https://maps.google.com/?saddr=ZIP+${zip()}&daddr=City+ST"
+    }
+  ]
+}
+Use REAL coordinates for all cities. Include 8-12 cities, 4-5 real estate pins at top locations, 5-6 driving directions. LoopNet URLs must use actual city slugs (e.g. suwanee-ga not generic).`;
   try {
     let d=await claudeJSON(sys,usr);
     if(!d) { console.warn('Agent 11 fallback'); d=getFallback11(); }
@@ -17,7 +61,7 @@ Return ONLY:
     buildDirections(d);
     setDot(11,'done'); showOut(11);
     return JSON.stringify(d);
-  } catch(e){setDot(11,'error');showOut(11);$('11-map-c').innerHTML=`<div class="prose" style="color:var(--red)">Error: ${e.message}</div>`;throw e}
+  } catch(e){setDot(11,'error');showOut(11);try{$('11-map-c').innerHTML=`<div class="prose" style="color:var(--red)">Error: ${e.message}</div>`;}catch(_){}throw e}
 }
 
 function gapCol(s){return s>=9?'#3dd68c':s>=7?'#f5a623':s>=5?'#4a9eff':s>=3?'#a78bfa':'#ff5f5f';}
