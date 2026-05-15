@@ -19,12 +19,18 @@ async function runAgent7(a3, a4, a5, a1, a2) {
   const ctx1 = a1 ? ctx(a1, ['summary', 'cities'], 600) : '';
   const ctx2 = a2 ? ctx(a2, ['summary', 'cities', 'overall_opportunity_score'], 500) : '';
 
+  // ── Real economic data injection ──────────────────────────
+  const _rdCtx7 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['demographics','wages','macro','rents','energy_rates','energy_state','flood'])
+    : '';
+
   // ── Sub-call A: Revenue Model ───────────────────────────
   $('7-s-t').textContent = '';
   $('7-sc-c').innerHTML = subProgress(1, 3, 'Sub-agent 1/3: Revenue Model…');
 
   const sysA = `You are a financial analyst specializing in ${ind.unit} revenue modeling. Return JSON only.`;
-  const usrA = `Build a detailed revenue model for a ${base}.
+  const usrA = (_rdCtx7 ? _rdCtx7 + '\n' : '') +
+  `Build a detailed revenue model for a ${base}.
 DEMOGRAPHICS (use median income for pricing realism): ${ctx1}
 GAP ANALYSIS (use demand strength for capacity): ${ctx2}
 SITE RECOMMENDATIONS: ${ctx3}
@@ -68,7 +74,8 @@ Return ONLY:
   $('7-sc-c').innerHTML = subProgress(2, 3, 'Sub-agent 2/3: Cost Model…');
 
   const sysB = `You are a financial analyst specializing in ${ind.unit} cost structures. Return JSON only.`;
-  const usrB = `Build a detailed cost model for a ${base}.
+  const usrB = (_rdCtx7 ? _rdCtx7 + '\n' : '') +
+  `Build a detailed cost model for a ${base}.
 SELECTED SITE: ${JSON.stringify(revModel.selected_site || {})}
 REGULATORY: ${ctx5}
 

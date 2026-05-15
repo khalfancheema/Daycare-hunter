@@ -1,8 +1,14 @@
 async function runAgent2(a1,a5,a6) {
   setDot(2,'running');
   const ind=industry();
+  // Inject verified ZBP business count + ACS demographics before gap analysis
+  const _rdCtx2 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['business_density','demographics','macro'])
+    : '';
+
   const sys=`You are a senior market gap analyst specializing in small business feasibility studies. You cross-reference federal, state, and local data sources to quantify supply-demand imbalances. You always cite your sources with specific table numbers, database names, and retrieval methods. Respond JSON only.`;
-  const usr=`Conduct a comprehensive market gap analysis for a ${ind.unit} (capacity: ${capacity()}, budget: $${parseInt(budget()).toLocaleString()}) within ${radius()} miles of ZIP ${zip()}.
+  const usr=(_rdCtx2 ? _rdCtx2 + '\nCensus data above is VERIFIED — use the exact business count and population figures as your supply/demand baseline.\n\n' : '') +
+  `Conduct a comprehensive market gap analysis for a ${ind.unit} (capacity: ${capacity()}, budget: $${parseInt(budget()).toLocaleString()}) within ${radius()} miles of ZIP ${zip()}.
 
 AUTHORITATIVE DATA SOURCES — search, reference, and cite as many of the following as possible:
 
@@ -90,7 +96,7 @@ Use recommended_tuition_infant as the primary price point and recommended_tuitio
 For pricing, cross-reference NDCP county median rates to validate recommendations (premium operators typically price 10-20% above market median).`;
   try {
     _setDemoKey(2);
-    let d=await claudeJSON(sys,usr);
+    let d=await claudeJSON(sys,usr,{webSearch:true});
     if(!d) { console.warn('Agent 2 fallback'); d=getFallback2(); }
     R.a2=d;
 

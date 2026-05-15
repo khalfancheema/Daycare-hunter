@@ -16,6 +16,15 @@ async function runPipeline() {
   const cached = k => R['a'+k] ? JSON.stringify(R['a'+k]) : null;
   const best   = k => cached(k) || fb(k);
   try {
+    // ── Phase 0: Real Data Prefetch (parallel, non-blocking) ─
+    // Fires all free-API calls BEFORE agents start so every prompt
+    // gets real Census/BLS/OSM/Grants data injected verbatim.
+    if (typeof prefetchRealData === 'function' && !demoMode) {
+      setProgress(2, 'Prefetching real data (Census · BLS · OSM · Grants.gov · FEMA)…');
+      try { await prefetchRealData(zip(), industry(), capacity(), budget()); }
+      catch(e) { console.warn('Real data prefetch failed (non-fatal):', e.message); }
+    }
+
     // ── Phase 1: Foundation Research (parallel) ─────────────
     let r1, r5, r6;
     if (phaseShouldRun(1)) {

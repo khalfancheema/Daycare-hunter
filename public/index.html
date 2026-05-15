@@ -1713,7 +1713,14 @@ const PROVIDERS = {
     url: 'https://api.anthropic.com/v1/messages',
     model_default: 'claude-sonnet-4-6',
     headers: key => ({'x-api-key':key,'anthropic-version':'2023-06-01','Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'}),
-    buildBody: (system,user,model) => ({model,max_tokens:8192,system,messages:[{role:'user',content:user}]}),
+    buildBody: (system,user,model,opts={}) => {
+      const body = {model,max_tokens:8192,system,messages:[{role:'user',content:user}]};
+      // Enable web_search tool for agents that need live data verification
+      if (opts.webSearch) {
+        body.tools = [{ type:'web_search_20250305', name:'web_search', max_uses:3 }];
+      }
+      return body;
+    },
     extractText: d => (d.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n'),
     extractStop: d => d.stop_reason,
   },
@@ -1942,7 +1949,8 @@ let _demoCJKey = null;
 function _setDemoKey(k) { _demoCJKey = k; }
 
 // Retry an agent call up to 2 times if JSON parse fails
-async function claudeJSON(system, user) {
+// opts.webSearch = true enables Anthropic web_search tool for this call
+async function claudeJSON(system, user, opts={}) {
   if (demoMode) {
     await new Promise(r => setTimeout(r, 400));
     // NEW: Try dedicated demo data first (deterministic, richly-shaped)
@@ -2000,7 +2008,7 @@ CRITICAL — NUMERIC PRECISION:
     }
     if (window._v2AbortCtrl?.signal?.aborted || window.stopRequested) throw new Error('Pipeline stopped');
     try {
-      const raw = await claude(strictSystem, user + (attempt > 1 ? '\n\nRemember: respond with ONLY the JSON object, nothing else.' : ''));
+      const raw = await claude(strictSystem, user + (attempt > 1 ? '\n\nRemember: respond with ONLY the JSON object, nothing else.' : ''), opts);
       const d = parseJSON(raw);
       if (d) { setCache(system, user, d); return d; }
       console.warn(`Attempt ${attempt} parse fail. Raw:`, (raw||'').substring(0, 200));
@@ -2012,13 +2020,14 @@ CRITICAL — NUMERIC PRECISION:
   return null;
 }
 
-async function claude(system, user) {
+// opts.webSearch = true → enable Anthropic web_search tool (Anthropic provider only)
+async function claude(system, user, opts={}) {
   const k=key();
   if(!k) throw new Error('No API key.');
   const p = PROVIDERS[provider()]||PROVIDERS.anthropic;
   const url = p.url_custom ? customUrl() : (typeof p.url==='function' ? p.url(k) : p.url);
   const headers = p.headers(k);
-  const body = p.buildBody(system, user, model());
+  const body = p.buildBody(system, user, model(), opts);
   // Use v2 abort controller if present (allows stop button to cancel mid-flight)
   const signal = window._v2AbortCtrl?.signal;
   const fetchOpts = { method:'POST', headers, body:JSON.stringify(body) };
@@ -2320,9 +2329,15 @@ Return ONLY this JSON:
   "daytime_population": {"residential_pop":49200,"daytime_pop":54800,"daytime_to_residential_ratio":1.11,"workers_present":28400,"workers_at_home":14600}
 }`;
 
+  // Prepend verified Census ACS data so agent anchors to real numbers
+  const _rdCtx1 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['demographics','business_density','macro','crime'])
+    : '';
+  const usrWithReal = _rdCtx1 ? _rdCtx1 + '\n\nNow complete the full demographic analysis:\n' + usr : usr;
+
   try {
     _setDemoKey(1);
-    let d=await claudeJSON(sys,usr);
+    let d=await claudeJSON(sys,usrWithReal);
     if(!d) { console.warn('Agent 1 Part 1 fallback'); d=getFallback1(); }
     R.a1=d;
 
@@ -2432,10 +2447,16 @@ async function runAgent5() {
     if (_d) { R.a5 = _d; }
   }
 
+  // ── Real regulatory + environmental data ─────────────────
+  const _rdCtx5 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['regulations','flood','crime','energy_rates'])
+    : '';
+
   // ── Part A: Requirements metadata + timeline ────────────────
   $('5-s-t').textContent = 'Researching licensing requirements…';
   const sysA=`You are a regulatory compliance expert for small businesses in the US. Research current licensing, zoning, and permit requirements for opening a ${ind.unit}. Respond JSON only.`;
-  const usrA=`Search for ALL federal, state, and local requirements to open a ${ind.unit} near ZIP ${zip()}.
+  const usrA=(_rdCtx5 ? _rdCtx5 + '\nUse the CFR regulation dates above as authoritative; do NOT estimate what year a regulation was last updated.\n\n' : '') +
+  `Search for ALL federal, state, and local requirements to open a ${ind.unit} near ZIP ${zip()}.
 
 Regulatory authority: ${ind.regulatory}
 Key compliance areas: ${ind.compliance}
@@ -2509,7 +2530,7 @@ For each item provide 4-6 numbered steps with SPECIFIC actions (not generic). In
   }
 
   try {
-    let d = !demoMode ? await claudeJSON(sysA, usrA) : (R.a5 || null);
+    let d = !demoMode ? await claudeJSON(sysA, usrA, {webSearch:true}) : (R.a5 || null);
     if(!d) { console.warn('Agent 5 fallback'); d=getFallback5(); }
     R.a5=d;
 
@@ -2634,9 +2655,15 @@ async function runAgent6() {
     if (_d) { R.a6 = _d; }
   }
 
+  // ── Real competitor data from OSM + ZBP ──────────────────────────────────
+  const _rdCtx6 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['competitors_osm','business_density','demographics'])
+    : '';
+
   // ── Part A: City-level aggregates + top_chains (no nested centers arrays) ──
   const sysA=`You are a senior competitive intelligence analyst specializing in ${ind.unit} market research. You cross-reference commercial directories, state licensing, review platforms, and NDCP data. Respond JSON only.`;
-  const usrA=`Conduct a competitive intelligence sweep for ${ind.units} within ${radius()} miles of ZIP ${zip()}.
+  const usrA=(_rdCtx6 ? _rdCtx6 + '\n\nReal competitors above are VERIFIED from OpenStreetMap — use their actual names and addresses in your analysis.\n\n' : '') +
+  `Conduct a competitive intelligence sweep for ${ind.units} within ${radius()} miles of ZIP ${zip()}.
 Key competitors: ${ind.competitors}
 
 Search: Google Maps "${ind.unit} near ${zip()}", Yelp, state licensing portal, Winnie.com, NAEYC accreditation finder, Head Start locator (eclkc.acf.hhs.gov), NDCP (DOL Women's Bureau county rates).
@@ -2684,7 +2711,8 @@ Return ONLY this JSON (no individual center details — aggregate data only):
 Use REAL data for ZIP ${zip()}. Revenue model: ${ind.revenue_unit}.`;
 
   try {
-    let d = !demoMode ? await claudeJSON(sysA, usrA) : (R.a6 || null);
+    // webSearch=true: Anthropic provider uses live search to find real businesses
+    let d = !demoMode ? await claudeJSON(sysA, usrA, {webSearch:true}) : (R.a6 || null);
     // Fallback: if claudeJSON returns null after 3 retries, use baseline data
     if(!d) {
       console.warn('Agent 6: using baseline fallback data');
@@ -2907,8 +2935,14 @@ function closeCompCityDetail() {
 async function runAgent2(a1,a5,a6) {
   setDot(2,'running');
   const ind=industry();
+  // Inject verified ZBP business count + ACS demographics before gap analysis
+  const _rdCtx2 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['business_density','demographics','macro'])
+    : '';
+
   const sys=`You are a senior market gap analyst specializing in small business feasibility studies. You cross-reference federal, state, and local data sources to quantify supply-demand imbalances. You always cite your sources with specific table numbers, database names, and retrieval methods. Respond JSON only.`;
-  const usr=`Conduct a comprehensive market gap analysis for a ${ind.unit} (capacity: ${capacity()}, budget: $${parseInt(budget()).toLocaleString()}) within ${radius()} miles of ZIP ${zip()}.
+  const usr=(_rdCtx2 ? _rdCtx2 + '\nCensus data above is VERIFIED — use the exact business count and population figures as your supply/demand baseline.\n\n' : '') +
+  `Conduct a comprehensive market gap analysis for a ${ind.unit} (capacity: ${capacity()}, budget: $${parseInt(budget()).toLocaleString()}) within ${radius()} miles of ZIP ${zip()}.
 
 AUTHORITATIVE DATA SOURCES — search, reference, and cite as many of the following as possible:
 
@@ -2996,7 +3030,7 @@ Use recommended_tuition_infant as the primary price point and recommended_tuitio
 For pricing, cross-reference NDCP county median rates to validate recommendations (premium operators typically price 10-20% above market median).`;
   try {
     _setDemoKey(2);
-    let d=await claudeJSON(sys,usr);
+    let d=await claudeJSON(sys,usr,{webSearch:true});
     if(!d) { console.warn('Agent 2 fallback'); d=getFallback2(); }
     R.a2=d;
 
@@ -4315,9 +4349,15 @@ async function runAgent12(a3,a5) {
     if (_d) { R.a12 = _d; try { buildGrants(_d); } catch(e){} setDot(12,'done'); showOut(12); return JSON.stringify(_d); }
   }
 
+  // ── Real grants data from Grants.gov + SAM.gov ──────────
+  const _rdCtx12 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['grants_gov','federal_opps','sba','demographics'])
+    : '';
+
   // ── Part A: Overview + grants summary table ───────────────
   const sysA=`You are a grant research specialist for ${ind.unit} businesses. Search for real, current grant and subsidy programs. Respond JSON only.`;
-  const usrA=`Search for all available grants, subsidies, and funding incentives for opening a ${ind.unit} near ZIP ${zip()}. Regulatory body: ${ind.regulatory}. Search for: SBA programs, USDA Rural Development, local county business incentives, industry subsidies (${ind.grants}), and federal small business grants.
+  const usrA=(_rdCtx12 ? _rdCtx12 + '\nThe VERIFIED grants above are REAL opportunities from Grants.gov — include them in your table with their exact titles, agencies, amounts, and deadlines.\n\n' : '') +
+  `Search for all available grants, subsidies, and funding incentives for opening a ${ind.unit} near ZIP ${zip()}. Regulatory body: ${ind.regulatory}. Search for: SBA programs, USDA Rural Development, local county business incentives, industry subsidies (${ind.grants}), and federal small business grants.
 
 Return ONLY:
 {
@@ -4387,7 +4427,8 @@ Use REAL URLs, phone numbers, and dollar amounts for ZIP ${zip()} state.`;
   }
 
   try {
-    let d = await claudeJSON(sysA, usrA);
+    // webSearch=true: Claude uses live search to verify grant program details
+    let d = await claudeJSON(sysA, usrA, {webSearch:true});
     if(!d) { console.warn('Agent 12 fallback'); d=getFallback12(); }
     R.a12 = d;
     buildGrants(d);
@@ -5067,6 +5108,15 @@ async function runPipeline() {
   const cached = k => R['a'+k] ? JSON.stringify(R['a'+k]) : null;
   const best   = k => cached(k) || fb(k);
   try {
+    // ── Phase 0: Real Data Prefetch (parallel, non-blocking) ─
+    // Fires all free-API calls BEFORE agents start so every prompt
+    // gets real Census/BLS/OSM/Grants data injected verbatim.
+    if (typeof prefetchRealData === 'function' && !demoMode) {
+      setProgress(2, 'Prefetching real data (Census · BLS · OSM · Grants.gov · FEMA)…');
+      try { await prefetchRealData(zip(), industry(), capacity(), budget()); }
+      catch(e) { console.warn('Real data prefetch failed (non-fatal):', e.message); }
+    }
+
     // ── Phase 1: Foundation Research (parallel) ─────────────
     let r1, r5, r6;
     if (phaseShouldRun(1)) {
@@ -5986,12 +6036,18 @@ async function runAgent7(a3, a4, a5, a1, a2) {
   const ctx1 = a1 ? ctx(a1, ['summary', 'cities'], 600) : '';
   const ctx2 = a2 ? ctx(a2, ['summary', 'cities', 'overall_opportunity_score'], 500) : '';
 
+  // ── Real economic data injection ──────────────────────────
+  const _rdCtx7 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['demographics','wages','macro','rents','energy_rates','energy_state','flood'])
+    : '';
+
   // ── Sub-call A: Revenue Model ───────────────────────────
   $('7-s-t').textContent = '';
   $('7-sc-c').innerHTML = subProgress(1, 3, 'Sub-agent 1/3: Revenue Model…');
 
   const sysA = `You are a financial analyst specializing in ${ind.unit} revenue modeling. Return JSON only.`;
-  const usrA = `Build a detailed revenue model for a ${base}.
+  const usrA = (_rdCtx7 ? _rdCtx7 + '\n' : '') +
+  `Build a detailed revenue model for a ${base}.
 DEMOGRAPHICS (use median income for pricing realism): ${ctx1}
 GAP ANALYSIS (use demand strength for capacity): ${ctx2}
 SITE RECOMMENDATIONS: ${ctx3}
@@ -6035,7 +6091,8 @@ Return ONLY:
   $('7-sc-c').innerHTML = subProgress(2, 3, 'Sub-agent 2/3: Cost Model…');
 
   const sysB = `You are a financial analyst specializing in ${ind.unit} cost structures. Return JSON only.`;
-  const usrB = `Build a detailed cost model for a ${base}.
+  const usrB = (_rdCtx7 ? _rdCtx7 + '\n' : '') +
+  `Build a detailed cost model for a ${base}.
 SELECTED SITE: ${JSON.stringify(revModel.selected_site || {})}
 REGULATORY: ${ctx5}
 

@@ -64,7 +64,8 @@ let _demoCJKey = null;
 function _setDemoKey(k) { _demoCJKey = k; }
 
 // Retry an agent call up to 2 times if JSON parse fails
-async function claudeJSON(system, user) {
+// opts.webSearch = true enables Anthropic web_search tool for this call
+async function claudeJSON(system, user, opts={}) {
   if (demoMode) {
     await new Promise(r => setTimeout(r, 400));
     // NEW: Try dedicated demo data first (deterministic, richly-shaped)
@@ -122,7 +123,7 @@ CRITICAL — NUMERIC PRECISION:
     }
     if (window._v2AbortCtrl?.signal?.aborted || window.stopRequested) throw new Error('Pipeline stopped');
     try {
-      const raw = await claude(strictSystem, user + (attempt > 1 ? '\n\nRemember: respond with ONLY the JSON object, nothing else.' : ''));
+      const raw = await claude(strictSystem, user + (attempt > 1 ? '\n\nRemember: respond with ONLY the JSON object, nothing else.' : ''), opts);
       const d = parseJSON(raw);
       if (d) { setCache(system, user, d); return d; }
       console.warn(`Attempt ${attempt} parse fail. Raw:`, (raw||'').substring(0, 200));
@@ -134,13 +135,14 @@ CRITICAL — NUMERIC PRECISION:
   return null;
 }
 
-async function claude(system, user) {
+// opts.webSearch = true → enable Anthropic web_search tool (Anthropic provider only)
+async function claude(system, user, opts={}) {
   const k=key();
   if(!k) throw new Error('No API key.');
   const p = PROVIDERS[provider()]||PROVIDERS.anthropic;
   const url = p.url_custom ? customUrl() : (typeof p.url==='function' ? p.url(k) : p.url);
   const headers = p.headers(k);
-  const body = p.buildBody(system, user, model());
+  const body = p.buildBody(system, user, model(), opts);
   // Use v2 abort controller if present (allows stop button to cancel mid-flight)
   const signal = window._v2AbortCtrl?.signal;
   const fetchOpts = { method:'POST', headers, body:JSON.stringify(body) };

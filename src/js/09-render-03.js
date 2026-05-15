@@ -7,9 +7,15 @@ async function runAgent6() {
     if (_d) { R.a6 = _d; }
   }
 
+  // ── Real competitor data from OSM + ZBP ──────────────────────────────────
+  const _rdCtx6 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['competitors_osm','business_density','demographics'])
+    : '';
+
   // ── Part A: City-level aggregates + top_chains (no nested centers arrays) ──
   const sysA=`You are a senior competitive intelligence analyst specializing in ${ind.unit} market research. You cross-reference commercial directories, state licensing, review platforms, and NDCP data. Respond JSON only.`;
-  const usrA=`Conduct a competitive intelligence sweep for ${ind.units} within ${radius()} miles of ZIP ${zip()}.
+  const usrA=(_rdCtx6 ? _rdCtx6 + '\n\nReal competitors above are VERIFIED from OpenStreetMap — use their actual names and addresses in your analysis.\n\n' : '') +
+  `Conduct a competitive intelligence sweep for ${ind.units} within ${radius()} miles of ZIP ${zip()}.
 Key competitors: ${ind.competitors}
 
 Search: Google Maps "${ind.unit} near ${zip()}", Yelp, state licensing portal, Winnie.com, NAEYC accreditation finder, Head Start locator (eclkc.acf.hhs.gov), NDCP (DOL Women's Bureau county rates).
@@ -57,7 +63,8 @@ Return ONLY this JSON (no individual center details — aggregate data only):
 Use REAL data for ZIP ${zip()}. Revenue model: ${ind.revenue_unit}.`;
 
   try {
-    let d = !demoMode ? await claudeJSON(sysA, usrA) : (R.a6 || null);
+    // webSearch=true: Anthropic provider uses live search to find real businesses
+    let d = !demoMode ? await claudeJSON(sysA, usrA, {webSearch:true}) : (R.a6 || null);
     // Fallback: if claudeJSON returns null after 3 retries, use baseline data
     if(!d) {
       console.warn('Agent 6: using baseline fallback data');

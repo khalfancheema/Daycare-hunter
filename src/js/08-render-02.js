@@ -7,10 +7,16 @@ async function runAgent5() {
     if (_d) { R.a5 = _d; }
   }
 
+  // ── Real regulatory + environmental data ─────────────────
+  const _rdCtx5 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['regulations','flood','crime','energy_rates'])
+    : '';
+
   // ── Part A: Requirements metadata + timeline ────────────────
   $('5-s-t').textContent = 'Researching licensing requirements…';
   const sysA=`You are a regulatory compliance expert for small businesses in the US. Research current licensing, zoning, and permit requirements for opening a ${ind.unit}. Respond JSON only.`;
-  const usrA=`Search for ALL federal, state, and local requirements to open a ${ind.unit} near ZIP ${zip()}.
+  const usrA=(_rdCtx5 ? _rdCtx5 + '\nUse the CFR regulation dates above as authoritative; do NOT estimate what year a regulation was last updated.\n\n' : '') +
+  `Search for ALL federal, state, and local requirements to open a ${ind.unit} near ZIP ${zip()}.
 
 Regulatory authority: ${ind.regulatory}
 Key compliance areas: ${ind.compliance}
@@ -84,7 +90,7 @@ For each item provide 4-6 numbered steps with SPECIFIC actions (not generic). In
   }
 
   try {
-    let d = !demoMode ? await claudeJSON(sysA, usrA) : (R.a5 || null);
+    let d = !demoMode ? await claudeJSON(sysA, usrA, {webSearch:true}) : (R.a5 || null);
     if(!d) { console.warn('Agent 5 fallback'); d=getFallback5(); }
     R.a5=d;
 

@@ -210,7 +210,14 @@ const PROVIDERS = {
     url: 'https://api.anthropic.com/v1/messages',
     model_default: 'claude-sonnet-4-6',
     headers: key => ({'x-api-key':key,'anthropic-version':'2023-06-01','Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'}),
-    buildBody: (system,user,model) => ({model,max_tokens:8192,system,messages:[{role:'user',content:user}]}),
+    buildBody: (system,user,model,opts={}) => {
+      const body = {model,max_tokens:8192,system,messages:[{role:'user',content:user}]};
+      // Enable web_search tool for agents that need live data verification
+      if (opts.webSearch) {
+        body.tools = [{ type:'web_search_20250305', name:'web_search', max_uses:3 }];
+      }
+      return body;
+    },
     extractText: d => (d.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n'),
     extractStop: d => d.stop_reason,
   },

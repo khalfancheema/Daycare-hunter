@@ -148,9 +148,15 @@ Return ONLY this JSON:
   "daytime_population": {"residential_pop":49200,"daytime_pop":54800,"daytime_to_residential_ratio":1.11,"workers_present":28400,"workers_at_home":14600}
 }`;
 
+  // Prepend verified Census ACS data so agent anchors to real numbers
+  const _rdCtx1 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['demographics','business_density','macro','crime'])
+    : '';
+  const usrWithReal = _rdCtx1 ? _rdCtx1 + '\n\nNow complete the full demographic analysis:\n' + usr : usr;
+
   try {
     _setDemoKey(1);
-    let d=await claudeJSON(sys,usr);
+    let d=await claudeJSON(sys,usrWithReal);
     if(!d) { console.warn('Agent 1 Part 1 fallback'); d=getFallback1(); }
     R.a1=d;
 

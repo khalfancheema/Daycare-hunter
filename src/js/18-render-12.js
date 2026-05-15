@@ -7,9 +7,15 @@ async function runAgent12(a3,a5) {
     if (_d) { R.a12 = _d; try { buildGrants(_d); } catch(e){} setDot(12,'done'); showOut(12); return JSON.stringify(_d); }
   }
 
+  // ── Real grants data from Grants.gov + SAM.gov ──────────
+  const _rdCtx12 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['grants_gov','federal_opps','sba','demographics'])
+    : '';
+
   // ── Part A: Overview + grants summary table ───────────────
   const sysA=`You are a grant research specialist for ${ind.unit} businesses. Search for real, current grant and subsidy programs. Respond JSON only.`;
-  const usrA=`Search for all available grants, subsidies, and funding incentives for opening a ${ind.unit} near ZIP ${zip()}. Regulatory body: ${ind.regulatory}. Search for: SBA programs, USDA Rural Development, local county business incentives, industry subsidies (${ind.grants}), and federal small business grants.
+  const usrA=(_rdCtx12 ? _rdCtx12 + '\nThe VERIFIED grants above are REAL opportunities from Grants.gov — include them in your table with their exact titles, agencies, amounts, and deadlines.\n\n' : '') +
+  `Search for all available grants, subsidies, and funding incentives for opening a ${ind.unit} near ZIP ${zip()}. Regulatory body: ${ind.regulatory}. Search for: SBA programs, USDA Rural Development, local county business incentives, industry subsidies (${ind.grants}), and federal small business grants.
 
 Return ONLY:
 {
@@ -79,7 +85,8 @@ Use REAL URLs, phone numbers, and dollar amounts for ZIP ${zip()} state.`;
   }
 
   try {
-    let d = await claudeJSON(sysA, usrA);
+    // webSearch=true: Claude uses live search to verify grant program details
+    let d = await claudeJSON(sysA, usrA, {webSearch:true});
     if(!d) { console.warn('Agent 12 fallback'); d=getFallback12(); }
     R.a12 = d;
     buildGrants(d);
