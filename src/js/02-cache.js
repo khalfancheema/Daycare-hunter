@@ -1,11 +1,17 @@
-const CACHE_KEY_PREFIX = 'dh_cache_';
+const CACHE_KEY_PREFIX = 'dh_cache_v2_';
 const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
 const memCache = {};
 
 function cacheKey(system, user) {
-  const raw = system.slice(0,80) + '|' + user.slice(0,120);
-  let h = 0;
-  for(let i=0;i<raw.length;i++) h=(Math.imul(31,h)+raw.charCodeAt(i))|0;
+  // Hash the FULL system + user. Truncating to 80+120 chars caused
+  // re-runs after changing ZIP/capacity/industry to collide with the
+  // previous cache entry (discriminating values usually appear deep
+  // inside the prompt, not in the boilerplate prefix).
+  const raw = (system || '') + '' + (user || '');
+  let h = 5381;
+  for (let i = 0; i < raw.length; i++) {
+    h = (Math.imul(33, h) ^ raw.charCodeAt(i)) | 0;
+  }
   return CACHE_KEY_PREFIX + Math.abs(h).toString(36);
 }
 

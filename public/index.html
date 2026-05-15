@@ -1749,14 +1749,20 @@ const PROVIDERS = {
 // ── RESPONSE CACHE ──────────────────────────────────────────
 
 
-const CACHE_KEY_PREFIX = 'dh_cache_';
+const CACHE_KEY_PREFIX = 'dh_cache_v2_';
 const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
 const memCache = {};
 
 function cacheKey(system, user) {
-  const raw = system.slice(0,80) + '|' + user.slice(0,120);
-  let h = 0;
-  for(let i=0;i<raw.length;i++) h=(Math.imul(31,h)+raw.charCodeAt(i))|0;
+  // Hash the FULL system + user. Truncating to 80+120 chars caused
+  // re-runs after changing ZIP/capacity/industry to collide with the
+  // previous cache entry (discriminating values usually appear deep
+  // inside the prompt, not in the boilerplate prefix).
+  const raw = (system || '') + '' + (user || '');
+  let h = 5381;
+  for (let i = 0; i < raw.length; i++) {
+    h = (Math.imul(33, h) ^ raw.charCodeAt(i)) | 0;
+  }
   return CACHE_KEY_PREFIX + Math.abs(h).toString(36);
 }
 
@@ -5035,6 +5041,10 @@ async function runPipeline() {
   if(running) return;
   if(!demoMode && !key()) { showErr('Please enter your Anthropic API key.'); return; }
   hideErr(); running=true; stopRequested=false;
+  // Fresh abort controller if previous run was stopped
+  if (window._v2AbortCtrl?.signal?.aborted) {
+    window._v2AbortCtrl = new AbortController();
+  }
   $('runBtn').disabled=true;
   $('stopBtn').style.display='inline-flex';
   $('resetBtn').style.display='none';
@@ -5181,12 +5191,20 @@ async function runPipeline() {
 
 async function reRunAgent(n) {
   if(running) return;
+  // Re-runs after a Stop click need a fresh abort signal + cleared
+  // stopRequested flag — otherwise claudeJSON throws "Pipeline stopped"
+  // on every call and the re-run silently fails.
+  try { stopRequested = false; } catch(e) { window.stopRequested = false; }
+  if (window._v2AbortCtrl?.signal?.aborted) {
+    window._v2AbortCtrl = new AbortController();
+  }
   const btn=$('rerun-'+n);
   if(btn) btn.style.display='none';
   running=true;
   try {
     const s = k => JSON.stringify(R['a'+k]||{});
-    if(n===1)      { const r=await runAgent1();  R.a1=JSON.parse(r||'{}'); }
+    // runAgent1 (and all others) write R.aN internally. Don't double-assign.
+    if(n===1)      { await runAgent1(); }
     else if(n===2) { await runAgent2(s(1),s(5),s(6)); }
     else if(n===3) { await runAgent3(s(1),s(2),s(5)); }
     else if(n===4) { await runAgent4(s(3),s(5)); }

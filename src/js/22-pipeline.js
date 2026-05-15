@@ -2,6 +2,10 @@ async function runPipeline() {
   if(running) return;
   if(!demoMode && !key()) { showErr('Please enter your Anthropic API key.'); return; }
   hideErr(); running=true; stopRequested=false;
+  // Fresh abort controller if previous run was stopped
+  if (window._v2AbortCtrl?.signal?.aborted) {
+    window._v2AbortCtrl = new AbortController();
+  }
   $('runBtn').disabled=true;
   $('stopBtn').style.display='inline-flex';
   $('resetBtn').style.display='none';
@@ -148,12 +152,20 @@ async function runPipeline() {
 
 async function reRunAgent(n) {
   if(running) return;
+  // Re-runs after a Stop click need a fresh abort signal + cleared
+  // stopRequested flag — otherwise claudeJSON throws "Pipeline stopped"
+  // on every call and the re-run silently fails.
+  try { stopRequested = false; } catch(e) { window.stopRequested = false; }
+  if (window._v2AbortCtrl?.signal?.aborted) {
+    window._v2AbortCtrl = new AbortController();
+  }
   const btn=$('rerun-'+n);
   if(btn) btn.style.display='none';
   running=true;
   try {
     const s = k => JSON.stringify(R['a'+k]||{});
-    if(n===1)      { const r=await runAgent1();  R.a1=JSON.parse(r||'{}'); }
+    // runAgent1 (and all others) write R.aN internally. Don't double-assign.
+    if(n===1)      { await runAgent1(); }
     else if(n===2) { await runAgent2(s(1),s(5),s(6)); }
     else if(n===3) { await runAgent3(s(1),s(2),s(5)); }
     else if(n===4) { await runAgent4(s(3),s(5)); }
