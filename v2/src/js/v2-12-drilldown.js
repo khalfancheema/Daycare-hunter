@@ -1014,9 +1014,13 @@ function v2SaveCurrentRun() {
   if (!run) { v2Toast('No analysis to save'); return; }
 
   const ind      = V2_INDUSTRIES.find(i => i.val === run.industry) || { emoji:'🏢', label:'Business' };
-  const verdict  = v2ScoreVerdict(run.score);
+  // Recompute score from current R so saved score matches the dashboard ring.
+  // (Showcase seeds run.score from a baseline, but v2CalcScore reflects the
+  // actual R data — they can drift if R was modified after seeding.)
+  const currentScore = (typeof v2CalcScore === 'function') ? v2CalcScore() : (run.score || 0);
+  const verdict  = v2ScoreVerdict(currentScore);
   const existing = V2.portfolio.find(r => r.industry === run.industry && r.zip === run.zip);
-  const history  = existing ? [...(existing.score_history || [existing.score]), run.score] : [run.score];
+  const history  = existing ? [...(existing.score_history || [existing.score]), currentScore] : [currentScore];
 
   // Capture per-component breakdown so run-diff panel can compute real
   // deltas between this run and the previous one for the same ZIP/industry.
@@ -1029,6 +1033,7 @@ function v2SaveCurrentRun() {
 
   const entry = {
     ...run,
+    score:        currentScore,
     id:           run.id || Date.now(),
     verdict:      verdict.verdict || 'caution',
     label:        verdict.label   || '—',

@@ -266,7 +266,16 @@ function getDemoData(agentNum, industry) {
     return _medDemo[agentNum] || { summary: `Medical practice agent ${agentNum} — demo data` };
   }
 
-  if (industry !== 'daycare') return {};
+  // For non-daycare/non-medical_practice industries, delegate to the
+  // broader DEMO_DATA dataset from 36-demo-data.js. This keeps v1 demo
+  // path working for restaurant, gas_station, coffee_shop, etc. — which
+  // would otherwise return {} and render blank.
+  if (industry !== 'daycare') {
+    if (typeof DEMO_DATA !== 'undefined' && DEMO_DATA[agentNum]) {
+      return DEMO_DATA[agentNum][industry] || DEMO_DATA[agentNum]['daycare'] || {};
+    }
+    return {};
+  }
   const _demo = {
     1: { // Demographics
       summary: 'Johns Creek metro has 47,200 children under age 6 within a 15-mile radius. Median household income is $127,400 — 62% above national average. 74% of households with children have dual incomes, creating strong childcare demand.',
@@ -870,6 +879,13 @@ function v2LaunchShowcase() {
       a16: getDemoData(16, 'daycare') || {},
       a17: getDemoData(17, 'daycare') || {},
     };
+  }
+
+  // Recompute score from the seeded R data so dashboard ring, breakdown card,
+  // and saved portfolio score all agree. The baseline in _V2_DEMO_RUN_B may
+  // not match what v2CalcScore() returns after R is populated.
+  if (typeof v2CalcScore === 'function') {
+    try { demoRun.score = v2CalcScore(); } catch(e) {}
   }
 
   // Set V2.run so v2GoTo re-renders correctly and save/export/portfolio work

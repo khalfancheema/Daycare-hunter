@@ -19605,9 +19605,13 @@ function v2SaveCurrentRun() {
   if (!run) { v2Toast('No analysis to save'); return; }
 
   const ind      = V2_INDUSTRIES.find(i => i.val === run.industry) || { emoji:'🏢', label:'Business' };
-  const verdict  = v2ScoreVerdict(run.score);
+  // Recompute score from current R so saved score matches the dashboard ring.
+  // (Showcase seeds run.score from a baseline, but v2CalcScore reflects the
+  // actual R data — they can drift if R was modified after seeding.)
+  const currentScore = (typeof v2CalcScore === 'function') ? v2CalcScore() : (run.score || 0);
+  const verdict  = v2ScoreVerdict(currentScore);
   const existing = V2.portfolio.find(r => r.industry === run.industry && r.zip === run.zip);
-  const history  = existing ? [...(existing.score_history || [existing.score]), run.score] : [run.score];
+  const history  = existing ? [...(existing.score_history || [existing.score]), currentScore] : [currentScore];
 
   // Capture per-component breakdown so run-diff panel can compute real
   // deltas between this run and the previous one for the same ZIP/industry.
@@ -19620,6 +19624,7 @@ function v2SaveCurrentRun() {
 
   const entry = {
     ...run,
+    score:        currentScore,
     id:           run.id || Date.now(),
     verdict:      verdict.verdict || 'caution',
     label:        verdict.label   || '—',
@@ -21958,7 +21963,16 @@ function getDemoData(agentNum, industry) {
     return _medDemo[agentNum] || { summary: `Medical practice agent ${agentNum} — demo data` };
   }
 
-  if (industry !== 'daycare') return {};
+  // For non-daycare/non-medical_practice industries, delegate to the
+  // broader DEMO_DATA dataset from 36-demo-data.js. This keeps v1 demo
+  // path working for restaurant, gas_station, coffee_shop, etc. — which
+  // would otherwise return {} and render blank.
+  if (industry !== 'daycare') {
+    if (typeof DEMO_DATA !== 'undefined' && DEMO_DATA[agentNum]) {
+      return DEMO_DATA[agentNum][industry] || DEMO_DATA[agentNum]['daycare'] || {};
+    }
+    return {};
+  }
   const _demo = {
     1: { // Demographics
       summary: 'Johns Creek metro has 47,200 children under age 6 within a 15-mile radius. Median household income is $127,400 — 62% above national average. 74% of households with children have dual incomes, creating strong childcare demand.',
@@ -22562,6 +22576,13 @@ function v2LaunchShowcase() {
       a16: getDemoData(16, 'daycare') || {},
       a17: getDemoData(17, 'daycare') || {},
     };
+  }
+
+  // Recompute score from the seeded R data so dashboard ring, breakdown card,
+  // and saved portfolio score all agree. The baseline in _V2_DEMO_RUN_B may
+  // not match what v2CalcScore() returns after R is populated.
+  if (typeof v2CalcScore === 'function') {
+    try { demoRun.score = v2CalcScore(); } catch(e) {}
   }
 
   // Set V2.run so v2GoTo re-renders correctly and save/export/portfolio work
