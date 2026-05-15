@@ -875,6 +875,10 @@ function v2LaunchShowcase() {
   // Set V2.run so v2GoTo re-renders correctly and save/export/portfolio work
   V2.run = demoRun;
 
+  // Flag demoMode globally so v2-16 free-API fetches short-circuit cleanly
+  // (avoids CORS/network failures spamming the console for un-seeded endpoints).
+  try { demoMode = true; } catch(e) { window.demoMode = true; }
+
   // Mark all 17 agent rows as done before rendering
   _v2DemoMarkAgentsDone();
 

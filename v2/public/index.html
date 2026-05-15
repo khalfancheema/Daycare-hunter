@@ -19609,6 +19609,15 @@ function v2SaveCurrentRun() {
   const existing = V2.portfolio.find(r => r.industry === run.industry && r.zip === run.zip);
   const history  = existing ? [...(existing.score_history || [existing.score]), run.score] : [run.score];
 
+  // Capture per-component breakdown so run-diff panel can compute real
+  // deltas between this run and the previous one for the same ZIP/industry.
+  let breakdown = {};
+  try {
+    if (typeof v2CalcScoreBreakdown === 'function') {
+      v2CalcScoreBreakdown().forEach(c => { if (c.id) breakdown[c.id] = c.earned; });
+    }
+  } catch(e) {}
+
   const entry = {
     ...run,
     id:           run.id || Date.now(),
@@ -19617,6 +19626,7 @@ function v2SaveCurrentRun() {
     indEmoji:     ind.emoji,
     indLabel:     ind.label,
     score_history: history,
+    breakdown,
     R:            typeof R !== 'undefined' ? JSON.parse(JSON.stringify(R)) : (run.R || {}),
   };
 
@@ -22557,6 +22567,10 @@ function v2LaunchShowcase() {
   // Set V2.run so v2GoTo re-renders correctly and save/export/portfolio work
   V2.run = demoRun;
 
+  // Flag demoMode globally so v2-16 free-API fetches short-circuit cleanly
+  // (avoids CORS/network failures spamming the console for un-seeded endpoints).
+  try { demoMode = true; } catch(e) { window.demoMode = true; }
+
   // Mark all 17 agent rows as done before rendering
   _v2DemoMarkAgentsDone();
 
@@ -22668,6 +22682,17 @@ const FREE_API_CACHE = {};
 function _freeApiCache(key, val) {
   if (val !== undefined) FREE_API_CACHE[key] = val;
   return FREE_API_CACHE[key];
+}
+
+// AbortSignal.timeout polyfill — Safari < 16 doesn't ship it.
+// All v2-16 fetches use this so the bundle works on older Safari.
+function _abortTimeoutSig(ms) {
+  if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+    return AbortSignal.timeout(ms);
+  }
+  const ctrl = new AbortController();
+  setTimeout(() => ctrl.abort(), ms);
+  return ctrl.signal;
 }
 
 // ── RATE LIMIT GUARD (Nominatim requires 1 req/sec) ──────────────────────────
@@ -23464,6 +23489,12 @@ async function v2EnrichDashboardWithFreeAPIs() {
   const industry = run.industry || V2.wizard?.data?.industry;
   if (!zip) return;
 
+  // Demo mode (showcase) — short-circuit. Pre-seeded cache will return
+  // the cards that should appear; we don't want CORS/network failures
+  // for unseeded endpoints spamming the console.
+  const isDemo = !!run._demoMode
+    || (typeof demoMode !== 'undefined' && demoMode);
+
   const activeSources = [];
 
   // Always: Census ACS demographics
@@ -23680,9 +23711,12 @@ async function v2FetchZBP(zip, industry) {
   const cacheKey = `zbp:${zip}:${naics}`;
   const cached = _freeApiCache(cacheKey);
   if (cached) return cached;
+  // Skip live fetch in demo mode — keeps console clean and avoids CORS
+  // failures on hosted preview / local dev where Census endpoints may be blocked
+  if (typeof demoMode !== 'undefined' && demoMode) return null;
   try {
     const url = `https://api.census.gov/data/2021/zbp?get=ESTAB,EMP,PAYANN&for=zipcode:${zip}&NAICS2017=${naics}`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    const r = await fetch(url, { signal: _abortTimeoutSig(6000) });
     if (!r.ok) throw new Error('ZBP HTTP ' + r.status);
     const rows = await r.json();
     // rows[0] = headers, rows[1] = data
@@ -23711,7 +23745,7 @@ async function v2DetectUserLocation() {
   const cached = _freeApiCache(cacheKey);
   if (cached) return cached;
   try {
-    const r = await fetch('https://ipinfo.io/json', { signal: AbortSignal.timeout(3000) });
+    const r = await fetch('https://ipinfo.io/json', { signal: _abortTimeoutSig(3000) });
     if (!r.ok) throw new Error();
     const d = await r.json();
     const [lat, lng] = (d.loc || '').split(',').map(Number);
@@ -23731,6 +23765,7 @@ async function v2DetectUserLocation() {
 
 // ── 3. OPEN-METEO — CLIMATE / SEASONALITY DATA ────────────────────────────────
 async function v2FetchClimate(lat, lng) {
+  if (typeof demoMode !== 'undefined' && demoMode) return null;
   if (!lat || !lng) return null;
   const key = `climate:${lat.toFixed(2)}:${lng.toFixed(2)}`;
   const cached = _freeApiCache(key);
@@ -23740,7 +23775,7 @@ async function v2FetchClimate(lat, lng) {
       + `&start_date=2000-01-01&end_date=2019-12-31`
       + `&monthly=temperature_2m_mean,precipitation_sum`
       + `&models=MRI_AGCM3_2_S`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const r = await fetch(url, { signal: _abortTimeoutSig(8000) });
     if (!r.ok) throw new Error('climate HTTP ' + r.status);
     const d = await r.json();
     // monthly arrays — 12 values averaged across the time range
@@ -23773,6 +23808,7 @@ const _CLIMATE_RELEVANT = new Set([
 
 // ── 4. CDC PLACES — LOCAL HEALTH / INSURANCE DATA ────────────────────────────
 async function v2FetchCDCPlaces(city, stateAbbr) {
+  if (typeof demoMode !== 'undefined' && demoMode) return null;
   if (!city || !stateAbbr) return null;
   const key = `cdc:${stateAbbr}:${city.toLowerCase()}`;
   const cached = _freeApiCache(key);
@@ -23781,7 +23817,7 @@ async function v2FetchCDCPlaces(city, stateAbbr) {
     const enc = encodeURIComponent(city);
     const url = `https://chronicdata.cdc.gov/resource/cwsq-ngmh.json`
       + `?StateAbbr=${stateAbbr}&PlaceName=${enc}&$limit=200`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(7000) });
+    const r = await fetch(url, { signal: _abortTimeoutSig(7000) });
     if (!r.ok) throw new Error('CDC HTTP ' + r.status);
     const rows = await r.json();
     if (!rows || rows.length === 0) return null;
@@ -23821,6 +23857,8 @@ async function v2FetchSBALoans(zip, industry) {
   const key = `sba:${zip}:${naics}`;
   const cached = _freeApiCache(key);
   if (cached) return cached;
+  // Skip live fetch in demo mode
+  if (typeof demoMode !== 'undefined' && demoMode) return null;
   try {
     // SBA CKAN API — 7(a) loans FOIA dataset
     const url = `https://data.sba.gov/api/3/action/datastore_search_sql?sql=`
@@ -23830,7 +23868,7 @@ async function v2FetchSBALoans(zip, industry) {
           + `WHERE "BorrZip" LIKE '${zip.slice(0,3)}%' AND "NAICSCode" LIKE '${naics.slice(0,4)}%' `
           + `ORDER BY "ApprovalDate" DESC LIMIT 20`
         );
-    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const r = await fetch(url, { signal: _abortTimeoutSig(8000) });
     if (!r.ok) throw new Error('SBA HTTP ' + r.status);
     const d = await r.json();
     const records = d?.result?.records || [];
@@ -23856,6 +23894,7 @@ async function v2FetchSBALoans(zip, industry) {
 const _EPA_RELEVANT = new Set(['gas_station','dry_cleaning','laundromat','car_wash','medical_practice','urgent_care','optometry']);
 
 async function v2FetchEPAEnvironmental(zip) {
+  if (typeof demoMode !== 'undefined' && demoMode) return null;
   if (!zip) return null;
   const key = `epa:${zip}`;
   const cached = _freeApiCache(key);
@@ -23863,7 +23902,7 @@ async function v2FetchEPAEnvironmental(zip) {
   try {
     // TRI (Toxic Release Inventory) facilities by ZIP
     const url = `https://data.epa.gov/efservice/tri_facility/zip_code/${zip}/json`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    const r = await fetch(url, { signal: _abortTimeoutSig(6000) });
     if (!r.ok) throw new Error('EPA HTTP ' + r.status);
     const facilities = await r.json();
     if (!Array.isArray(facilities)) return null;
@@ -24111,11 +24150,13 @@ async function v2FetchUSAspending(zip) {
   const key = `usaspend:${zip}`;
   const cached = _freeApiCache(key);
   if (cached) return cached;
+  // Skip live fetch in demo mode
+  if (typeof demoMode !== 'undefined' && demoMode) return null;
   try {
     const r = await fetch('https://api.usaspending.gov/api/v2/search/spending_by_award/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      signal: AbortSignal.timeout(10000),
+      signal: _abortTimeoutSig(10000),
       body: JSON.stringify({
         filters: {
           award_type_codes: ['02', '03', '04', '05'],   // grants & cooperative agreements
@@ -24225,6 +24266,7 @@ const _SEC_CHAINS = {
 };
 
 async function v2FetchSECChains(industry) {
+  if (typeof demoMode !== 'undefined' && demoMode) return null;
   const chains = _SEC_CHAINS[industry];
   if (!chains || !chains.length) return null;
   const key = `sec:${industry}`;
@@ -24234,7 +24276,7 @@ async function v2FetchSECChains(industry) {
   const results = await Promise.allSettled(chains.map(async chain => {
     const url = `https://data.sec.gov/submissions/CIK${chain.cik}.json`;
     const r = await fetch(url, {
-      signal: AbortSignal.timeout(8000),
+      signal: _abortTimeoutSig(8000),
       headers: { 'User-Agent': 'BusinessHunterApp/2.0 contact@businesshunter.app' },
     });
     if (!r.ok) throw new Error('SEC HTTP ' + r.status);
@@ -24327,13 +24369,14 @@ const _WB_INDICATORS = [
 ];
 
 async function v2FetchWorldBankMacro() {
+  if (typeof demoMode !== 'undefined' && demoMode) return null;
   const key = 'worldbank:us:macro';
   const cached = _freeApiCache(key);
   if (cached) return cached;
   try {
     const results = await Promise.allSettled(_WB_INDICATORS.map(async ind => {
       const url = `https://api.worldbank.org/v2/country/US/indicator/${ind.code}?format=json&mrv=3&per_page=3`;
-      const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      const r = await fetch(url, { signal: _abortTimeoutSig(8000) });
       if (!r.ok) throw new Error();
       const d = await r.json();
       const pts = (d[1] || []).filter(p => p.value != null);
@@ -24412,6 +24455,7 @@ function v2RenderWorldBankCard(indicators) {
  * Returns { price_cents_kwh, state, period, residential, commercial }
  */
 async function v2FetchEIAEnergy(stateAbbr) {
+  if (typeof demoMode !== 'undefined' && demoMode) return null;
   if (!stateAbbr || stateAbbr.length !== 2) return null;
   const cacheKey = `eia:${stateAbbr.toUpperCase()}`;
   const cached = _freeApiCache(cacheKey);
@@ -24420,8 +24464,8 @@ async function v2FetchEIAEnergy(stateAbbr) {
     const st = stateAbbr.toUpperCase();
     // Fetch commercial + residential in parallel
     const [comRes, resRes] = await Promise.all([
-      fetch(`https://api.eia.gov/v2/electricity/retail-sales/data?api_key=DEMO_KEY&facets[stateid][]=${st}&facets[sectorid][]=COM&frequency=annual&data[]=price&sort[0][column]=period&sort[0][direction]=desc&length=1`, { signal: AbortSignal.timeout(6000) }),
-      fetch(`https://api.eia.gov/v2/electricity/retail-sales/data?api_key=DEMO_KEY&facets[stateid][]=${st}&facets[sectorid][]=RES&frequency=annual&data[]=price&sort[0][column]=period&sort[0][direction]=desc&length=1`, { signal: AbortSignal.timeout(6000) }),
+      fetch(`https://api.eia.gov/v2/electricity/retail-sales/data?api_key=DEMO_KEY&facets[stateid][]=${st}&facets[sectorid][]=COM&frequency=annual&data[]=price&sort[0][column]=period&sort[0][direction]=desc&length=1`, { signal: _abortTimeoutSig(6000) }),
+      fetch(`https://api.eia.gov/v2/electricity/retail-sales/data?api_key=DEMO_KEY&facets[stateid][]=${st}&facets[sectorid][]=RES&frequency=annual&data[]=price&sort[0][column]=period&sort[0][direction]=desc&length=1`, { signal: _abortTimeoutSig(6000) }),
     ]);
     if (!comRes.ok) return null;
     const comData = await comRes.json();
@@ -24532,6 +24576,7 @@ function v2RenderEIACard(data, industry) {
  * Returns { anchors: [{ type, name, count }], total }
  */
 async function v2FetchNearbyPOIs(lat, lng, radiusMiles = 3) {
+  if (typeof demoMode !== 'undefined' && demoMode) return null;
   if (!lat || !lng) return null;
   const radiusM = Math.min(Math.round(radiusMiles * 1609.34), 5000); // cap at 5km
   const cacheKey = `poi:${lat.toFixed(3)},${lng.toFixed(3)},${radiusM}`;
@@ -24568,7 +24613,7 @@ async function v2FetchNearbyPOIs(lat, lng, radiusMiles = 3) {
         const r = await fetch(url, {
           method: 'POST',
           body: 'data=' + encodeURIComponent(ql),
-          signal: AbortSignal.timeout(12000),
+          signal: _abortTimeoutSig(12000),
         });
         if (!r.ok) return { ...q, count: 0 };
         const d = await r.json();

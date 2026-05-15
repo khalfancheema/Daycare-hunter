@@ -18,6 +18,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["serve", "public", "-l", "8080"],
       "port": 8080
+    },
+    {
+      "name": "v2 (python http.server v2)",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8081", "--directory", "v2/public"],
+      "port": 8081
     }
   ]
 }

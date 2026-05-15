@@ -1018,6 +1018,15 @@ function v2SaveCurrentRun() {
   const existing = V2.portfolio.find(r => r.industry === run.industry && r.zip === run.zip);
   const history  = existing ? [...(existing.score_history || [existing.score]), run.score] : [run.score];
 
+  // Capture per-component breakdown so run-diff panel can compute real
+  // deltas between this run and the previous one for the same ZIP/industry.
+  let breakdown = {};
+  try {
+    if (typeof v2CalcScoreBreakdown === 'function') {
+      v2CalcScoreBreakdown().forEach(c => { if (c.id) breakdown[c.id] = c.earned; });
+    }
+  } catch(e) {}
+
   const entry = {
     ...run,
     id:           run.id || Date.now(),
@@ -1026,6 +1035,7 @@ function v2SaveCurrentRun() {
     indEmoji:     ind.emoji,
     indLabel:     ind.label,
     score_history: history,
+    breakdown,
     R:            typeof R !== 'undefined' ? JSON.parse(JSON.stringify(R)) : (run.R || {}),
   };
 
