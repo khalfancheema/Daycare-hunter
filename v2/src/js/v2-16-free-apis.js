@@ -239,11 +239,14 @@ async function v2FetchCensusACS(zip) {
       'B15003_022E', // Bachelor's degree +
     ].join(',');
 
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=NAME,${fields}&for=zip+code+tabulation+area:${zip}`;
+    const keySuffix = (typeof window !== 'undefined' && window.CENSUS_API_KEY) ? `&key=${window.CENSUS_API_KEY}` : '';
+    const url = `https://api.census.gov/data/2022/acs/acs5?get=NAME,${fields}&for=zip+code+tabulation+area:${zip}${keySuffix}`;
     const res = await fetch(url);
     if (!res.ok) return null;
 
-    const raw  = await res.json();
+    const text = await res.text();
+    if (text.includes('<title>Missing Key')) return null;
+    let raw; try { raw = JSON.parse(text); } catch { return null; }
     if (!raw || raw.length < 2) return null;
 
     const headers = raw[0];
@@ -1074,10 +1077,13 @@ async function v2FetchZBP(zip, industry) {
   // failures on hosted preview / local dev where Census endpoints may be blocked
   if (typeof demoMode !== 'undefined' && demoMode) return null;
   try {
-    const url = `https://api.census.gov/data/2021/zbp?get=ESTAB,EMP,PAYANN&for=zipcode:${zip}&NAICS2017=${naics}`;
+    const keySuffix = (typeof window !== 'undefined' && window.CENSUS_API_KEY) ? `&key=${window.CENSUS_API_KEY}` : '';
+    const url = `https://api.census.gov/data/2021/zbp?get=ESTAB,EMP,PAYANN&for=zipcode:${zip}&NAICS2017=${naics}${keySuffix}`;
     const r = await fetch(url, { signal: _abortTimeoutSig(6000) });
     if (!r.ok) throw new Error('ZBP HTTP ' + r.status);
-    const rows = await r.json();
+    const text = await r.text();
+    if (text.includes('<title>Missing Key')) return null;
+    let rows; try { rows = JSON.parse(text); } catch { return null; }
     // rows[0] = headers, rows[1] = data
     if (!rows || rows.length < 2) return null;
     const [headers, values] = rows;

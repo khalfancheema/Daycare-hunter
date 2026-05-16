@@ -10856,6 +10856,10 @@ async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
   // Warn about absent API keys that silently null out sources
   if (typeof window !== 'undefined') {
     const missing = [];
+    // CRITICAL: Census now requires a key for ALL /data/* endpoints. Without
+    // it ACS demographics, ZBP business density, CBP, PEP, BPS and 4 other
+    // sources all return Missing Key HTML and null out silently.
+    if (!window.CENSUS_API_KEY) missing.push('🚨 CENSUS_API_KEY (REQUIRED for ACS, ZBP, CBP, PEP, BPS, ACS Expanded, Home Value, Industry Mix, Migration — get free at api.census.gov/data/key_signup.html)');
     if (!window.HUD_TOKEN)      missing.push('HUD_TOKEN (HUD FMR/Income/Vacancy)');
     if (!window.BEA_API_KEY)    missing.push('BEA_API_KEY (BEA per-capita income)');
     if (!window.NOAA_TOKEN)     missing.push('NOAA_TOKEN (NOAA climate normals)');
@@ -11359,6 +11363,16 @@ async function _rdGeocodeZip(zip) {
   } catch(e) { return null; }
 }
 
+// Census API requires a key for EVERY data API request as of 2024.
+// Free key at https://api.census.gov/data/key_signup.html. Without it, all
+// /data/* endpoints return a "Missing Key" HTML page (still HTTP 200) which
+// fails JSON.parse and yields null. This helper returns the &key= suffix
+// when window.CENSUS_API_KEY is set, otherwise an empty string.
+function _rdCensusKeySuffix() {
+  const k = (typeof window !== 'undefined' && window.CENSUS_API_KEY) ? window.CENSUS_API_KEY : null;
+  return k ? `&key=${k}` : '';
+}
+
 async function _rdFetchACS(zip) {
   if (typeof v2FetchCensusACS === 'function') {
     // v2 uses different field names — normalize to shared shape
@@ -11382,10 +11396,12 @@ async function _rdFetchACS(zip) {
     // ACS 5-Year variables: pop, median_income, owner_occ, under_18, employed,
     // bachelors (B15003_022), masters (023), professional (024), doctorate (025), renter
     const vars = 'B01003_001E,B19013_001E,B25003_002E,B09001_001E,B23025_004E,B15003_022E,B15003_023E,B15003_024E,B15003_025E,B25003_003E';
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}`;
+    const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
-    const d = await res.json();
+    const text = await res.text();
+    if (text.includes('<title>Missing Key')) return null;
+    let d; try { d = JSON.parse(text); } catch { return null; }
     if (d.length < 2) return null;
     const row = d[1];
     const pop     = parseInt(row[0]);
@@ -11428,10 +11444,12 @@ async function _rdFetchZBP(zip, naics) {
   const k = `rdzbp:${zip}:${naics}`;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    const url = `https://api.census.gov/data/2021/zbp?get=EMP,ESTAB,PAYANN&for=zipcode:${zip}&NAICS2017=${naics}`;
+    const url = `https://api.census.gov/data/2021/zbp?get=EMP,ESTAB,PAYANN&for=zipcode:${zip}&NAICS2017=${naics}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
-    const d = await res.json();
+    const text = await res.text();
+    if (text.includes('<title>Missing Key')) return null;
+    let d; try { d = JSON.parse(text); } catch { return null; }
     if (d.length < 2) return { count:0, employees:0, naics, source:'Census ZBP 2021', zip };
     const row = d[1];
     const result = {
@@ -11898,11 +11916,17 @@ async function _rdFetchACSExpanded(zip) {
     // B08303_001E = total commuters; B08303_013E = commuters 60+ min
     const vars = 'S2301_C04_001E,B17001_001E,B17001_002E,B11003_001E,B11003_002E,B25064_001E,B25002_001E,B25002_003E,B08303_001E,B08303_013E';
     // Subject tables (S) must use /subject endpoint
-    const subjUrl = `https://api.census.gov/data/2022/acs/acs5/subject?get=S2301_C04_001E&for=zip%20code%20tabulation%20area:${zip}`;
-    const detUrl  = `https://api.census.gov/data/2022/acs/acs5?get=B17001_001E,B17001_002E,B11003_001E,B11003_002E,B25064_001E,B25002_001E,B25002_003E,B08303_001E,B08303_013E&for=zip%20code%20tabulation%20area:${zip}`;
+    const subjUrl = `https://api.census.gov/data/2022/acs/acs5/subject?get=S2301_C04_001E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const detUrl  = `https://api.census.gov/data/2022/acs/acs5?get=B17001_001E,B17001_002E,B11003_001E,B11003_002E,B25064_001E,B25002_001E,B25002_003E,B08303_001E,B08303_013E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const parseCensus = async r => {
+      if (!r || !r.ok) return null;
+      const t = await r.text();
+      if (t.includes('<title>Missing Key')) return null;
+      try { return JSON.parse(t); } catch { return null; }
+    };
     const [sR, dR] = await Promise.allSettled([
-      fetch(subjUrl, { signal:_rdAbortTimeout(10000) }).then(r => r.ok ? r.json() : null),
-      fetch(detUrl,  { signal:_rdAbortTimeout(10000) }).then(r => r.ok ? r.json() : null),
+      fetch(subjUrl, { signal:_rdAbortTimeout(10000) }).then(parseCensus),
+      fetch(detUrl,  { signal:_rdAbortTimeout(10000) }).then(parseCensus),
     ]);
     const s = sR.status === 'fulfilled' ? sR.value : null;
     const d = dR.status === 'fulfilled' ? dR.value : null;
@@ -11996,19 +12020,23 @@ async function _rdFetchUSDARural(stateFips, countyFips) {
   const k = 'rdusda:'+fips;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    const url = `https://gisportal.ers.usda.gov/server/rest/services/Economics/RuralUrbanContinuumCodes2023/MapServer/0/query?where=FIPS%3D%27${fips}%27&outFields=FIPS,RUCC_2023,Description,County_Name&f=json`;
+    // USDA ERS hosts the Rural Atlas County Classifications (RUCC 2013 + metro/nonmetro flags).
+    // The standalone 2023 RUCC MapServer is not exposed publicly; the 2013 service is the
+    // current public REST endpoint (methodology unchanged for the metro/rural cutoff).
+    const url = `https://gisportal.ers.usda.gov/server/rest/services/Rural_Atlas_Data/County_Classifications/MapServer/0/query?where=FIPSTXT%3D%27${fips}%27&outFields=FIPSTXT,County,State,RuralUrbanContinuumCode2013,Metro2013&returnGeometry=false&f=json`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const feat = d.features?.[0]?.attributes;
     if (!feat) return null;
-    const code = parseInt(feat.RUCC_2023);
+    const code = parseInt(feat.RuralUrbanContinuumCode2013);
     const result = {
-      rucc_code: code,
+      rucc_code:      code,
       classification: code <= 3 ? 'metro' : 'rural/nonmetro',
-      description: feat.Description,
-      county_name: feat.County_Name,
-      source: 'USDA ERS Rural-Urban Continuum 2023',
+      metro_flag:     feat.Metro2013 === 1 || feat.Metro2013 === '1',
+      county_name:    feat.County,
+      state:          feat.State,
+      source:         'USDA ERS Rural-Urban Continuum 2013 (current public REST)',
       fips,
     };
     return _rdCacheSet(k, result);
@@ -12021,10 +12049,13 @@ async function _rdFetchCBPCounty(stateFips, countyFips, naics) {
   const k = `rdcbp:${stateFips}${countyFips}:${naics}`;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    const url = `https://api.census.gov/data/2022/cbp?get=ESTAB,EMP,PAYANN&for=county:${countyFips}&in=state:${stateFips}&NAICS2017=${naics}`;
+    // Census CBP requires window.CENSUS_API_KEY (free at api.census.gov/data/key_signup.html)
+    const url = `https://api.census.gov/data/2022/cbp?get=ESTAB,EMP,PAYANN&for=county:${countyFips}&in=state:${stateFips}&NAICS2017=${naics}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
-    const d = await res.json();
+    const text = await res.text();
+    if (text.includes('<title>Missing Key')) return null;
+    let d; try { d = JSON.parse(text); } catch { return null; }
     if (!d || d.length < 2) return null;
     const row = d[1];
     const result = {
@@ -12124,22 +12155,22 @@ async function _rdFetchUSDAFARA(lat, lng) {
   const k = `rdfara:${lat.toFixed(3)}:${lng.toFixed(3)}`;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // FARA 2019 layer hosted by USDA ERS — point-in-polygon query
-    const url = `https://gisportal.ers.usda.gov/server/rest/services/FoodAccessResearchAtlas/FARA_2019/MapServer/0/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=false&f=json`;
+    // USDA ERS FARA 2019. Folder is /FARA/FARA_2019 (NOT /FoodAccessResearchAtlas/...)
+    // Layer 30 = "All tracts" with full attribute schema for point-in-polygon lookup.
+    const url = `https://gisportal.ers.usda.gov/server/rest/services/FARA/FARA_2019/MapServer/30/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=CensusTract,LILATracts_1And10,LILATracts_halfAnd10,LowIncomeTracts,TractSNAP,TractLOWI&returnGeometry=false&f=json`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const a = d.features?.[0]?.attributes;
     if (!a) return null;
     const result = {
-      tract_fips:        a.CensusTract || a.TractFIPS,
+      tract_fips:        a.CensusTract || null,
       is_food_desert:    a.LILATracts_1And10 === 1 || a.LILATracts_halfAnd10 === 1,
       low_income_low_access: a.LILATracts_1And10 === 1,
-      low_access_pop_pct:  a.lapophalfshare != null ? Math.round(a.lapophalfshare * 10) / 10 : null,
+      low_income_tract:  a.LowIncomeTracts === 1,
       snap_households:    a.TractSNAP,
-      low_vehicle_access_pct: a.lalowihalfshare != null ? Math.round(a.lalowihalfshare * 10) / 10 : null,
-      urban_flag:         a.Urban === 1,
-      source:             'USDA FARA 2019',
+      low_income_pop:     a.TractLOWI,
+      source:             'USDA FARA 2019 (Census tracts)',
     };
     return _rdCacheSet(k, result);
   } catch(e) { console.warn('[RealData] USDA FARA failed:', e.message); return null; }
@@ -12275,10 +12306,12 @@ async function _rdFetchACSHomeValue(zip) {
   try {
     // B25077_001E = median value of owner-occupied housing units
     // B25104_001E = monthly housing costs (median) — owner+renter combined
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=B25077_001E,B25104_001E,B25088_001E&for=zip%20code%20tabulation%20area:${zip}`;
+    const url = `https://api.census.gov/data/2022/acs/acs5?get=B25077_001E,B25104_001E,B25088_001E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
-    const d = await res.json();
+    const text = await res.text();
+    if (text.includes('<title>Missing Key')) return null;
+    let d; try { d = JSON.parse(text); } catch { return null; }
     if (!d || d.length < 2) return null;
     const row = d[1];
     const result = {
@@ -12393,10 +12426,12 @@ async function _rdFetchBuildingPermits(stateFips, countyFips) {
   try {
     // Census BPS county-level annual; latest year typically year-1
     const yr = new Date().getFullYear() - 1;
-    const url = `https://api.census.gov/data/timeseries/eits/bps?get=permits,units_total&for=county:${countyFips}&in=state:${stateFips}&time=${yr}`;
+    const url = `https://api.census.gov/data/timeseries/eits/bps?get=permits,units_total&for=county:${countyFips}&in=state:${stateFips}&time=${yr}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
-    const d = await res.json();
+    const text = await res.text();
+    if (text.includes('<title>Missing Key')) return null;
+    let d; try { d = JSON.parse(text); } catch { return null; }
     if (!d || d.length < 2) return null;
     const row = d[1];
     const result = {
@@ -12420,10 +12455,12 @@ async function _rdFetchACSIndustryMix(zip) {
     // _010 educational/health, _011 arts/entertainment, _012 other svc, _013 public admin
     const vars = 'C24050_001E,C24050_005E,C24050_009E,C24050_010E,C24050_011E,B19301_001E';
     // B19301_001E = per capita income
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}`;
+    const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
-    const d = await res.json();
+    const text = await res.text();
+    if (text.includes('<title>Missing Key')) return null;
+    let d; try { d = JSON.parse(text); } catch { return null; }
     if (!d || d.length < 2) return null;
     const row = d[1];
     const total = parseInt(row[0]) || 0;
@@ -12526,10 +12563,12 @@ async function _rdFetchACSMigration(zip) {
     // B07001_001 = total pop 1yr+; _017 = same house 1yr ago; _033 = same county;
     // _049 = different county same state; _065 = different state; _081 = abroad
     const vars = 'B07001_001E,B07001_017E,B07001_033E,B07001_049E,B07001_065E,B07001_081E';
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}`;
+    const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
-    const d = await res.json();
+    const text = await res.text();
+    if (text.includes('<title>Missing Key')) return null;
+    let d; try { d = JSON.parse(text); } catch { return null; }
     if (!d || d.length < 2) return null;
     const row = d[1];
     const total = parseInt(row[0]) || 0;
@@ -12629,10 +12668,12 @@ async function _rdFetchCensusPEP(stateFips, countyFips) {
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
     // Population Estimates 2023 county-level
-    const url = `https://api.census.gov/data/2023/pep/population?get=POP_2023,POP_2022,POP_2020,NAME&for=county:${countyFips}&in=state:${stateFips}`;
+    const url = `https://api.census.gov/data/2023/pep/population?get=POP_2023,POP_2022,POP_2020,NAME&for=county:${countyFips}&in=state:${stateFips}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
-    const d = await res.json();
+    const text = await res.text();
+    if (text.includes('<title>Missing Key')) return null;
+    let d; try { d = JSON.parse(text); } catch { return null; }
     if (!d || d.length < 2) return null;
     const row = d[1];
     const pop2023 = parseInt(row[0]) || null;
