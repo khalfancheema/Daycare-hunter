@@ -2340,7 +2340,7 @@ Return ONLY this JSON:
 
   try {
     _setDemoKey(1);
-    let d=await claudeJSON(sys,usrWithReal);
+    let d=await claudeJSON(sys, usrWithReal, {webSearch:true});
     if(!d) { console.warn('Agent 1 Part 1 fallback'); d=getFallback1(); }
     R.a1=d;
 
@@ -2425,7 +2425,7 @@ Return ONLY this JSON:
     if (!demoMode) {
       try {
         const sys2 = `You are a community profile analyst. Return only accurate JSON — no text before or after.`;
-        const cp = await claudeJSON(sys2, usr2);
+        const cp = await claudeJSON(sys2, usr2, {webSearch:true});
         if (cp) {
           // Merge community profile fields into R.a1
           const cpFields = ['age_pyramid','generation_breakdown','multi_radius','consumer_expenditure',
@@ -2520,7 +2520,7 @@ Return ONLY this JSON:
 }
 For each item provide 4-6 numbered steps with SPECIFIC actions (not generic). Include actual form names, website paths, and timing caveats.`;
     try {
-      const partB = await claudeJSON(sysB, usrB);
+      const partB = await claudeJSON(sysB, usrB, {webSearch:true});
       if (partB && Array.isArray(partB.instructions)) {
         partB.instructions.forEach(inst => {
           const req = reqs.find(r => r.item === inst.item ||
@@ -2839,7 +2839,7 @@ Return ONLY this JSON:
   ]
 }`;
   try {
-    const partB = await claudeJSON(sys6b, usr6b);
+    const partB = await claudeJSON(sys6b, usr6b, {webSearch:true});
     if (partB && Array.isArray(partB.cities)) {
       partB.cities.forEach(bc => {
         const cityObj = (data.cities||[]).find(c => c.city === bc.city ||
@@ -4433,7 +4433,7 @@ Return ONLY:
 }
 Use REAL URLs, phone numbers, and dollar amounts for ZIP ${zip()} state.`;
     try {
-      const partB = await claudeJSON(sysB, usrB);
+      const partB = await claudeJSON(sysB, usrB, {webSearch:true});
       if (!partB) return;
       if (partB.industry_subsidy) data.caps_program = partB.industry_subsidy;
       if (partB.state_program) data.georgia_pre_k = partB.state_program;
@@ -5758,7 +5758,7 @@ Return ONLY:
 }`;
 
   // ── Part 2 of 4: Market Analysis ────────────────────────
-  const p1 = await claudeJSON(sys1, usr1);
+  const p1 = await claudeJSON(sys1, usr1, {webSearch:true});
   $('9-mkt-c').innerHTML = subProgress(2,4,'Market Analysis & Competitive Positioning');
   const sys2 = `You are a market research analyst. Return JSON only.`;
   const usr2 = `Write Part 2 — market analysis — for a ${base}.
@@ -5797,7 +5797,7 @@ Return ONLY:
 }`;
 
   // ── Part 3 of 4: Operations Plan + Financial Plan ───────
-  const p2 = await claudeJSON(sys2, usr2);
+  const p2 = await claudeJSON(sys2, usr2, {webSearch:true});
   $('9-fin-c').innerHTML = subProgress(3,4,'Operations Plan & Financial Model');
   const sys3 = `You are a ${ind.unit} operations and finance expert. Return JSON only.`;
   const usr3 = `Write Part 3 — operations and financial plan — for a ${base}.
@@ -5873,7 +5873,7 @@ Return ONLY:
   ]
 }`;
 
-  const p4 = await claudeJSON(sys4, usr4);
+  const p4 = await claudeJSON(sys4, usr4, {webSearch:true});
 
   // Merge all 4 parts into one object
   const merged = Object.assign(
@@ -5953,7 +5953,7 @@ Return ONLY:
 Include ALL 5 phases: Foundation & Funding (months 1-3), Legal/Lease/Design (months 3-6), Construction & Licensing (months 6-12), Staffing & Pre-Opening (months 12-16), Soft Open & Ramp (months 16-18). Each phase should have 8-12 tasks with detailed step-by-step instructions, specific vendor names, phone numbers, and URLs. Priority must be exactly "Critical", "High", or "Medium".`;
 
   // ── Part 2 of 3: Milestones + Budget Tracker ─────────────
-  const p1 = await claudeJSON(sys1, usr1);
+  const p1 = await claudeJSON(sys1, usr1, {webSearch:true});
   $('10-mile-c').innerHTML = subProgress(2,3,'Milestones & Budget Tracker');
   const sys2 = `You are a ${ind.unit} project manager. Return JSON only.`;
   const usr2 = `Create milestones and budget tracker for launching a ${base}.
@@ -5984,7 +5984,7 @@ Return ONLY:
 Include 15-20 milestones from Week 1 through Month 18 (use "critical" or "high" for priority). Include 15-20 budget line items covering all startup costs with notes on cost drivers.`;
 
   // ── Part 3 of 3: Risk Register + Team + Checklist ────────
-  const p2 = await claudeJSON(sys2, usr2);
+  const p2 = await claudeJSON(sys2, usr2, {webSearch:true});
   $('10-risk-c').innerHTML = subProgress(3,3,'Risk Register, Team & Checklist');
   const sys3 = `You are a ${ind.unit} project risk manager and operations consultant. Return JSON only.`;
   const usr3 = `Create risk register, team/vendor directory, and launch checklist for a ${base}.
@@ -6111,7 +6111,7 @@ Return ONLY:
   ]
 }`;
 
-  const revModel = await claudeJSON(sysA, usrA) || {};
+  const revModel = await claudeJSON(sysA, usrA, {webSearch:true}) || {};
 
   // ── Sub-call B: Cost Model ──────────────────────────────
   $('7-sc-c').innerHTML = subProgress(2, 3, 'Sub-agent 2/3: Cost Model…');
@@ -6154,7 +6154,7 @@ Return ONLY:
   "total_variable_at_base": 0
 }`;
 
-  const costModel = await claudeJSON(sysB, usrB) || {};
+  const costModel = await claudeJSON(sysB, usrB, {webSearch:true}) || {};
 
   // ── Main Consolidating Call ─────────────────────────────
   $('7-sc-c').innerHTML = subProgress(3, 3, 'Consolidating…');

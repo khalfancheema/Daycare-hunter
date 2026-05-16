@@ -72,7 +72,7 @@ Return ONLY this JSON:
 }
 For each item provide 4-6 numbered steps with SPECIFIC actions (not generic). Include actual form names, website paths, and timing caveats.`;
     try {
-      const partB = await claudeJSON(sysB, usrB);
+      const partB = await claudeJSON(sysB, usrB, {webSearch:true});
       if (partB && Array.isArray(partB.instructions)) {
         partB.instructions.forEach(inst => {
           const req = reqs.find(r => r.item === inst.item ||

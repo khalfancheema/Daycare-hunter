@@ -73,7 +73,7 @@ Return ONLY:
 }
 Use REAL URLs, phone numbers, and dollar amounts for ZIP ${zip()} state.`;
     try {
-      const partB = await claudeJSON(sysB, usrB);
+      const partB = await claudeJSON(sysB, usrB, {webSearch:true});
       if (!partB) return;
       if (partB.industry_subsidy) data.caps_program = partB.industry_subsidy;
       if (partB.state_program) data.georgia_pre_k = partB.state_program;

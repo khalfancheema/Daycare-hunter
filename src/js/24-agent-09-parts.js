@@ -45,7 +45,7 @@ Return ONLY:
 }`;
 
   // ── Part 2 of 4: Market Analysis ────────────────────────
-  const p1 = await claudeJSON(sys1, usr1);
+  const p1 = await claudeJSON(sys1, usr1, {webSearch:true});
   $('9-mkt-c').innerHTML = subProgress(2,4,'Market Analysis & Competitive Positioning');
   const sys2 = `You are a market research analyst. Return JSON only.`;
   const usr2 = `Write Part 2 — market analysis — for a ${base}.
@@ -84,7 +84,7 @@ Return ONLY:
 }`;
 
   // ── Part 3 of 4: Operations Plan + Financial Plan ───────
-  const p2 = await claudeJSON(sys2, usr2);
+  const p2 = await claudeJSON(sys2, usr2, {webSearch:true});
   $('9-fin-c').innerHTML = subProgress(3,4,'Operations Plan & Financial Model');
   const sys3 = `You are a ${ind.unit} operations and finance expert. Return JSON only.`;
   const usr3 = `Write Part 3 — operations and financial plan — for a ${base}.
@@ -160,7 +160,7 @@ Return ONLY:
   ]
 }`;
 
-  const p4 = await claudeJSON(sys4, usr4);
+  const p4 = await claudeJSON(sys4, usr4, {webSearch:true});
 
   // Merge all 4 parts into one object
   const merged = Object.assign(

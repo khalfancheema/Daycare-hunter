@@ -183,7 +183,7 @@ Return ONLY this JSON:
   ]
 }`;
   try {
-    const partB = await claudeJSON(sys6b, usr6b);
+    const partB = await claudeJSON(sys6b, usr6b, {webSearch:true});
     if (partB && Array.isArray(partB.cities)) {
       partB.cities.forEach(bc => {
         const cityObj = (data.cities||[]).find(c => c.city === bc.city ||

@@ -156,7 +156,7 @@ Return ONLY this JSON:
 
   try {
     _setDemoKey(1);
-    let d=await claudeJSON(sys,usrWithReal);
+    let d=await claudeJSON(sys, usrWithReal, {webSearch:true});
     if(!d) { console.warn('Agent 1 Part 1 fallback'); d=getFallback1(); }
     R.a1=d;
 
@@ -241,7 +241,7 @@ Return ONLY this JSON:
     if (!demoMode) {
       try {
         const sys2 = `You are a community profile analyst. Return only accurate JSON — no text before or after.`;
-        const cp = await claudeJSON(sys2, usr2);
+        const cp = await claudeJSON(sys2, usr2, {webSearch:true});
         if (cp) {
           // Merge community profile fields into R.a1
           const cpFields = ['age_pyramid','generation_breakdown','multi_radius','consumer_expenditure',

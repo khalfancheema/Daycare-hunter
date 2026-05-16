@@ -50,7 +50,7 @@ Return ONLY:
 Include ALL 5 phases: Foundation & Funding (months 1-3), Legal/Lease/Design (months 3-6), Construction & Licensing (months 6-12), Staffing & Pre-Opening (months 12-16), Soft Open & Ramp (months 16-18). Each phase should have 8-12 tasks with detailed step-by-step instructions, specific vendor names, phone numbers, and URLs. Priority must be exactly "Critical", "High", or "Medium".`;
 
   // ── Part 2 of 3: Milestones + Budget Tracker ─────────────
-  const p1 = await claudeJSON(sys1, usr1);
+  const p1 = await claudeJSON(sys1, usr1, {webSearch:true});
   $('10-mile-c').innerHTML = subProgress(2,3,'Milestones & Budget Tracker');
   const sys2 = `You are a ${ind.unit} project manager. Return JSON only.`;
   const usr2 = `Create milestones and budget tracker for launching a ${base}.
@@ -81,7 +81,7 @@ Return ONLY:
 Include 15-20 milestones from Week 1 through Month 18 (use "critical" or "high" for priority). Include 15-20 budget line items covering all startup costs with notes on cost drivers.`;
 
   // ── Part 3 of 3: Risk Register + Team + Checklist ────────
-  const p2 = await claudeJSON(sys2, usr2);
+  const p2 = await claudeJSON(sys2, usr2, {webSearch:true});
   $('10-risk-c').innerHTML = subProgress(3,3,'Risk Register, Team & Checklist');
   const sys3 = `You are a ${ind.unit} project risk manager and operations consultant. Return JSON only.`;
   const usr3 = `Create risk register, team/vendor directory, and launch checklist for a ${base}.
