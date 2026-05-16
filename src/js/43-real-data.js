@@ -177,6 +177,15 @@ async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
     energy_state:     v(eiaR),
   };
 
+  // ── Phase D: Industry-specific APIs (healthcare NPI) ─────────
+  const _npiIndustries = ['urgent_care','medical_practice','optometry','senior_care','dental'];
+  if (_npiIndustries.includes(industryKey) && city && stateAbbr) {
+    try {
+      const npiR = await _rdFetchCMSNPI(city, stateAbbr, industryKey);
+      if (npiR) R.real.npi_providers = npiR;
+    } catch(e) { console.warn('[RealData] NPI fetch failed (non-fatal):', e.message); }
+  }
+
   const loaded = Object.entries(R.real)
     .filter(([k, v2]) => v2 && !k.startsWith('_'))
     .map(([k]) => k);
@@ -306,6 +315,13 @@ function buildRealDataCtx(keys) {
     lines.push(`  cfr: Title ${reg.title}, Part ${reg.part} — ${reg.name}`);
     if (reg.last_amended) lines.push(`  last_amended: ${reg.last_amended}`);
     lines.push(`  url: ${reg.url}`);
+  }
+
+  if (want('npi_providers') && d.npi_providers && d.npi_providers.count > 0) {
+    const n = d.npi_providers;
+    lines.push(`🏥 CMS NPI LICENSED PROVIDERS [${n.source}]`);
+    lines.push(`  licensed_${n.taxonomy.toLowerCase().replace(/\s+/g,'_')}_in_${n.city}: ${n.count}`);
+    if (n.names.length) lines.push(`  provider_names: ${n.names.slice(0,8).join(', ')}`);
   }
 
   lines.push('══ END REAL DATA — cite each figure with its bracketed source tag ══\n');
@@ -708,6 +724,53 @@ const _RD_FIPS = {
 function _rdStateFips(abbr) { return _RD_FIPS[abbr] || null; }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// PHASE D — Industry-specific APIs
+// CMS NPI Registry: licensed healthcare providers in the city/state
+// ══════════════════════════════════════════════════════════════════════════════
+
+const _RD_NPI_TAXONOMY = {
+  urgent_care:      'Urgent Care',
+  medical_practice: 'Family Medicine',
+  optometry:        'Optometrist',
+  senior_care:      'Assisted Living',
+  dental:           'Dentist',
+};
+
+async function _rdFetchCMSNPI(city, stateAbbr, industryKey) {
+  const taxonomy = _RD_NPI_TAXONOMY[industryKey];
+  if (!taxonomy || !city || !stateAbbr) return null;
+  const k = `rdnpi:${city}:${stateAbbr}:${industryKey}`;
+  if (_rdCacheGet(k)) return _rdCacheGet(k);
+  try {
+    const cityEnc = encodeURIComponent(city.replace(/\s+city$/i,'').trim());
+    const url = `https://npiregistry.cms.hhs.gov/api/?` +
+      `city=${cityEnc}&state=${stateAbbr}&` +
+      `taxonomy_description=${encodeURIComponent(taxonomy)}&` +
+      `limit=200&version=2.1`;
+    const res = await fetch(url, { signal: _rdAbortTimeout(10000) });
+    if (!res.ok) return null;
+    const d = await res.json();
+    const results = d.results || [];
+    const count   = d.result_count ?? results.length;
+    // Extract top provider names (individual + org)
+    const names = results.slice(0, 15).map(r => {
+      const basic = r.basic || {};
+      return basic.organization_name ||
+        [basic.first_name, basic.last_name].filter(Boolean).join(' ');
+    }).filter(Boolean);
+    const result = {
+      count,
+      taxonomy,
+      city,
+      state:   stateAbbr,
+      names,
+      source:  'CMS NPI Registry',
+    };
+    return _rdCacheSet(k, result);
+  } catch(e) { console.warn('[RealData] CMS NPI failed:', e.message); return null; }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // PHASE C — Provenance UI helpers
 // rdShowDataStatus()      → inject status strip after pipeline progress bar
 // rdRenderRealDataBadge() → inject verified-data card above any agent output
@@ -730,6 +793,7 @@ function rdShowDataStatus() {
     { key:'crime',           label:'FBI',        icon:'🚔' },
     { key:'regulations',     label:'eCFR',       icon:'📜' },
     { key:'sba',             label:'SBA',        icon:'🏦' },
+    { key:'npi_providers',   label:'CMS NPI',    icon:'🏥' },
   ];
   const loaded = badges.filter(b => d[b.key]);
   const failed = badges.filter(b => !d[b.key]);

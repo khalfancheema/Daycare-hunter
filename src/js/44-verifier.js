@@ -160,6 +160,21 @@
       }
     }
 
+    // ── A6 vs CMS NPI (healthcare only) ─────────────────────────
+    const npi = R.real.npi_providers;
+    if (npi && npi.count > 0 && a6) {
+      const aiTotal = a6.total_licensed_estimated;
+      if (aiTotal) {
+        const npiAcc = Math.max(0, 1 - Math.abs(aiTotal - npi.count) / (npi.count * 2));
+        checks.push({
+          agent: 'A6', field: `${npi.taxonomy} Count (NPI)`,
+          real: npi.count, ai: aiTotal,
+          realFmt: _fmt(npi.count, '', ' (licensed)'), aiFmt: _fmt(aiTotal, '', ' (est.)'),
+          acc: npiAcc, source: 'CMS NPI',
+        });
+      }
+    }
+
     // ── Need at least 2 valid checks to display ──────────────────
     const valid = checks.filter(c => c.acc !== null && !isNaN(c.acc));
     if (valid.length < 2) {
