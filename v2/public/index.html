@@ -12899,6 +12899,103 @@ function _rdFloodZoneDesc(zone) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// API KEY STORE — read from localStorage on load, persist user-entered keys
+// ══════════════════════════════════════════════════════════════════════════════
+const _RD_KEY_DEFS = [
+  { id:'CENSUS_API_KEY', label:'Census API',  signup:'https://api.census.gov/data/key_signup.html',  critical:true,
+    desc:'ACS demographics, ZBP business density, CBP, PEP, BPS (foundation of pipeline)' },
+  { id:'HUD_TOKEN',      label:'HUD',         signup:'https://www.huduser.gov/portal/dataset/fmr-api.html',
+    desc:'Fair Market Rents, Income Limits, USPS Vacancy' },
+  { id:'BEA_API_KEY',    label:'BEA',         signup:'https://apps.bea.gov/API/signup/',
+    desc:'Regional Per Capita Personal Income' },
+  { id:'NOAA_TOKEN',     label:'NOAA',        signup:'https://www.ncdc.noaa.gov/cdo-web/token',
+    desc:'NCEI Climate Normals 1991-2020' },
+  { id:'AIRNOW_API_KEY', label:'AirNow',      signup:'https://docs.airnowapi.org/account/request/',
+    desc:'EPA Air Quality Index' },
+  { id:'BLS_API_KEY',    label:'BLS',         signup:'https://data.bls.gov/registrationEngine/',
+    desc:'BLS OES occupation wages (no key works for low volume)' },
+  { id:'FRED_API_KEY',   label:'FRED',        signup:'https://fred.stlouisfed.org/docs/api/api_key.html',
+    desc:'FRED county-level LAUS unemployment' },
+  { id:'SAM_API_KEY',    label:'SAM.gov',     signup:'https://sam.gov/data-services/Public%20API%20%E2%80%93%20Search%20Federal%20Opportunities',
+    desc:'Federal contracting opportunities' },
+];
+
+function _rdLoadKeysFromStorage() {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+  for (const def of _RD_KEY_DEFS) {
+    try {
+      const v = localStorage.getItem('bh:apikey:' + def.id);
+      if (v && !window[def.id]) window[def.id] = v;
+    } catch {}
+  }
+}
+
+function rdShowApiKeysPanel() {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById('rdApiKeysModal')) {
+    document.getElementById('rdApiKeysModal').style.display = 'flex';
+    return;
+  }
+  _rdLoadKeysFromStorage();
+  const rows = _RD_KEY_DEFS.map(def => {
+    const current = (typeof window !== 'undefined' && window[def.id]) ? window[def.id] : '';
+    const masked = current ? current.slice(0, 4) + '…' + current.slice(-4) : '';
+    return `<div style="display:grid;grid-template-columns:120px 1fr auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border,#2a2d35)">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--text,#eee)">${def.label}${def.critical?' <span style="color:#ef4444">🚨</span>':''}</div>
+        <div style="font-size:9px;color:var(--muted,#8a8d96)">${def.desc}</div>
+      </div>
+      <input type="password" id="apikey-${def.id}" placeholder="${current ? 'saved: '+masked : 'paste key'}" value="${current ? '' : ''}"
+        style="background:var(--surface3,#1a1d22);border:1px solid var(--border,#2a2d35);color:var(--text,#eee);padding:5px 7px;border-radius:4px;font-size:11px;font-family:monospace;width:100%" />
+      <a href="${def.signup}" target="_blank" rel="noopener" style="font-size:10px;color:var(--blue,#4a9eff);text-decoration:none;white-space:nowrap">get key →</a>
+    </div>`;
+  }).join('');
+  const modal = document.createElement('div');
+  modal.id = 'rdApiKeysModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `
+    <div style="background:var(--surface,#13161a);border:1px solid var(--border,#2a2d35);border-radius:12px;padding:18px 22px;max-width:640px;width:100%;max-height:85vh;overflow:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <h3 style="margin:0;font-size:15px;font-family:'Syne',sans-serif;color:var(--text,#eee)">🔑 Free Government Data API Keys</h3>
+        <button onclick="document.getElementById('rdApiKeysModal').remove()" style="background:transparent;border:none;color:var(--muted,#8a8d96);font-size:18px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <p style="font-size:11px;color:var(--muted,#8a8d96);margin:0 0 10px 0">
+        Stored locally in your browser. Census key is <strong style="color:#ef4444">required</strong> for demographics / business density.
+        Others optional but each unlocks specific data sources. All free, instant signup.
+      </p>
+      <div>${rows}</div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button id="rdSaveKeys" style="flex:1;background:var(--green,#22c55e);color:#000;border:none;padding:8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">Save Keys</button>
+        <button onclick="document.getElementById('rdApiKeysModal').remove()" style="background:var(--surface3,#1a1d22);color:var(--text,#eee);border:1px solid var(--border,#2a2d35);padding:8px 14px;border-radius:6px;font-size:11px;cursor:pointer">Cancel</button>
+      </div>
+      <div id="rdSaveStatus" style="font-size:10px;color:var(--muted,#8a8d96);margin-top:8px;min-height:14px"></div>
+    </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('rdSaveKeys').onclick = () => {
+    let saved = 0;
+    for (const def of _RD_KEY_DEFS) {
+      const el = document.getElementById('apikey-' + def.id);
+      const v = el && el.value && el.value.trim();
+      if (v) {
+        try { localStorage.setItem('bh:apikey:' + def.id, v); } catch {}
+        window[def.id] = v;
+        saved++;
+      }
+    }
+    document.getElementById('rdSaveStatus').innerHTML =
+      `<span style="color:var(--green,#22c55e)">✓ Saved ${saved} key${saved===1?'':'s'} to browser. Run pipeline again to use them.</span>`;
+    setTimeout(() => { const m=document.getElementById('rdApiKeysModal'); if (m) m.remove(); }, 1500);
+  };
+}
+
+// Auto-load on script parse so prefetchRealData sees the keys
+_rdLoadKeysFromStorage();
+
+if (typeof window !== 'undefined') {
+  window.rdShowApiKeysPanel = rdShowApiKeysPanel;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // MAIN ORCHESTRATOR
 // ══════════════════════════════════════════════════════════════════════════════
 async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
@@ -14239,16 +14336,39 @@ async function _rdFetchEPAEcho(zip) {
   const k = 'rdecho:'+zip;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    const url = `https://echodata.epa.gov/echo/echo_rest_services.get_facilities?output=JSON&p_zip=${zip}&p_act=Y&qcolumns=1,4,12,19`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
-    if (!res.ok) return null;
-    const d = await res.json();
-    const facs = d?.Results?.Facilities || [];
-    const violators = facs.filter(f => (f.CWAFormalActionCount > 0 || f.CAAFormalActionCount > 0 || f.RCRA3yrFormalActionCount > 0));
+    // EPA ECHO requires a 2-step call: get_facilities returns counts + a QueryID,
+    // then get_qid pulls actual facility rows. Step 1 also returns aggregate stats
+    // we can keep (total regulated, formal actions, penalties).
+    const step1Url = `https://echodata.epa.gov/echo/echo_rest_services.get_facilities?output=JSON&p_zip=${zip}&p_act=Y&qcolumns=1,4,12,19`;
+    const res1 = await fetch(step1Url, { signal:_rdAbortTimeout(10000) });
+    if (!res1.ok) return null;
+    const d1 = await res1.json();
+    const r1 = d1?.Results || {};
+    const qid = r1.QueryID;
+    const totalRegulated = parseInt(r1.QueryRows) || 0;
+    const formalActions  = (parseInt(r1.CAARows)||0) + (parseInt(r1.CWARows)||0) + (parseInt(r1.RCRRows)||0);
+    let facilityNames = [];
+    if (qid && totalRegulated > 0) {
+      try {
+        const step2Url = `https://echodata.epa.gov/echo/echo_rest_services.get_qid?qid=${qid}&qrows=1:5&output=JSON`;
+        const res2 = await fetch(step2Url, { signal:_rdAbortTimeout(8000) });
+        if (res2.ok) {
+          const d2 = await res2.json();
+          const facs = d2?.Results?.Facilities || [];
+          facilityNames = facs.map(f => f.FacName || f.RegistryID).filter(Boolean);
+        }
+      } catch {}
+    }
+    const totalPenalties = (r1.TotalPenalties || '').replace(/[$,]/g, '');
     const result = {
-      total_regulated: facs.length,
-      with_violations: violators.length,
-      facility_names: facs.slice(0, 5).map(f => f.FacName || f.RegistryID).filter(Boolean),
+      total_regulated: totalRegulated,
+      formal_actions:  formalActions,
+      total_penalties_usd: parseFloat(totalPenalties) || 0,
+      caa_violations: parseInt(r1.CAARows) || 0,
+      cwa_violations: parseInt(r1.CWARows) || 0,
+      rcra_violations:parseInt(r1.RCRRows) || 0,
+      with_violations: formalActions,
+      facility_names: facilityNames,
       source: 'EPA ECHO',
       zip,
     };
@@ -15182,7 +15302,8 @@ function rdShowDataStatus() {
   const loaded = badges.filter(b => d[b.key]);
   const failed = badges.filter(b => !d[b.key]);
   const pct    = Math.round(loaded.length / badges.length * 100);
-  const html = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:8px;font-size:11px;margin-top:6px"><span style="font-weight:700;color:var(--green,#22c55e)">🛰 Live Data ${pct}%</span>${loaded.map(b=>`<span title="${b.label}" style="background:rgba(34,197,94,0.15);padding:2px 6px;border-radius:4px;color:var(--green,#22c55e)">${b.icon} ${b.label}</span>`).join('')}${failed.length ? `<span style="color:var(--text-dim,#666);margin-left:4px">(${failed.map(b=>b.label).join(', ')}: unavailable)</span>` : ''}</div>`;
+  const keysBtn = `<button onclick="rdShowApiKeysPanel && rdShowApiKeysPanel()" style="background:rgba(74,158,255,0.15);border:1px solid rgba(74,158,255,0.4);color:var(--blue,#4a9eff);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;margin-left:auto">🔑 ${pct < 80 ? 'Add API keys to unlock more data' : 'Manage API keys'}</button>`;
+  const html = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:8px;font-size:11px;margin-top:6px"><span style="font-weight:700;color:var(--green,#22c55e)">🛰 Live Data ${pct}%</span>${loaded.map(b=>`<span title="${b.label}" style="background:rgba(34,197,94,0.15);padding:2px 6px;border-radius:4px;color:var(--green,#22c55e)">${b.icon} ${b.label}</span>`).join('')}${failed.length ? `<span style="color:var(--text-dim,#666);margin-left:4px">(${failed.map(b=>b.label).join(', ')}: unavailable)</span>` : ''}${keysBtn}</div>`;
   let el = document.getElementById('realDataStatus');
   if (!el) {
     const anchor = document.getElementById('progressText')?.parentElement || document.getElementById('progressRow');
