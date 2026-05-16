@@ -4655,7 +4655,7 @@ Return ONLY:
 }
 Include 5 distinct audience segments with messaging tailored to their specific competitor frustrations.`;
 
-    const partC = await claudeJSON(sysC, usrC);
+    const partC = await claudeJSON(sysC, usrC, {webSearch:true});
 
     // Merge all 3 parts
     const d = Object.assign(
@@ -6029,7 +6029,7 @@ Return ONLY:
 }
 Risk register: 8-10 risks with probability (High/Medium/Low) and impact (Critical/High/Medium). Team/vendors: 10-14 specific named vendors with real phone numbers and websites. Checklist: 5 phases with 10-15 items each.`;
 
-  const p3 = await claudeJSON(sys3, usr3);
+  const p3 = await claudeJSON(sys3, usr3, {webSearch:true});
 
   // Merge all 3 parts
   return Object.assign(
@@ -6874,7 +6874,7 @@ Important: Be honest. Flag every number or statistic the AI generated as an esti
 
   try {
     _setDemoKey(17);
-    let d = await claudeJSON(sys, usr);
+    let d = await claudeJSON(sys, usr, {webSearch:true});
     if (!d) { d = _fallbackSources17(agentSummaries); }
 
     R.a17 = d;

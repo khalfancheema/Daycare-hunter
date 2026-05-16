@@ -90,7 +90,7 @@ Return ONLY:
 }
 Include 5 distinct audience segments with messaging tailored to their specific competitor frustrations.`;
 
-    const partC = await claudeJSON(sysC, usrC);
+    const partC = await claudeJSON(sysC, usrC, {webSearch:true});
 
     // Merge all 3 parts
     const d = Object.assign(

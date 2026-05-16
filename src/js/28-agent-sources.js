@@ -106,7 +106,7 @@ Important: Be honest. Flag every number or statistic the AI generated as an esti
 
   try {
     _setDemoKey(17);
-    let d = await claudeJSON(sys, usr);
+    let d = await claudeJSON(sys, usr, {webSearch:true});
     if (!d) { d = _fallbackSources17(agentSummaries); }
 
     R.a17 = d;

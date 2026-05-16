@@ -126,7 +126,7 @@ Return ONLY:
 }
 Risk register: 8-10 risks with probability (High/Medium/Low) and impact (Critical/High/Medium). Team/vendors: 10-14 specific named vendors with real phone numbers and websites. Checklist: 5 phases with 10-15 items each.`;
 
-  const p3 = await claudeJSON(sys3, usr3);
+  const p3 = await claudeJSON(sys3, usr3, {webSearch:true});
 
   // Merge all 3 parts
   return Object.assign(

@@ -205,7 +205,7 @@ Return ONLY:
 }
 Include 5 distinct audience segments with messaging tailored to specific competitor frustrations.`;
 
-    const passC = await safeClaudeJSON(sysC, usrC, '13c');
+    const passC = await safeClaudeJSON(sysC, usrC, '13c', {webSearch:true});
 
     // ── Merge all 3 passes ───────────────────────────────────────────────────
     const merged = {
