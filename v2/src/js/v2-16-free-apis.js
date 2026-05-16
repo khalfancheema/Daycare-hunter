@@ -1225,18 +1225,30 @@ async function v2FetchSBALoans(zip, industry) {
   // Skip live fetch in demo mode
   if (typeof demoMode !== 'undefined' && demoMode) return null;
   try {
-    // SBA CKAN API — 7(a) loans FOIA dataset
-    const url = `https://data.sba.gov/api/3/action/datastore_search_sql?sql=`
-      + encodeURIComponent(
-          `SELECT "BorrZip","GrossApproval","JobsSupported","ApprovalDate","BorrName" `
-          + `FROM "9e5c3673-30c1-4f9c-a3ef-5abf12f4f6e8" `
-          + `WHERE "BorrZip" LIKE '${zip.slice(0,3)}%' AND "NAICSCode" LIKE '${naics.slice(0,4)}%' `
-          + `ORDER BY "ApprovalDate" DESC LIMIT 20`
-        );
-    const r = await fetch(url, { signal: _abortTimeoutSig(8000) });
-    if (!r.ok) throw new Error('SBA HTTP ' + r.status);
-    const d = await r.json();
-    const records = d?.result?.records || [];
+    // SBA CKAN now stores 7(a) FOIA data as bulk CSV files (not datastore-indexed),
+    // so `datastore_search_sql` returns UndefinedTable. Trying multiple known resource
+    // IDs as the CKAN bulk-to-datastore migration progresses; falls back to null on miss.
+    const candidates = [
+      'd67d3ccb-2002-4134-a288-481b51cd3479', // 7(a) FY2020-Present (latest)
+      '3f838176-6060-44db-9c91-b4acafbcb28c', // 7(a) FY2010-FY2019
+    ];
+    let records = [];
+    for (const resourceId of candidates) {
+      try {
+        const url = `https://data.sba.gov/api/3/action/datastore_search_sql?sql=`
+          + encodeURIComponent(
+              `SELECT "BorrZip","GrossApproval","JobsSupported","ApprovalDate","BorrName" `
+              + `FROM "${resourceId}" `
+              + `WHERE "BorrZip" LIKE '${zip.slice(0,3)}%' AND "NAICSCode" LIKE '${naics.slice(0,4)}%' `
+              + `ORDER BY "ApprovalDate" DESC LIMIT 20`
+            );
+        const r = await fetch(url, { signal: _abortTimeoutSig(8000) });
+        if (!r.ok) continue;
+        const d = await r.json();
+        const got = d?.result?.records || [];
+        if (got.length) { records = got; break; }
+      } catch {}
+    }
     if (!records.length) return null;
     const totalAmount = records.reduce((s, row) => s + (parseFloat(row.GrossApproval)||0), 0);
     const avgAmount   = totalAmount / records.length;

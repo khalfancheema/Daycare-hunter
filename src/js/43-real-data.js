@@ -1074,10 +1074,15 @@ async function _rdFetchOSMCompetitors(lat, lng, tags) {
       `way["${kk}"="${vv}"](around:${radius},${lat},${lng});`
     ).join('');
     const query = `[out:json][timeout:25];(${tagQueries});out center 40;`;
+    // Overpass returns 406 without a real UA. Browser fetch sets a UA implicitly;
+    // we set Accept explicitly for robustness against future API tightening.
     const res = await fetch('https://overpass-api.de/api/interpreter', {
       method:  'POST',
-      body:    query,
-      headers: {'Content-Type':'text/plain'},
+      body:    'data=' + encodeURIComponent(query),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept':       'application/json',
+      },
       signal:  _rdAbortTimeout(25000),
     });
     if (!res.ok) return null;
@@ -1570,32 +1575,12 @@ async function _rdFetchBLSOES(stateAbbr, industryKey) {
 async function _rdFetchNDCP(stateFips, countyFips, industryKey) {
   if (industryKey !== 'daycare') return null;
   if (!stateFips || !countyFips) return null;
-  const fips = `${stateFips}${countyFips}`;
-  const k = 'rdndcp:'+fips;
-  if (_rdCacheGet(k)) return _rdCacheGet(k);
-  try {
-    // Data.gov NDCP endpoint (latest 2022 dataset)
-    const url = `https://www.dol.gov/sites/dolgov/files/WB/NDCP/nationaldatabaseofchildcareprices.csv`;
-    // CSV is large (~5MB); skip large fetch in browser unless cached server-side
-    // Use the simpler DOL data.gov JSON endpoint if available
-    const altUrl = `https://data.dol.gov/get/childcare-prices/limit/1/filter/county_fips_code:${fips}`;
-    const res = await fetch(altUrl, { signal:_rdAbortTimeout(8000) });
-    if (!res.ok) return null;
-    const d = await res.json();
-    const row = Array.isArray(d) ? d[0] : (d?.results?.[0] || d?.data?.[0]);
-    if (!row) return null;
-    const result = {
-      county_fips:       fips,
-      median_infant_center:    parseInt(row.mc_infant) || null,
-      median_toddler_center:   parseInt(row.mc_toddler) || null,
-      median_preschool_center: parseInt(row.mc_preschool) || null,
-      median_school_age_center:parseInt(row.mc_schoolage) || null,
-      median_family_care:      parseInt(row.mfc_infant) || null,
-      study_year:        row.studyyear || '2022',
-      source:            'DOL Womens Bureau NDCP 2022',
-    };
-    return _rdCacheSet(k, result);
-  } catch(e) { console.warn('[RealData] NDCP failed:', e.message); return null; }
+  // The DOL Women's Bureau publishes the National Database of Childcare Prices only as
+  // a downloadable CSV/XLSX from dol.gov — no public REST endpoint exists.
+  // The previous data.dol.gov/get/... URL was speculative and returns HTML.
+  // Skip this fetcher until a server-side cache is added (would require a backend
+  // CSV-to-JSON shim hosting nationaldatabaseofchildcareprices.csv).
+  return null;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
