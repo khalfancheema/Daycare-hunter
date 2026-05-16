@@ -46,6 +46,8 @@ const V1_JS = [
   'src/js/39-scenario.js',
   'src/js/40-local-guide.js',
   'src/js/41-agent-stress-guard.js',
+  'src/js/43-real-data.js',      // Real data pipeline: prefetchRealData + buildRealDataCtx
+  'src/js/44-verifier.js',       // Post-pipeline accuracy verifier vs live government sources
 ].map(f => join(ROOT, f));
 
 const V2_JS = [

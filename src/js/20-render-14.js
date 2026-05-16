@@ -102,7 +102,8 @@ Include all 15 active agents (1,2,3,4,5,6,7,8,9,10,11,12,13,16,17) with realisti
   try {
     const partA = await claudeJSON(sysCommon, usrA);
     if (_t14) _t14.innerHTML = subProgress(2, 2, 'Building cost analysis…');
-    const partB = await claudeJSON(sysCommon, usrB);
+    // webSearch: fetch current Claude API pricing (rates change frequently)
+    const partB = await claudeJSON(sysCommon, usrB, {webSearch:true});
 
     const d = Object.assign({}, partA || {}, partB || {});
     if (!d.summary && !d.issues) { console.warn('Agent 14 fallback'); Object.assign(d, getFallback14()); }

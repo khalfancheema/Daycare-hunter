@@ -12,12 +12,16 @@ async function runAgent9Parts(a1,a2,a3,a4,a5,a6,a7,a8) {
   const ctx3 = ctx(a3,['summary','locations']);
   const ctx7 = ctx(a7,['summary','scenarios','startup_breakdown','monthly_ops','by_city_financials']);
   const ctx8 = ctx(a8,['verdict','verdict_rationale','assessment','success_factors','risks','next_steps']);
+  // Verified real data for financial grounding
+  const _rdCtx9 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['demographics','wages','macro','rents'])
+    : '';
 
   if(demoMode&&typeof getDemoData==='function'){const _d=getDemoData(9);if(_d){R.a9=_d;try{renderBusinessPlan(_d);}catch(e){}setDot(9,'done');showOut(9);return _d;}}
   // ── Part 1 of 4: Executive Summary + Company Overview ───
   setDot(9,'running'); $('9-ov-c').innerHTML = subProgress(1,4,'Executive Summary & Company Overview');
   const sys1 = `You are a senior business plan writer. Return JSON only. No extra text.`;
-  const usr1 = `Write Part 1 of a business plan for a ${base}.
+  const usr1 = `${_rdCtx9 ? _rdCtx9 + '\n\n' : ''}Write Part 1 of a business plan for a ${base}.
 SITE: ${ctx3}
 FINANCIALS: ${ctx7}
 VERDICT: ${ctx8}
@@ -135,7 +139,8 @@ Return ONLY:
 }`;
 
   // ── Part 4 of 4: SBA Checklist + Investor Slides ────────
-  const p3 = await claudeJSON(sys3, usr3);
+  // webSearch: find real SBA lender contacts and current commercial rent comps
+  const p3 = await claudeJSON(sys3, usr3, {webSearch:true});
   $('9-sba-c').innerHTML = subProgress(4,4,'SBA Package & Investor Deck');
   const sys4 = `You are an SBA loan consultant and startup pitch coach. Return JSON only.`;
   const usr4 = `Write Part 4 — SBA checklist and investor pitch deck — for a ${base}.

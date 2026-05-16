@@ -100,6 +100,23 @@
       }
     }
 
+    // ── A1 median wage vs BLS avg weekly wage ───────────────────
+    const wages0 = R.real.wages;
+    if (wages0 && wages0.avg_weekly_wage && a1) {
+      // A1 labor_market_summary.median_wage_primary_occupation is annual
+      const aiAnnual = _get(a1, 'labor_market_summary.median_wage_primary_occupation');
+      if (aiAnnual && aiAnnual > 0) {
+        const aiWeekly  = aiAnnual / 52;
+        const realWeekly = wages0.avg_weekly_wage;
+        checks.push({
+          agent: 'A1', field: 'Median Occupation Wage',
+          real: realWeekly, ai: aiWeekly,
+          realFmt: _fmt(realWeekly, '$', '/wk'), aiFmt: _fmt(aiWeekly, '$', '/wk'),
+          acc: _acc(aiWeekly, realWeekly), source: 'BLS QCEW',
+        });
+      }
+    }
+
     // ── A6 vs OSM competitor count ───────────────────────────────
     const osm = R.real.competitors_osm;
     const a6  = R.a6;
@@ -160,6 +177,44 @@
       }
     }
 
+    // ── A2 gap score direction vs ZBP business density ──────────
+    // If ZBP shows 0 competitors in ZIP, A2 gap score should be high (>=7)
+    // If ZBP shows many competitors, gap score should be lower
+    const zbp = R.real.business_density;
+    const a2  = R.a2;
+    if (zbp != null && a2 && a2.overall_opportunity_score) {
+      const zbpCount   = zbp.count || 0;
+      const gapScore   = a2.overall_opportunity_score;         // 0-100 scale
+      // Normalize: expect high gap when zbpCount low, low gap when zbpCount high
+      // Cap zbpCount at 20 for scoring (above 20 = saturated)
+      const expectedGap = Math.max(0, 100 - zbpCount * 5);
+      const gapAcc = Math.max(0, 1 - Math.abs(gapScore - expectedGap) / 50);
+      checks.push({
+        agent: 'A2', field: 'Opportunity Score (vs ZBP density)',
+        real: expectedGap, ai: gapScore,
+        realFmt: _fmt(expectedGap, '', ' (expected)'), aiFmt: _fmt(gapScore, '', '/100'),
+        acc: gapAcc, source: 'Census ZBP',
+      });
+    }
+
+    // ── A4 real estate rent vs HUD FMR residential proxy ────────
+    const a4 = R.a4;
+    if (rents && rents.fmr_2br && a4) {
+      // A4 stores recommended monthly rent per sqft or total monthly rent
+      const a4Rent = _get(a4, 'selected_property.monthly_rent') ||
+                     _get(a4, 'best_option.monthly_rent') ||
+                     _get(a4, 'options[0].monthly_rent');
+      if (a4Rent) {
+        const estCommercial = rents.fmr_2br * 3;
+        checks.push({
+          agent: 'A4', field: 'Selected Property Rent (vs HUD×3)',
+          real: estCommercial, ai: a4Rent,
+          realFmt: _fmt(estCommercial, '$', '/mo'), aiFmt: _fmt(a4Rent, '$', '/mo'),
+          acc: _acc(a4Rent, estCommercial), source: 'HUD FMR×3',
+        });
+      }
+    }
+
     // ── A6 vs CMS NPI (healthcare only) ─────────────────────────
     const npi = R.real.npi_providers;
     if (npi && npi.count > 0 && a6) {
@@ -171,6 +226,94 @@
           real: npi.count, ai: aiTotal,
           realFmt: _fmt(npi.count, '', ' (licensed)'), aiFmt: _fmt(aiTotal, '', ' (est.)'),
           acc: npiAcc, source: 'CMS NPI',
+        });
+      }
+    }
+
+    // ── A1 education bachelors+ % vs ACS ─────────────────────────
+    // ACS: bachelors count / population × 100 = real bachelors+ %
+    // A1 Part 2: education_attainment.bachelors_pct + graduate_pct
+    if (dem && dem.bachelors && dem.population && a1) {
+      const realEduPct = (dem.bachelors / dem.population) * 100;
+      const aiEdu = a1.education_attainment;
+      if (aiEdu && (aiEdu.bachelors_pct != null || aiEdu.graduate_pct != null)) {
+        const aiBaPct = (aiEdu.bachelors_pct || 0) + (aiEdu.graduate_pct || 0);
+        if (aiBaPct > 0 && realEduPct > 0) {
+          checks.push({
+            agent: 'A1', field: 'Bachelors+ Attainment %',
+            real: realEduPct, ai: aiBaPct,
+            realFmt: _fmt(realEduPct, '', '%'), aiFmt: _fmt(aiBaPct, '', '%'),
+            acc: _accRate(aiBaPct, realEduPct, 15), // ±15pp tolerance (metro vs ZIP)
+            source: 'ACS B15003',
+          });
+        }
+      }
+    }
+
+    // ── A1 renter % vs ACS tenure ────────────────────────────────
+    // ACS: renter_pct; A1 cities[0].renter_pct
+    if (dem && dem.renter_pct != null && a1) {
+      const city0r = (a1.cities || [])[0] || {};
+      const aiRenter = city0r.renter_pct;
+      if (aiRenter != null) {
+        checks.push({
+          agent: 'A1', field: 'Renter-Occupied %',
+          real: dem.renter_pct, ai: aiRenter,
+          realFmt: _fmt(dem.renter_pct, '', '%'), aiFmt: _fmt(aiRenter, '', '%'),
+          acc: _accRate(aiRenter, dem.renter_pct, 10), // ±10pp tolerance
+          source: 'ACS B25003',
+        });
+      }
+    }
+
+    // ── A1 households vs ACS ─────────────────────────────────────
+    // ACS: households (owner + renter occ); A1 cities[0].households
+    if (dem && dem.households && a1) {
+      const city0h = (a1.cities || [])[0] || {};
+      const aiHH = city0h.households;
+      if (aiHH && aiHH > 0) {
+        checks.push({
+          agent: 'A1', field: 'Households',
+          real: dem.households, ai: aiHH,
+          realFmt: _fmt(dem.households), aiFmt: _fmt(aiHH),
+          acc: _acc(aiHH, dem.households), source: 'ACS B25003',
+        });
+      }
+    }
+
+    // ── A7 SBA loan amount vs SBA FOIA avg ───────────────────────
+    // SBA FOIA: avg_loan_amount in area; A7 funding[0].amount (SBA 7(a) tranche)
+    const sba = R.real.sba;
+    const a7v = R.a7;
+    if (sba && sba.avg_loan_amount && sba.loan_count >= 3 && a7v) {
+      const funding = a7v.funding || [];
+      const sbaLine = funding.find(f => /sba|7\(a\)|small business/i.test(f.source || ''));
+      if (sbaLine && sbaLine.amount > 0) {
+        // Requested loan vs avg in area — use very loose tolerance (4×); they legitimately differ
+        const sbaAcc = Math.max(0, 1 - Math.abs(sbaLine.amount - sba.avg_loan_amount) / (sba.avg_loan_amount * 4));
+        checks.push({
+          agent: 'A7', field: 'SBA Loan Amount (vs area avg)',
+          real: sba.avg_loan_amount, ai: sbaLine.amount,
+          realFmt: _fmt(sba.avg_loan_amount, '$', ' avg'), aiFmt: _fmt(sbaLine.amount, '$', ' requested'),
+          acc: sbaAcc, source: 'SBA FOIA',
+        });
+      }
+    }
+
+    // ── A9 year1 revenue consistency vs A7 base case ─────────────
+    // A9 builds on A7; year1 revenue should be within 30% of A7 base monthly×12
+    const a9 = R.a9;
+    if (a7v && a9) {
+      const a9rev = _get(a9, 'financial_plan.year1_projections.revenue');
+      const scenarios = a7v.scenarios || [];
+      const base = scenarios.find(s => /base/i.test(s.name || '')) || scenarios[1];
+      if (a9rev && base && base.monthly_revenue) {
+        const a7annual = base.monthly_revenue * 12;
+        checks.push({
+          agent: 'A9', field: 'Year-1 Revenue (vs A7 base)',
+          real: a7annual, ai: a9rev,
+          realFmt: _fmt(a7annual, '$', '/yr (A7)'), aiFmt: _fmt(a9rev, '$', '/yr (A9)'),
+          acc: _acc(a9rev, a7annual), source: 'Cross-agent',
         });
       }
     }

@@ -91,7 +91,15 @@ function _escHtml(s) {
 }
 
 // ── claudeStreamJSON ─────────────────────────────────────────
-async function claudeStreamJSON(system, user, streamPanelId) {
+// opts.webSearch — when true, skip streaming (tool_use incompatible with
+// raw SSE body) and delegate directly to claudeJSON which adds the
+// web_search_20250305 tool. Streaming preview is sacrificed for accuracy.
+async function claudeStreamJSON(system, user, streamPanelId, opts={}) {
+  // webSearch requested → streaming can't carry tools; use claudeJSON
+  if (opts.webSearch || opts.webSearchMaxUses) {
+    return await claudeJSON(system, user, opts);
+  }
+
   // Demo mode: use normal path
   if (demoMode) {
     await new Promise(r => setTimeout(r, 300));
@@ -146,7 +154,7 @@ CRITICAL — DATA INTEGRITY: Never fabricate specific data. Use null for unknown
   const d = parseJSON(rawText);
   if (d) { setCache(system, user, d); return d; }
 
-  // Streaming parse failed → fall back to regular retry path
+  // Streaming parse failed → fall back to regular retry path (preserve opts)
   console.warn('Streaming JSON parse failed — retrying with claudeJSON');
-  return await claudeJSON(system, user);
+  return await claudeJSON(system, user, opts);
 }

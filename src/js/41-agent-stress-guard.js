@@ -268,13 +268,13 @@ if (typeof runAgent14 === 'function') {
 (function _patchClaudeJSON() {
   if (typeof claudeJSON !== 'function') return;
   const _origClaudeJSON = window.claudeJSON;
-  window.claudeJSON = async function(system, user) {
+  window.claudeJSON = async function(system, user, opts={}) {
     const totalChars = (system || '').length + (user || '').length;
     if (totalChars > 100000) {
       console.warn(`[StressGuard] Large claudeJSON call: ${totalChars} chars (~${Math.round(totalChars/4)} tokens). Consider sub-agents.`);
     }
     try {
-      return await _origClaudeJSON(system, user);
+      return await _origClaudeJSON(system, user, opts);
     } catch (e) {
       const isTokenErr = e.message?.toLowerCase().includes('max_token') ||
                          e.message?.toLowerCase().includes('truncat');
@@ -283,7 +283,7 @@ if (typeof runAgent14 === 'function') {
         const halfUser = user.slice(0, Math.floor(user.length / 2)) +
           '\n[Context truncated. Return JSON with available data; use null for unknown fields.]';
         try {
-          return await _origClaudeJSON(system, halfUser);
+          return await _origClaudeJSON(system, halfUser, {}); // no webSearch on truncated retry
         } catch {}
       }
       throw e;

@@ -2,7 +2,13 @@ async function runAgent8(a1,a2,a3,a4,a5,a6,a7) {
   setDot(8,'running');
   const ind=industry();
   const sys=`You are an executive consultant. Respond JSON only.`;
-  const usr=`Write a final executive report for opening a ${ind.unit} (${ind.capacity_label}: ${capacity()}, $${parseInt(budget()).toLocaleString()} budget) near ZIP ${zip()}.
+
+  // Inject verified real data so executive summary cites accurate numbers
+  const _rdCtx8 = (typeof buildRealDataCtx === 'function')
+    ? buildRealDataCtx(['demographics','wages','macro','rents','competitors_osm','npi_providers'])
+    : '';
+
+  const usr=`${_rdCtx8 ? _rdCtx8 + '\n\n' : ''}Write a final executive report for opening a ${ind.unit} (${ind.capacity_label}: ${capacity()}, $${parseInt(budget()).toLocaleString()} budget) near ZIP ${zip()}.
 
 KEY FINDINGS:
 - Demographics: ${ctx(a1,['summary','cities'],1000)}
@@ -45,9 +51,10 @@ Return ONLY:
     // Show panel early so streaming text is visible immediately
     showOut(8);
     // Stream response into summary prose panel while building
-    let d = await claudeStreamJSON(sys, usr, '8-s-t');
+    let d = await claudeStreamJSON(sys, usr, '8-s-t', {webSearch:true});
     if(!d) { console.warn('Agent 8 fallback'); d=getFallback8(); }
     R.a8=d;
+    if (typeof rdRenderRealDataBadge === 'function') rdRenderRealDataBadge('8-s-t', ['demographics','wages','macro','rents','competitors_osm']);
     $('8-s-t').textContent=(d.verdict||'')+(d.verdict_rationale?' — '+d.verdict_rationale:'');
     // Final report
     const vl=(d.verdict||'').toLowerCase();

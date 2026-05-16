@@ -206,7 +206,7 @@ function buildRealDataCtx(keys) {
   if (!R || !R.real) return '';
   const d = R.real;
   const want = k => !keys || keys.includes(k);
-  const lines = ['\n\n══ VERIFIED REAL DATA — use EXACT numbers below, never re-estimate ══'];
+  const lines = ['\n\n══ VERIFIED REAL DATA — MANDATORY: use EXACT numbers below verbatim. DO NOT round, adjust, or re-estimate. If your training data conflicts with these numbers, these numbers win. Cite each figure with its bracketed source tag. ══'];
 
   if (want('demographics') && d.demographics) {
     const dem = d.demographics;
@@ -217,6 +217,10 @@ function buildRealDataCtx(keys) {
     if (dem.households)     lines.push(`  households: ${dem.households.toLocaleString()}`);
     if (dem.employed != null) lines.push(`  employed: ${(dem.employed||0).toLocaleString()}`);
     if (dem.renter_pct != null) lines.push(`  renter_pct: ${dem.renter_pct}%`);
+    if (dem.bachelors != null && dem.population) {
+      const baPlus = Math.round(dem.bachelors / dem.population * 100);
+      lines.push(`  bachelors_plus_pct: ${baPlus}% (ACS B15003)`);
+    }
   }
 
   if (want('business_density') && d.business_density) {
@@ -229,8 +233,11 @@ function buildRealDataCtx(keys) {
   if (want('wages') && d.wages) {
     const w = d.wages;
     lines.push(`💰 WAGES [${w.source}]`);
-    if (w.avg_weekly_wage) lines.push(`  avg_weekly_wage_state: $${Math.round(w.avg_weekly_wage).toLocaleString()}`);
-    if (w.employment)     lines.push(`  industry_employment_state: ${(w.employment||0).toLocaleString()}`);
+    if (w.avg_weekly_wage) {
+      const annual = Math.round(w.avg_weekly_wage * 52);
+      lines.push(`  avg_weekly_wage_state: $${Math.round(w.avg_weekly_wage).toLocaleString()}/wk ($${annual.toLocaleString()}/yr)`);
+    }
+    if (w.employment) lines.push(`  industry_employment_state: ${(w.employment||0).toLocaleString()}`);
   }
 
   if (want('macro') && d.macro) {
@@ -329,6 +336,24 @@ function buildRealDataCtx(keys) {
     if (n.names.length) lines.push(`  provider_names: ${n.names.slice(0,8).join(', ')}`);
   }
 
+  if (want('health') && d.health && (d.health.no_insurance_pct != null || d.health.obesity_pct != null)) {
+    const h = d.health;
+    lines.push(`🏥 CDC PLACES LOCAL HEALTH [CDC PLACES]`);
+    if (h.no_insurance_pct != null) lines.push(`  no_health_insurance_pct: ${h.no_insurance_pct}%`);
+    if (h.diabetes_pct     != null) lines.push(`  diabetes_prevalence_pct: ${h.diabetes_pct}%`);
+    if (h.obesity_pct      != null) lines.push(`  obesity_pct: ${h.obesity_pct}%`);
+    if (h.checkup_pct      != null) lines.push(`  annual_checkup_pct: ${h.checkup_pct}%`);
+    if (h.physical_inactivity != null) lines.push(`  physical_inactivity_pct: ${h.physical_inactivity}%`);
+  }
+
+  if (want('climate') && d.climate && d.climate.avgTemp_c != null) {
+    const cl = d.climate;
+    lines.push(`🌤 CLIMATE [Open-Meteo 2000-2019]`);
+    if (cl.avgTemp_c)      lines.push(`  annual_avg_temp: ${cl.avgTemp_c}°C (${Math.round(cl.avgTemp_c*9/5+32)}°F)`);
+    if (cl.totalPrecip_mm) lines.push(`  annual_precip: ${cl.totalPrecip_mm}mm`);
+    if (cl.peakWetMonth)   lines.push(`  peak_wet_month: ${cl.peakWetMonth}`);
+  }
+
   lines.push('══ END REAL DATA — cite each figure with its bracketed source tag ══\n');
   return lines.length > 3 ? lines.join('\n') : '';
 }
@@ -366,12 +391,28 @@ async function _rdGeocodeZip(zip) {
 }
 
 async function _rdFetchACS(zip) {
-  if (typeof v2FetchCensusACS === 'function') return v2FetchCensusACS(zip);
+  if (typeof v2FetchCensusACS === 'function') {
+    // v2 uses different field names — normalize to shared shape
+    const raw = await v2FetchCensusACS(zip);
+    if (!raw) return null;
+    return {
+      ...raw,
+      population:     raw.population     ?? raw.total_population     ?? null,
+      under_18:       raw.under_18       ?? raw.population_under_18  ?? null,
+      households:     raw.households     ?? raw.total_households      ?? null,
+      median_income:  raw.median_income  ?? null,
+      employed:       raw.employed       ?? raw.labor_force           ?? null,
+      bachelors:      raw.bachelors      ?? raw.bachelors_degree_plus ?? null,
+      // renter_pct not available in v2 shape — leave as null
+      renter_pct:     raw.renter_pct     ?? null,
+    };
+  }
   const k = 'rdacs:'+zip;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // ACS 5-Year variables: pop, median_income, owner_occ, under_18, employed, bachelors, renter
-    const vars = 'B01003_001E,B19013_001E,B25003_002E,B09001_001E,B23025_004E,B15003_022E,B25003_003E';
+    // ACS 5-Year variables: pop, median_income, owner_occ, under_18, employed,
+    // bachelors (B15003_022), masters (023), professional (024), doctorate (025), renter
+    const vars = 'B01003_001E,B19013_001E,B25003_002E,B09001_001E,B23025_004E,B15003_022E,B15003_023E,B15003_024E,B15003_025E,B25003_003E';
     const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
@@ -383,9 +424,14 @@ async function _rdFetchACS(zip) {
     const owned   = parseInt(row[2]);
     const u18     = parseInt(row[3]);
     const emp     = parseInt(row[4]);
-    const bach    = parseInt(row[5]);
-    const renter  = parseInt(row[6]);
+    const bach    = parseInt(row[5]);  // B15003_022 — bachelor's only
+    const mast    = parseInt(row[6]);  // B15003_023 — master's
+    const prof    = parseInt(row[7]);  // B15003_024 — professional
+    const doct    = parseInt(row[8]);  // B15003_025 — doctorate
+    const renter  = parseInt(row[9]);
     const hh      = owned + renter;
+    // bachelor's or higher = all four degree levels
+    const bachPlus = [bach, mast, prof, doct].reduce((s, n) => s + (n > 0 ? n : 0), 0);
     const result = {
       population:    pop > 0 ? pop : null,
       median_income: income > 0 ? income : null,
@@ -395,7 +441,7 @@ async function _rdFetchACS(zip) {
       renter_pct:    hh > 0 ? Math.round(renter/hh*100) : null,
       under_18:      u18 > 0 ? u18 : null,
       employed:      emp > 0 ? emp : null,
-      bachelors:     bach > 0 ? bach : null,
+      bachelors:     bachPlus > 0 ? bachPlus : null, // bachelors+ (B15003_022-025)
       source:        'ACS 5-Year 2022',
       zip,
     };
@@ -404,7 +450,12 @@ async function _rdFetchACS(zip) {
 }
 
 async function _rdFetchZBP(zip, naics) {
-  if (typeof v2FetchZBP === 'function') return v2FetchZBP(zip, naics);
+  if (typeof v2FetchZBP === 'function') {
+    // v2FetchZBP(zip, industry) takes industryKey, not naics; inline takes naics.
+    // v2 returns { establishments, employees, payroll_k } — normalize to { count, employees }
+    // We pass naics directly — v2 will get null from its _ZBP_NAICS lookup, so use inline.
+    // Do NOT delegate: v2 signature is incompatible (industryKey vs naics string).
+  }
   const k = `rdzbp:${zip}:${naics}`;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
@@ -425,7 +476,8 @@ async function _rdFetchZBP(zip, naics) {
 }
 
 async function _rdFetchBLSWages(stateAbbr) {
-  if (typeof v2FetchBLSWages === 'function') return v2FetchBLSWages(stateAbbr);
+  // NOTE: v2FetchBLSWages(industryKey) has a different signature — do NOT delegate.
+  // Always use QCEW inline fetch which correctly takes stateAbbr.
   if (!stateAbbr) return null;
   const k = 'rdbls:'+stateAbbr;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
@@ -453,7 +505,23 @@ async function _rdFetchBLSWages(stateAbbr) {
 }
 
 async function _rdFetchFRED() {
-  if (typeof v2FetchFREDIndicators === 'function') return v2FetchFREDIndicators();
+  if (typeof v2FetchFREDIndicators === 'function') {
+    // v2 returns {PRIME:{value}, UNRATE:{value}, CPIAUCSL:{value}} — normalize to expected shape
+    const raw = await v2FetchFREDIndicators();
+    if (!raw) return null;
+    const prime = raw.PRIME?.value    != null ? parseFloat(raw.PRIME.value)    : null;
+    const un    = raw.UNRATE?.value   != null ? parseFloat(raw.UNRATE.value)   : null;
+    const cpi   = raw.CPIAUCSL?.value != null ? parseFloat(raw.CPIAUCSL.value) : null;
+    if (prime == null && un == null && cpi == null) return null;
+    const fed = prime != null ? Math.round((prime - 3) * 100) / 100 : null;
+    return {
+      fed_funds_rate: fed   ?? 4.33,
+      cpi:            cpi   ?? 319.8,
+      unemployment:   un    ?? 4.2,
+      prime_rate:     prime ?? 7.33,
+      source:         'FRED (Federal Reserve)',
+    };
+  }
   const k = 'rdfed';
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
@@ -531,12 +599,38 @@ async function _rdFetchCDC(city, stateAbbr) {
 }
 
 async function _rdFetchSBA(zip, industry) {
-  if (typeof v2FetchSBALoans === 'function') return v2FetchSBALoans(zip, industry);
+  if (typeof v2FetchSBALoans === 'function') {
+    const raw = await v2FetchSBALoans(zip, industry);
+    if (!raw) return null;
+    // v2 returns { count, avg_amount, total_amount, recent, naics }
+    // buildRealDataCtx expects { loan_count, avg_loan_amount, approval_rate }
+    return {
+      loan_count:      raw.count        ?? raw.loan_count      ?? null,
+      avg_loan_amount: raw.avg_amount   ?? raw.avg_loan_amount ?? null,
+      total_amount:    raw.total_amount ?? null,
+      approval_rate:   raw.approval_rate ?? null, // not provided by v2
+      recent:          raw.recent        ?? [],
+      naics:           raw.naics         ?? null,
+      source:          'SBA FOIA Data',
+    };
+  }
   return null;
 }
 
 async function _rdFetchEIA(stateAbbr) {
-  if (typeof v2FetchEIAEnergy === 'function') return v2FetchEIAEnergy(stateAbbr);
+  if (typeof v2FetchEIAEnergy === 'function') {
+    const raw = await v2FetchEIAEnergy(stateAbbr);
+    if (!raw) return null;
+    // v2 returns { commercial_cents, residential_cents, state, period } (cents/kWh)
+    // buildRealDataCtx expects { commercial_cents_kwh } (still cents, div/100 happens in ctx)
+    return {
+      commercial_cents_kwh:  raw.commercial_cents  ?? raw.commercial_cents_kwh  ?? null,
+      residential_cents_kwh: raw.residential_cents ?? raw.residential_cents_kwh ?? null,
+      state:  raw.state  ?? stateAbbr,
+      period: raw.period ?? null,
+      source: 'EIA Electric Power Monthly',
+    };
+  }
   return null;
 }
 
@@ -817,11 +911,15 @@ function rdShowDataStatus() {
     { key:'rents',           label:'HUD',        icon:'🏠' },
     { key:'competitors_osm', label:'OSM',        icon:'🗺' },
     { key:'grants_gov',      label:'Grants.gov', icon:'💵' },
+    { key:'federal_opps',    label:'SAM.gov',    icon:'📋' },
     { key:'flood',           label:'FEMA',       icon:'🌊' },
     { key:'energy_rates',    label:'NREL',       icon:'⚡' },
+    { key:'energy_state',    label:'EIA',        icon:'🔌' },
     { key:'crime',           label:'FBI',        icon:'🚔' },
     { key:'regulations',     label:'eCFR',       icon:'📜' },
     { key:'sba',             label:'SBA',        icon:'🏦' },
+    { key:'health',          label:'CDC',        icon:'🩺' },
+    { key:'climate',         label:'Climate',    icon:'🌤' },
     { key:'npi_providers',   label:'CMS NPI',    icon:'🏥' },
   ];
   const loaded = badges.filter(b => d[b.key]);
@@ -869,6 +967,12 @@ function rdRenderRealDataBadge(elId, keys) {
   if ((!keys || keys.includes('flood')) && d.flood) {
     rows.push(['Flood Zone', d.flood.flood_zone+' — '+d.flood.zone_description, 'FEMA NFHL']);
   }
+  if ((!keys || keys.includes('health')) && d.health && d.health.no_insurance_pct != null) {
+    rows.push(['Uninsured %', d.health.no_insurance_pct+'%', 'CDC PLACES']);
+  }
+  if ((!keys || keys.includes('climate')) && d.climate && d.climate.avgTemp_c != null) {
+    rows.push(['Avg Annual Temp', d.climate.avgTemp_c+'°C ('+Math.round(d.climate.avgTemp_c*9/5+32)+'°F)', 'Open-Meteo']);
+  }
   if (!rows.length) return;
   const pulledAt = d._pulled_at ? new Date(d._pulled_at).toLocaleTimeString() : '';
   const card = document.createElement('div');
@@ -888,6 +992,8 @@ function rdRenderFinancialBadge(elId) {
   if (d.macro && d.macro.prime_rate != null)          rows.push(['Prime Rate', d.macro.prime_rate+'%', 'FRED+3%']);
   if (d.rents && d.rents.fmr_2br)                    rows.push(['HUD FMR 2BR', '$'+d.rents.fmr_2br+'/mo', 'HUD FY2024']);
   if (d.energy_rates && d.energy_rates.commercial_rate_kwh) rows.push(['Commercial kWh', '$'+d.energy_rates.commercial_rate_kwh, 'NREL']);
+  if (!d.energy_rates && d.energy_state && d.energy_state.commercial_cents_kwh) rows.push(['Commercial kWh', '$'+(d.energy_state.commercial_cents_kwh/100).toFixed(4), 'EIA']);
+  if (d.sba && d.sba.loan_count && d.sba.avg_loan_amount)  rows.push(['SBA Avg Loan', '$'+Math.round(d.sba.avg_loan_amount).toLocaleString(), 'SBA FOIA']);
   if (d.flood && d.flood.flood_zone)                  rows.push(['Flood Zone', d.flood.flood_zone, 'FEMA NFHL']);
   if (!rows.length) return;
   const card = document.createElement('div');

@@ -60,8 +60,12 @@ Return ONLY:
     outEl.innerHTML = `<div style="padding:16px">${subProgress(2, 3, 'Sub-agent 2/3: Build vs Buy Analysis…')}</div>`;
   }
 
+  const _rdCtx16 = (typeof buildRealDataCtx === 'function')
+    ? buildRealDataCtx(['rents','wages','macro'])
+    : '';
+
   const sysB = `You are a business strategy consultant specializing in ${ind.unit} startups and acquisitions. Return JSON only.`;
-  const usrB = `Analyze the build-from-scratch vs acquisition paths for a ${base}.
+  const usrB = `${_rdCtx16 ? _rdCtx16 + '\n\n' : ''}Analyze the build-from-scratch vs acquisition paths for a ${base}.
 FINANCIALS: ${ctx7}
 LISTINGS LANDSCAPE: ${JSON.stringify((listingsData || {}).buy_summary || '')}
 

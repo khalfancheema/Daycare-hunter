@@ -13,6 +13,10 @@ async function runAgent10Parts(a3,a4,a5,a7,a9) {
   const ctx3 = ctx(a3,['summary','locations']);
   const ctx7 = ctx(a7,['summary','scenarios','startup_breakdown','total_startup_cost']);
   const ctx9 = ctx(a9,['executive_summary','financial_plan','operations_plan']);
+  // Verified real data for cost/wage grounding in budget tracker
+  const _rdCtx10 = typeof buildRealDataCtx === 'function'
+    ? buildRealDataCtx(['wages','rents','macro','energy_rates'])
+    : '';
 
   if(demoMode&&typeof getDemoData==='function'){const _d=getDemoData(10);if(_d){R.a10=_d;try{renderProjectPlan(_d);}catch(e){}setDot(10,'done');showOut(10);return _d;}}
   // ── Part 1 of 3: All 5 Project Phases (Gantt) ───────────
@@ -53,7 +57,7 @@ Include ALL 5 phases: Foundation & Funding (months 1-3), Legal/Lease/Design (mon
   const p1 = await claudeJSON(sys1, usr1, {webSearch:true});
   $('10-mile-c').innerHTML = subProgress(2,3,'Milestones & Budget Tracker');
   const sys2 = `You are a ${ind.unit} project manager. Return JSON only.`;
-  const usr2 = `Create milestones and budget tracker for launching a ${base}.
+  const usr2 = `${_rdCtx10 ? _rdCtx10 + '\n\n' : ''}Create milestones and budget tracker for launching a ${base}.
 FINANCIALS: ${ctx7}
 BUSINESS PLAN: ${ctx9}
 

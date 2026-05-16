@@ -214,7 +214,8 @@ const PROVIDERS = {
       const body = {model,max_tokens:8192,system,messages:[{role:'user',content:user}]};
       // Enable web_search tool for agents that need live data verification
       if (opts.webSearch) {
-        body.tools = [{ type:'web_search_20250305', name:'web_search', max_uses:3 }];
+        // max_uses:5 — research agents cite 15-23 sources; 3 was too restrictive
+        body.tools = [{ type:'web_search_20250305', name:'web_search', max_uses: opts.webSearchMaxUses || 5 }];
       }
       return body;
     },

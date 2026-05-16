@@ -58,6 +58,9 @@ const JS_FILES = [
   'src/js/38-dag.js',             // Agent dependency graph visualization
   'src/js/39-scenario.js',        // Interactive financial scenario builder
   'src/js/40-local-guide.js',     // Ollama/local setup guide + data freshness helpers
+  'src/js/41-agent-stress-guard.js', // Stress-test guard: safeClaudeJSON + A13/A14 overrides
+  'src/js/43-real-data.js',      // Real data pipeline: prefetchRealData + buildRealDataCtx
+  'src/js/44-verifier.js',       // Post-pipeline accuracy verifier vs live government sources
 ];
 
 const CSS_FILES = ['src/styles.css'];
