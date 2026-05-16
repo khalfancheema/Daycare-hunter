@@ -5,7 +5,7 @@ async function runAgent8(a1,a2,a3,a4,a5,a6,a7) {
 
   // Inject verified real data so executive summary cites accurate numbers
   const _rdCtx8 = (typeof buildRealDataCtx === 'function')
-    ? buildRealDataCtx(['demographics','wages','macro','rents','competitors_osm','npi_providers'])
+    ? buildRealDataCtx(['demographics','wages','macro','rents','competitors_osm','npi_providers','flood','sba'])
     : '';
 
   const usr=`${_rdCtx8 ? _rdCtx8 + '\n\n' : ''}Write a final executive report for opening a ${ind.unit} (${ind.capacity_label}: ${capacity()}, $${parseInt(budget()).toLocaleString()} budget) near ZIP ${zip()}.

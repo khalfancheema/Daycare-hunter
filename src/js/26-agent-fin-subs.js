@@ -21,7 +21,7 @@ async function runAgent7(a3, a4, a5, a1, a2) {
 
   // ── Real economic data injection ──────────────────────────
   const _rdCtx7 = typeof buildRealDataCtx === 'function'
-    ? buildRealDataCtx(['demographics','wages','macro','rents','energy_rates','energy_state','flood','climate'])
+    ? buildRealDataCtx(['demographics','wages','macro','rents','energy_rates','energy_state','flood','climate','sba'])
     : '';
 
   // ── Sub-call A: Revenue Model ───────────────────────────
@@ -176,7 +176,7 @@ Return ONLY:
 }`;
 
   try {
-    let main = await claudeJSON(sysMain, usrMain);
+    let main = await claudeJSON(sysMain, usrMain, {webSearch:true});
     if (!main) { console.warn('Agent 7 consolidation fallback'); main = getFallback7(); }
 
     // Merge sub-model arrays into result so renderAgent7 can use them.

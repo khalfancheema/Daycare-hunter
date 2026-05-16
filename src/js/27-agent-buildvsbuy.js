@@ -94,7 +94,7 @@ Return ONLY:
   }
 }`;
 
-  const analysisData = await claudeJSON(sysB, usrB);
+  const analysisData = await claudeJSON(sysB, usrB, {webSearch:true});
 
   // ── Sub-call C: Recommendation ──────────────────────────
   if (outEl) {

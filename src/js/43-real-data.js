@@ -765,8 +765,8 @@ async function _rdFetchFBICrime(stateAbbr) {
   const k = 'rdfbi:'+stateAbbr;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // FBI CDE API — state-level estimates (no key needed for v1)
-    const url = `https://cde.ucr.cjis.gov/LATEST/webapp/public/api/data/summary/state/${stateAbbr}/violent-crime?from=2022&to=2022&API_KEY=iiHnOKfno2Mgkt5AynpvPpUQTEyxE77jo1RU8PIv`;
+    // FBI CDE API — public summary endpoint (no key required for state-level summary)
+    const url = `https://cde.ucr.cjis.gov/LATEST/webapp/public/api/data/summary/state/${stateAbbr}/violent-crime?from=2022&to=2022`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();

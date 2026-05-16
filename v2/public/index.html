@@ -5687,7 +5687,7 @@ async function runAgent8(a1,a2,a3,a4,a5,a6,a7) {
 
   // Inject verified real data so executive summary cites accurate numbers
   const _rdCtx8 = (typeof buildRealDataCtx === 'function')
-    ? buildRealDataCtx(['demographics','wages','macro','rents','competitors_osm','npi_providers'])
+    ? buildRealDataCtx(['demographics','wages','macro','rents','competitors_osm','npi_providers','flood','sba'])
     : '';
 
   const usr=`${_rdCtx8 ? _rdCtx8 + '\n\n' : ''}Write a final executive report for opening a ${ind.unit} (${ind.capacity_label}: ${capacity()}, $${parseInt(budget()).toLocaleString()} budget) near ZIP ${zip()}.
@@ -8305,7 +8305,7 @@ async function runAgent7(a3, a4, a5, a1, a2) {
 
   // ── Real economic data injection ──────────────────────────
   const _rdCtx7 = typeof buildRealDataCtx === 'function'
-    ? buildRealDataCtx(['demographics','wages','macro','rents','energy_rates','energy_state','flood','climate'])
+    ? buildRealDataCtx(['demographics','wages','macro','rents','energy_rates','energy_state','flood','climate','sba'])
     : '';
 
   // ── Sub-call A: Revenue Model ───────────────────────────
@@ -8460,7 +8460,7 @@ Return ONLY:
 }`;
 
   try {
-    let main = await claudeJSON(sysMain, usrMain);
+    let main = await claudeJSON(sysMain, usrMain, {webSearch:true});
     if (!main) { console.warn('Agent 7 consolidation fallback'); main = getFallback7(); }
 
     // Merge sub-model arrays into result so renderAgent7 can use them.
@@ -8757,7 +8757,7 @@ Return ONLY:
   }
 }`;
 
-  const analysisData = await claudeJSON(sysB, usrB);
+  const analysisData = await claudeJSON(sysB, usrB, {webSearch:true});
 
   // ── Sub-call C: Recommendation ──────────────────────────
   if (outEl) {
@@ -13542,8 +13542,8 @@ async function _rdFetchFBICrime(stateAbbr) {
   const k = 'rdfbi:'+stateAbbr;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // FBI CDE API — state-level estimates (no key needed for v1)
-    const url = `https://cde.ucr.cjis.gov/LATEST/webapp/public/api/data/summary/state/${stateAbbr}/violent-crime?from=2022&to=2022&API_KEY=iiHnOKfno2Mgkt5AynpvPpUQTEyxE77jo1RU8PIv`;
+    // FBI CDE API — public summary endpoint (no key required for state-level summary)
+    const url = `https://cde.ucr.cjis.gov/LATEST/webapp/public/api/data/summary/state/${stateAbbr}/violent-crime?from=2022&to=2022`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
