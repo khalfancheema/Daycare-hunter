@@ -204,6 +204,18 @@ async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
     (stateFips && countyFips) ? _rdFetchCensusPEP(stateFips, countyFips) : Promise.resolve(null),
   ]);
 
+  // Phase I batch
+  const [
+    fccR, lodesR, chrR, ozR, noaaR, placesXR,
+  ] = await Promise.allSettled([
+    lat && lng ? _rdFetchFCCBroadband(lat, lng) : Promise.resolve(null),
+    (stateFips && countyFips) ? _rdFetchLEHDLODES(stateFips, countyFips) : Promise.resolve(null),
+    (stateFips && countyFips) ? _rdFetchCountyHealthRankings(stateFips, countyFips) : Promise.resolve(null),
+    lat && lng ? _rdFetchOpportunityZone(lat, lng) : Promise.resolve(null),
+    (stateFips && countyFips) ? _rdFetchNOAAClimate(stateFips, countyFips) : Promise.resolve(null),
+    (stateAbbr && countyName) ? _rdFetchCDCPlacesExpanded(stateAbbr, countyName) : Promise.resolve(null),
+  ]);
+
   const v = r => r.status === 'fulfilled' ? r.value : null;
 
   R.real = {
@@ -256,6 +268,13 @@ async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
     seismic:          v(quakeR),
     air_quality:      v(airR),
     census_pep:       v(pepR),
+    // Phase I batch
+    fcc_broadband:    v(fccR),
+    lehd_lodes:       v(lodesR),
+    county_health:    v(chrR),
+    opportunity_zone: v(ozR),
+    noaa_climate:     v(noaaR),
+    cdc_places_x:     v(placesXR),
   };
 
   // ── Phase D: Industry-specific APIs (healthcare NPI) ─────────
@@ -642,6 +661,59 @@ function buildRealDataCtx(keys) {
     if (p.pop_2023)          lines.push(`  population_2023: ${p.pop_2023.toLocaleString()}`);
     if (p.pop_growth_1yr_pct != null) lines.push(`  population_growth_1yr_pct: ${p.pop_growth_1yr_pct}%`);
     if (p.pop_growth_3yr_pct != null) lines.push(`  population_growth_3yr_pct: ${p.pop_growth_3yr_pct}%`);
+  }
+
+  // ── Phase I: more accuracy data ───────────────────────────────────────────
+  if (want('fcc_broadband') && d.fcc_broadband) {
+    const f = d.fcc_broadband;
+    lines.push(`📡 FCC BROADBAND [${f.source}]`);
+    if (f.max_download_mbps != null) lines.push(`  max_download_mbps: ${f.max_download_mbps}`);
+    if (f.max_upload_mbps != null)   lines.push(`  max_upload_mbps: ${f.max_upload_mbps}`);
+    if (f.provider_count != null)    lines.push(`  provider_count: ${f.provider_count}`);
+    if (f.fiber_available !== null)  lines.push(`  fiber_available: ${f.fiber_available}`);
+  }
+
+  if (want('county_health') && d.county_health) {
+    const c = d.county_health;
+    lines.push(`🏥 COUNTY HEALTH RANKINGS [${c.source}]`);
+    if (c.health_outcomes_rank) lines.push(`  health_outcomes_rank: ${c.health_outcomes_rank} (lower=better)`);
+    if (c.health_factors_rank)  lines.push(`  health_factors_rank: ${c.health_factors_rank}`);
+    if (c.uninsured_pct != null) lines.push(`  uninsured_pct: ${c.uninsured_pct}%`);
+    if (c.pcp_ratio)             lines.push(`  primary_care_physician_ratio: ${c.pcp_ratio}`);
+    if (c.mental_health_provider_ratio) lines.push(`  mental_health_provider_ratio: ${c.mental_health_provider_ratio}`);
+  }
+
+  if (want('opportunity_zone') && d.opportunity_zone) {
+    const o = d.opportunity_zone;
+    lines.push(`🎯 OPPORTUNITY ZONE [${o.source}]`);
+    lines.push(`  is_qualified_opportunity_zone: ${o.is_opportunity_zone}`);
+    if (o.tract_geoid)   lines.push(`  census_tract: ${o.tract_geoid}`);
+    if (o.tax_benefit)   lines.push(`  tax_benefit: ${o.tax_benefit}`);
+  }
+
+  if (want('noaa_climate') && d.noaa_climate) {
+    const n = d.noaa_climate;
+    lines.push(`🌡 NOAA CLIMATE NORMALS [${n.source}]`);
+    if (n.annual_avg_temp_f != null) lines.push(`  annual_avg_temp: ${n.annual_avg_temp_f}°F`);
+    if (n.annual_max_temp_f != null) lines.push(`  annual_max_temp: ${n.annual_max_temp_f}°F`);
+    if (n.annual_min_temp_f != null) lines.push(`  annual_min_temp: ${n.annual_min_temp_f}°F`);
+    if (n.annual_precip_in != null)  lines.push(`  annual_precip_in: ${n.annual_precip_in}"`);
+    if (n.annual_snowfall_in != null) lines.push(`  annual_snowfall_in: ${n.annual_snowfall_in}"`);
+    if (n.cooling_degree_days != null) lines.push(`  cooling_degree_days: ${n.cooling_degree_days}`);
+    if (n.heating_degree_days != null) lines.push(`  heating_degree_days: ${n.heating_degree_days}`);
+  }
+
+  if (want('cdc_places_x') && d.cdc_places_x) {
+    const p = d.cdc_places_x;
+    lines.push(`🩹 CDC PLACES EXPANDED [${p.source}]`);
+    if (p.mental_health_bad_pct != null) lines.push(`  mental_health_bad_pct: ${p.mental_health_bad_pct}%`);
+    if (p.sleep_short_pct != null)       lines.push(`  short_sleep_pct: ${p.sleep_short_pct}%`);
+    if (p.smoking_pct != null)           lines.push(`  smoking_pct: ${p.smoking_pct}%`);
+    if (p.binge_drinking_pct != null)    lines.push(`  binge_drinking_pct: ${p.binge_drinking_pct}%`);
+    if (p.coronary_heart_pct != null)    lines.push(`  coronary_heart_pct: ${p.coronary_heart_pct}%`);
+    if (p.copd_pct != null)              lines.push(`  copd_pct: ${p.copd_pct}%`);
+    if (p.stroke_pct != null)            lines.push(`  stroke_pct: ${p.stroke_pct}%`);
+    if (p.asthma_pct != null)            lines.push(`  asthma_pct: ${p.asthma_pct}%`);
   }
 
   lines.push('══ END REAL DATA — cite each figure with its bracketed source tag ══\n');
@@ -2005,6 +2077,194 @@ async function _rdFetchCensusPEP(stateFips, countyFips) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// PHASE I — ACCURACY UPGRADE BATCH 5 (added 2026-05-16)
+// FCC Broadband · LEHD LODES · CHR · OZ · NOAA · CDC PLACES expanded
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── FCC Broadband Map — broadband availability by location ───────────────────
+async function _rdFetchFCCBroadband(lat, lng) {
+  if (!lat || !lng) return null;
+  const k = `rdfcc:${lat.toFixed(3)}:${lng.toFixed(3)}`;
+  if (_rdCacheGet(k)) return _rdCacheGet(k);
+  try {
+    // FCC Broadband Map ArcGIS — query broadband availability at point
+    const url = `https://geoapi.fcc.gov/area?lat=${lat}&lon=${lng}&format=json`;
+    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    if (!res.ok) return null;
+    const d = await res.json();
+    const block = d?.results?.[0];
+    if (!block) return null;
+    // FCC Broadband performance — use BDC summary by census block
+    const bdcUrl = `https://broadbandmap.fcc.gov/nbm/map/api/published/locations/${block.block_fips || ''}/summary`;
+    let bdcData = null;
+    try {
+      const bdcRes = await fetch(bdcUrl, { signal:_rdAbortTimeout(8000) });
+      if (bdcRes.ok) bdcData = await bdcRes.json();
+    } catch {}
+    const result = {
+      block_fips:        block.block_fips,
+      county_fips:       block.county_fips,
+      block_pop_2020:    block.block_pop_2020 || null,
+      fiber_available:   bdcData?.fiber_available ?? null,
+      cable_available:   bdcData?.cable_available ?? null,
+      max_download_mbps: bdcData?.max_download ?? null,
+      max_upload_mbps:   bdcData?.max_upload ?? null,
+      provider_count:    bdcData?.provider_count ?? null,
+      source:            'FCC Broadband Map BDC',
+    };
+    return _rdCacheSet(k, result);
+  } catch(e) { console.warn('[RealData] FCC Broadband failed:', e.message); return null; }
+}
+
+// ── Census LEHD LODES — workplace area characteristics ──────────────────────
+async function _rdFetchLEHDLODES(stateFips, countyFips) {
+  if (!stateFips || !countyFips) return null;
+  const k = `rdlodes:${stateFips}${countyFips}`;
+  if (_rdCacheGet(k)) return _rdCacheGet(k);
+  try {
+    // LEHD WAC (Workplace Area Characteristics) county-level via LED API
+    // C000 = total jobs; CE01 = $1250/mo and below; CE02 = $1251-$3333; CE03 = $3334+
+    // CNS18 = Information; CNS19 = Finance; CNS20 = Real Estate
+    const stateAbbr = Object.keys(_RD_FIPS).find(k => _RD_FIPS[k] === stateFips);
+    if (!stateAbbr) return null;
+    const url = `https://api.lehd.ces.census.gov/data/lodes/LODES8/${stateAbbr.toLowerCase()}/wac/${stateAbbr.toLowerCase()}_wac_S000_JT00_2021.csv.gz`;
+    // Direct CSV (large); use alternative API endpoint
+    const altUrl = `https://lehd.ces.census.gov/data/lodes/LODES8/${stateAbbr.toLowerCase()}/wac/${stateAbbr.toLowerCase()}_wac_S000_JT00_2021.csv.gz`;
+    // CSV.gz too heavy for browser fetch; skip LODES if no JSON endpoint
+    // Use OnTheMap analysis endpoint instead
+    const onthemapUrl = `https://onthemap.ces.census.gov/v616/server/services/onthemapServiceArea/datasource?st=${stateFips}&ct=${countyFips}&year=2021`;
+    // No working public JSON endpoint discovered; return null gracefully
+    return null;
+  } catch(e) { console.warn('[RealData] LEHD LODES failed:', e.message); return null; }
+}
+
+// ── County Health Rankings (RWJF) ───────────────────────────────────────────
+async function _rdFetchCountyHealthRankings(stateFips, countyFips) {
+  if (!stateFips || !countyFips) return null;
+  const fips = `${stateFips}${countyFips}`;
+  const k = 'rdchr:'+fips;
+  if (_rdCacheGet(k)) return _rdCacheGet(k);
+  try {
+    // CHR via Robert Wood Johnson Foundation public ArcGIS layer
+    const url = `https://services.arcgis.com/uUvqNMGPm7axC2dD/ArcGIS/rest/services/CHRR_2024/FeatureServer/0/query?where=fips5%3D'${fips}'&outFields=*&returnGeometry=false&f=json`;
+    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    if (!res.ok) return null;
+    const d = await res.json();
+    const a = d.features?.[0]?.attributes;
+    if (!a) return null;
+    const result = {
+      county_fips:           fips,
+      health_outcomes_rank:  a.health_outcomes_rank || a.HEALTH_OUTCOMES_RANK || null,
+      health_factors_rank:   a.health_factors_rank || a.HEALTH_FACTORS_RANK || null,
+      premature_death:       a.premature_death || null,
+      uninsured_pct:         a.uninsured_pct || null,
+      pcp_ratio:             a.primary_care_physicians_ratio || null,
+      mental_health_provider_ratio: a.mental_health_providers_ratio || null,
+      source:                'County Health Rankings 2024 (RWJF)',
+    };
+    return _rdCacheSet(k, result);
+  } catch(e) { console.warn('[RealData] CHR failed:', e.message); return null; }
+}
+
+// ── Treasury Qualified Opportunity Zones ─────────────────────────────────────
+async function _rdFetchOpportunityZone(lat, lng) {
+  if (!lat || !lng) return null;
+  const k = `rdoz:${lat.toFixed(3)}:${lng.toFixed(3)}`;
+  if (_rdCacheGet(k)) return _rdCacheGet(k);
+  try {
+    // CDFI Fund / Treasury OZ ArcGIS feature service — point-in-tract
+    const url = `https://services1.arcgis.com/ZCw5pcVj9ChTbktV/arcgis/rest/services/QOZ_NMTC_OZ/FeatureServer/0/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=GEOID10,QOZ_STATUS,POPULATION,STATE_NAME&returnGeometry=false&f=json`;
+    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    if (!res.ok) return null;
+    const d = await res.json();
+    const a = d.features?.[0]?.attributes;
+    const isOZ = a && (a.QOZ_STATUS === 'Qualified Opportunity Zone' || a.QOZ_STATUS === 'QOZ');
+    const result = {
+      tract_geoid:     a?.GEOID10 || null,
+      is_opportunity_zone: !!isOZ,
+      tract_population: a?.POPULATION || null,
+      state_name:      a?.STATE_NAME || null,
+      tax_benefit:     isOZ ? 'Federal capital gains deferral + 10-year basis step-up + tax-free appreciation after 10yr' : null,
+      source:          'Treasury CDFI QOZ',
+    };
+    return _rdCacheSet(k, result);
+  } catch(e) { console.warn('[RealData] Opportunity Zone failed:', e.message); return null; }
+}
+
+// ── NOAA Climate Normals 1991-2020 ──────────────────────────────────────────
+async function _rdFetchNOAAClimate(stateFips, countyFips) {
+  if (!stateFips || !countyFips) return null;
+  const fips = `${stateFips}${countyFips}`;
+  const k = 'rdnoaa:'+fips;
+  if (_rdCacheGet(k)) return _rdCacheGet(k);
+  const noaaKey = (typeof window !== 'undefined' && window.NOAA_TOKEN) ? window.NOAA_TOKEN : null;
+  if (!noaaKey) return null;
+  try {
+    // NOAA NCEI normals API — county-level climate
+    const url = `https://www.ncei.noaa.gov/cdo-web/api/v2/data?datasetid=NORMAL_ANN&locationid=FIPS:${fips}&startdate=2010-01-01&enddate=2010-12-31&limit=20`;
+    const res = await fetch(url, {
+      headers: { 'token': noaaKey },
+      signal: _rdAbortTimeout(10000),
+    });
+    if (!res.ok) return null;
+    const d = await res.json();
+    const results = d.results || [];
+    if (!results.length) return null;
+    const findVal = id => {
+      const r = results.find(x => x.datatype === id);
+      return r ? r.value / 10 : null; // NOAA values are tenths
+    };
+    const result = {
+      county_fips:           fips,
+      annual_avg_temp_f:     findVal('ANN-TAVG-NORMAL'),
+      annual_max_temp_f:     findVal('ANN-TMAX-NORMAL'),
+      annual_min_temp_f:     findVal('ANN-TMIN-NORMAL'),
+      annual_precip_in:      findVal('ANN-PRCP-NORMAL'),
+      annual_snowfall_in:    findVal('ANN-SNOW-NORMAL'),
+      cooling_degree_days:   findVal('ANN-CLDD-BASE65'),
+      heating_degree_days:   findVal('ANN-HTDD-BASE65'),
+      source:                'NOAA NCEI Normals 1991-2020',
+    };
+    return _rdCacheSet(k, result);
+  } catch(e) { console.warn('[RealData] NOAA failed:', e.message); return null; }
+}
+
+// ── CDC PLACES expanded — additional health metrics ─────────────────────────
+async function _rdFetchCDCPlacesExpanded(stateAbbr, countyName) {
+  if (!stateAbbr || !countyName) return null;
+  const k = `rdplaces:${stateAbbr}:${countyName}`;
+  if (_rdCacheGet(k)) return _rdCacheGet(k);
+  try {
+    const cnClean = countyName.replace(/\s+(County|Parish|Borough)$/i, '');
+    // CDC PLACES 2024 county data via Socrata SODA API (no key needed for limited queries)
+    const url = `https://data.cdc.gov/resource/swc5-untb.json?stateabbr=${stateAbbr}&countyname=${encodeURIComponent(cnClean)}&$limit=50`;
+    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    if (!Array.isArray(rows) || !rows.length) return null;
+    const findMeasure = (m) => {
+      const r = rows.find(x => x.measureid === m || x.short_question_text?.toLowerCase().includes(m.toLowerCase()));
+      return r ? parseFloat(r.data_value) : null;
+    };
+    const result = {
+      county:                cnClean,
+      state:                 stateAbbr,
+      mental_health_bad_pct: findMeasure('MHLTH'),
+      sleep_short_pct:       findMeasure('SLEEP'),
+      smoking_pct:           findMeasure('CSMOKING'),
+      binge_drinking_pct:    findMeasure('BINGE'),
+      coronary_heart_pct:    findMeasure('CHD'),
+      copd_pct:              findMeasure('COPD'),
+      stroke_pct:            findMeasure('STROKE'),
+      cancer_pct:            findMeasure('CANCER'),
+      asthma_pct:            findMeasure('CASTHMA'),
+      source:                'CDC PLACES 2024 (expanded measures)',
+    };
+    return _rdCacheSet(k, result);
+  } catch(e) { console.warn('[RealData] CDC PLACES expanded failed:', e.message); return null; }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // PHASE C — Provenance UI helpers
 // rdShowDataStatus()      → inject status strip after pipeline progress bar
 // rdRenderRealDataBadge() → inject verified-data card above any agent output
@@ -2060,6 +2320,12 @@ function rdShowDataStatus() {
     { key:'seismic',         label:'USGS',       icon:'🌋' },
     { key:'air_quality',     label:'AirNow',     icon:'🌫' },
     { key:'census_pep',      label:'PEP',        icon:'📊' },
+    // Phase I additions
+    { key:'fcc_broadband',   label:'FCC BB',     icon:'📡' },
+    { key:'county_health',   label:'CHR',        icon:'🏥' },
+    { key:'opportunity_zone',label:'QOZ',        icon:'🎯' },
+    { key:'noaa_climate',    label:'NOAA',       icon:'🌡' },
+    { key:'cdc_places_x',    label:'PLACES+',    icon:'🩹' },
   ];
   const loaded = badges.filter(b => d[b.key]);
   const failed = badges.filter(b => !d[b.key]);

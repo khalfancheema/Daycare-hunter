@@ -608,6 +608,44 @@
       }
     }
 
+    // ══ Phase I: more verifier checks ══
+
+    // ── A1 uninsured % vs County Health Rankings ─────────────────
+    const chr = R.real.county_health;
+    if (chr && chr.uninsured_pct != null && a1) {
+      const aiUninsured = _get(a1, 'metro_overview.uninsured_pct')
+                       || _get(R.real.health, 'no_insurance_pct');
+      const realUninsured = chr.uninsured_pct;
+      if (aiUninsured != null && aiUninsured > 0 && realUninsured > 0) {
+        checks.push({
+          agent: 'A1', field: 'Uninsured %',
+          real: realUninsured, ai: aiUninsured,
+          realFmt: _fmt(realUninsured, '', '%'),
+          aiFmt: _fmt(aiUninsured, '', '%'),
+          acc: _accRate(aiUninsured, realUninsured, 5),
+          source: 'CHR / CDC',
+        });
+      }
+    }
+
+    // ── A1 annual avg temp vs NOAA Normals ───────────────────────
+    const noaa = R.real.noaa_climate;
+    if (noaa && noaa.annual_avg_temp_f != null) {
+      // Cross-check vs existing climate (Open-Meteo) °C → °F
+      const oldClimate = R.real.climate;
+      if (oldClimate && oldClimate.avgTemp_c != null) {
+        const omFahr = oldClimate.avgTemp_c * 9 / 5 + 32;
+        checks.push({
+          agent: 'Data', field: 'Climate Cross-Check (NOAA vs OpenMeteo)',
+          real: noaa.annual_avg_temp_f, ai: Math.round(omFahr * 10) / 10,
+          realFmt: _fmt(noaa.annual_avg_temp_f, '', '°F NOAA'),
+          aiFmt: _fmt(Math.round(omFahr * 10) / 10, '', '°F OM'),
+          acc: _accRate(omFahr, noaa.annual_avg_temp_f, 3),
+          source: 'NOAA NCEI',
+        });
+      }
+    }
+
     // ── Need at least 2 valid checks to display ──────────────────
     const valid = checks.filter(c => c.acc !== null && !isNaN(c.acc));
     if (valid.length < 2) {

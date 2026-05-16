@@ -5,7 +5,7 @@ async function runAgent8(a1,a2,a3,a4,a5,a6,a7) {
 
   // Inject verified real data so executive summary cites accurate numbers
   const _rdCtx8 = (typeof buildRealDataCtx === 'function')
-    ? buildRealDataCtx(['demographics','wages','macro','rents','competitors_osm','npi_providers','flood','sba','acs_expanded','hud_fmr','rural_urban','cbp_county','bls_oes','ndcp_county','epa_echo','food_access','local_unemp','hud_vacancy','crime_city','schools','acs_home_value','cdc_svi','fema_disasters','hud_income','building_permits','acs_industry_mix','hrsa_hpsa','bea_income','acs_migration','seismic','air_quality','census_pep'])
+    ? buildRealDataCtx(['demographics','wages','macro','rents','competitors_osm','npi_providers','flood','sba','acs_expanded','hud_fmr','rural_urban','cbp_county','bls_oes','ndcp_county','epa_echo','food_access','local_unemp','hud_vacancy','crime_city','schools','acs_home_value','cdc_svi','fema_disasters','hud_income','building_permits','acs_industry_mix','hrsa_hpsa','bea_income','acs_migration','seismic','air_quality','census_pep','fcc_broadband','county_health','opportunity_zone','noaa_climate','cdc_places_x'])
     : '';
 
   const usr=`${_rdCtx8 ? _rdCtx8 + '\n\n' : ''}Write a final executive report for opening a ${ind.unit} (${ind.capacity_label}: ${capacity()}, $${parseInt(budget()).toLocaleString()} budget) near ZIP ${zip()}.

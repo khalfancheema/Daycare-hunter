@@ -9,7 +9,7 @@ async function runAgent6() {
 
   // ── Real competitor data from OSM + ZBP ──────────────────────────────────
   const _rdCtx6 = typeof buildRealDataCtx === 'function'
-    ? buildRealDataCtx(['competitors_osm','business_density','demographics','npi_providers','health','cbp_county','ndcp_county','hrsa_hpsa'])
+    ? buildRealDataCtx(['competitors_osm','business_density','demographics','npi_providers','health','cbp_county','ndcp_county','hrsa_hpsa','county_health','cdc_places_x'])
     : '';
 
   // ── Part A: City-level aggregates + top_chains (no nested centers arrays) ──

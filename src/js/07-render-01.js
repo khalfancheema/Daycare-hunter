@@ -150,7 +150,7 @@ Return ONLY this JSON:
 
   // Prepend verified Census ACS data so agent anchors to real numbers
   const _rdCtx1 = typeof buildRealDataCtx === 'function'
-    ? buildRealDataCtx(['demographics','business_density','macro','crime','health','acs_expanded','rural_urban','cbp_county','food_access','local_unemp','crime_city','schools','acs_home_value','cdc_svi','hud_income','acs_industry_mix','building_permits','bea_income','acs_migration','census_pep','air_quality'])
+    ? buildRealDataCtx(['demographics','business_density','macro','crime','health','acs_expanded','rural_urban','cbp_county','food_access','local_unemp','crime_city','schools','acs_home_value','cdc_svi','hud_income','acs_industry_mix','building_permits','bea_income','acs_migration','census_pep','air_quality','county_health','noaa_climate','cdc_places_x'])
     : '';
   const usrWithReal = _rdCtx1 ? _rdCtx1 + '\n\nNow complete the full demographic analysis:\n' + usr : usr;
 
