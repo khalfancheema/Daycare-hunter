@@ -10716,7 +10716,7 @@ async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
     stateAbbr ? _rdFetchSAMGov(naics, stateAbbr)                     : Promise.resolve(null),
     lat && lng ? _rdFetchFEMAFlood(lat, lng)                         : Promise.resolve(null),
     stateAbbr ? _rdFetchFBICrime(stateAbbr)                          : Promise.resolve(null),
-    zipCode ? _rdFetchNREL(zipCode)                                   : Promise.resolve(null),
+    (lat && lng) ? _rdFetchNREL(zipCode, lat, lng)                   : Promise.resolve(null),
     ecfr ? _rdFetchECFR(ecfr)                                        : Promise.resolve(null),
     _rdFetchSBA(zipCode, industryKey),
     stateAbbr ? _rdFetchEIA(stateAbbr)                               : Promise.resolve(null),
@@ -10866,6 +10866,9 @@ async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
     if (!window.AIRNOW_API_KEY) missing.push('AIRNOW_API_KEY (EPA AirNow AQI)');
     if (!window.BLS_API_KEY)    missing.push('BLS_API_KEY (BLS OES occupation wages)');
     if (!window.FRED_API_KEY)   missing.push('FRED_API_KEY (FRED LAUS county unemployment)');
+    if (!window.SAM_API_KEY)    missing.push('SAM_API_KEY (SAM.gov federal opportunities — free at sam.gov/data-services)');
+    if (!window.NREL_API_KEY)   missing.push('NREL_API_KEY (NREL utility rates — optional; DEMO_KEY works for low volume)');
+    if (!window.FBI_API_KEY)    missing.push('FBI_API_KEY (FBI Crime Data Explorer — optional; DEMO_KEY works for low volume)');
     if (missing.length) {
       console.warn(`[RealData] ⚠ ${missing.length} API keys absent (sources will return null):\n  - ` + missing.join('\n  - ') + '\nSet via window.<KEY_NAME> = "..." before pipeline runs to enable.');
     }
@@ -11706,10 +11709,13 @@ async function _rdFetchSAMGov(naics, stateAbbr) {
   const k = `rdsam:${naics}:${stateAbbr}`;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // SAM.gov public search — no API key for basic search
+    // SAM.gov requires a free API key (set window.SAM_API_KEY).
+    // Without a key it returns 404 — silent-fail.
+    const samKey = (typeof window !== 'undefined' && window.SAM_API_KEY) ? window.SAM_API_KEY : null;
+    if (!samKey) return null;
     const today = new Date();
     const fromDate = `${(today.getMonth()+1).toString().padStart(2,'0')}/01/${today.getFullYear()-1}`;
-    const url = `https://api.sam.gov/opportunities/v2/search?limit=5&postedFrom=${fromDate}&naics=${naics}&ptype=o&active=Yes`;
+    const url = `https://api.sam.gov/opportunities/v2/search?limit=5&postedFrom=${fromDate}&naics=${naics}&ptype=o&active=Yes&api_key=${samKey}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
@@ -11731,7 +11737,9 @@ async function _rdFetchFEMAFlood(lat, lng) {
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
     const ext = `${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}`;
-    const url = `https://hazards.fema.gov/gis/nfhl/rest/services/public/NFHL/MapServer/28/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIntersects&outFields=FLD_ZONE,ZONE_SUBTY&returnGeometry=false&f=json`;
+    // FEMA migrated NFHL to a hosted FeatureServer on services.arcgis.com in late 2024;
+    // hazards.fema.gov/.../MapServer/28 now returns a 404 WebSEAL error.
+    const url = `https://services.arcgis.com/2gdL2gxYNFY2TOUb/arcgis/rest/services/FEMA_National_Flood_Hazard_Layer/FeatureServer/0/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=FLD_ZONE,ZONE_SUBTY,SFHA_TF&returnGeometry=false&f=json`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
@@ -11752,34 +11760,42 @@ async function _rdFetchFBICrime(stateAbbr) {
   const k = 'rdfbi:'+stateAbbr;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // FBI CDE API — public summary endpoint (no key required for state-level summary)
-    const url = `https://cde.ucr.cjis.gov/LATEST/webapp/public/api/data/summary/state/${stateAbbr}/violent-crime?from=2022&to=2022`;
+    // FBI CDE migrated to api.usa.gov in 2024; cde.ucr.cjis.gov returns 404. Date format
+    // is MM-YYYY. DEMO_KEY works for light use; users can set window.FBI_API_KEY.
+    const fbiKey = (typeof window !== 'undefined' && window.FBI_API_KEY) ? window.FBI_API_KEY : 'DEMO_KEY';
+    const url = `https://api.usa.gov/crime/fbi/cde/summarized/state/${stateAbbr}/violent-crime?from=01-2022&to=12-2022&API_KEY=${fbiKey}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
-    // Response shape: {data:[{data_year,violent_crime,...}]}
-    const latest = Array.isArray(d) ? d[d.length-1] : d?.data?.[0];
-    if (!latest) return null;
-    const pop = latest.population || 1;
-    const vc  = latest.violent_crime || latest.actual_violent || 0;
-    const pc  = latest.property_crime || latest.actual_property || 0;
+    // Response shape: {offenses:{rates:{"<State> Offenses":{MM-YYYY: rate, ...}}}}
+    const ratesObj = d?.offenses?.rates;
+    if (!ratesObj) return null;
+    const stateKey = Object.keys(ratesObj).find(k => k.includes('Offenses') && !k.includes('United States') && !k.includes('Clearances'));
+    if (!stateKey) return null;
+    const monthRates = ratesObj[stateKey];
+    const months = Object.values(monthRates).filter(v => typeof v === 'number');
+    if (!months.length) return null;
+    const annualRatePer100k = months.reduce((s, n) => s + n, 0); // monthly /100k rates sum ≈ annual /100k
     const result = {
-      violent_per_100k:  vc ? Math.round(vc / pop * 100000) : null,
-      property_per_100k: pc ? Math.round(pc / pop * 100000) : null,
-      year:              latest.data_year || 2022,
+      violent_per_100k:  Math.round(annualRatePer100k),
+      property_per_100k: null, // separate endpoint required for property crime
+      year:              2022,
       state:             stateAbbr,
-      source:            'FBI CDE',
+      source:            'FBI CDE (api.usa.gov)',
     };
     return _rdCacheSet(k, result);
   } catch(e) { console.warn('[RealData] FBI crime failed:', e.message); return null; }
 }
 
-async function _rdFetchNREL(zip) {
-  const k = 'rdnrel:'+zip;
+async function _rdFetchNREL(zip, lat, lng) {
+  if (!lat || !lng) return null;
+  const k = `rdnrel:${lat.toFixed(3)}:${lng.toFixed(3)}`;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // NREL Utility Rates API — DEMO_KEY works for low volume (~10 req/day)
-    const url = `https://developer.nrel.gov/api/utility_rates/v3.json?api_key=DEMO_KEY&address=${zip}`;
+    // NREL Utility Rates API v3. `address=` was deprecated 2025-02-25; now requires lat+lon.
+    // DEMO_KEY works for low volume (~10 req/day); users can set window.NREL_API_KEY.
+    const nrelKey = (typeof window !== 'undefined' && window.NREL_API_KEY) ? window.NREL_API_KEY : 'DEMO_KEY';
+    const url = `https://developer.nrel.gov/api/utility_rates/v3.json?api_key=${nrelKey}&lat=${lat}&lon=${lng}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
@@ -12240,8 +12256,10 @@ async function _rdFetchFBICityCrime(city, stateAbbr) {
   const k = `rdfbic:${stateAbbr}:${city}`;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // FBI CDE agency-level endpoint by state — find matching ORI
-    const url = `https://cde.ucr.cjis.gov/LATEST/webapp/public/api/data/summary/agencies/${stateAbbr}?from=2022&to=2022`;
+    // FBI CDE agency-level — migrated to api.usa.gov (cde.ucr.cjis.gov returns 404).
+    // The api.usa.gov endpoint list-by-state path is /agencies/byStateAbbr/{abbr}.
+    const fbiKey = (typeof window !== 'undefined' && window.FBI_API_KEY) ? window.FBI_API_KEY : 'DEMO_KEY';
+    const url = `https://api.usa.gov/crime/fbi/cde/agency/byStateAbbr/${stateAbbr}?API_KEY=${fbiKey}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
@@ -12273,26 +12291,25 @@ async function _rdFetchNCESSchools(lat, lng) {
   const k = `rdnces:${lat.toFixed(3)}:${lng.toFixed(3)}`;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // NCES EDGE ArcGIS REST service — public schools layer; 5-mile buffer
-    // Public Schools Composite layer ID may vary; use SDE schools layer
-    const url = `https://services1.arcgis.com/Ua5sjt3LWTPigjyD/arcgis/rest/services/Public_School_Locations_Current/FeatureServer/0/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&distance=8047&units=esriSRUnit_Meter&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=NAME,SCH_NAME,LEVEL,ENROLLMENT&returnGeometry=false&f=json&resultRecordCount=15`;
+    // NCES EDGE Public_School_Locations_Current layer 0; 5-mile buffer (8047 m).
+    // The schema does NOT include SCH_NAME/LEVEL/ENROLLMENT — only NAME/STATE/CITY/LOCALE.
+    // Locale code: 11-13 city, 21-23 suburb, 31-33 town, 41-43 rural.
+    const url = `https://services1.arcgis.com/Ua5sjt3LWTPigjyD/ArcGIS/rest/services/Public_School_Locations_Current/FeatureServer/0/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&distance=8047&units=esriSRUnit_Meter&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=NAME,STATE,CITY,LOCALE&returnGeometry=false&f=json&resultRecordCount=50`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const feats = d.features || [];
     if (!feats.length) return null;
     const schools = feats.map(f => f.attributes || {});
-    const elementary = schools.filter(s => /elem|primary/i.test(s.LEVEL || ''));
-    const middle     = schools.filter(s => /mid/i.test(s.LEVEL || ''));
-    const high       = schools.filter(s => /high|secondary/i.test(s.LEVEL || ''));
-    const totalEnroll = schools.reduce((s, x) => s + (parseInt(x.ENROLLMENT) || 0), 0);
+    const cityCount  = schools.filter(s => /^1\d$/.test(String(s.LOCALE))).length;
+    const suburbCount= schools.filter(s => /^2\d$/.test(String(s.LOCALE))).length;
+    const ruralCount = schools.filter(s => /^[34]\d$/.test(String(s.LOCALE))).length;
     const result = {
       total_public_schools_5mi: schools.length,
-      elementary_count:    elementary.length,
-      middle_count:        middle.length,
-      high_count:          high.length,
-      total_enrollment:    totalEnroll,
-      example_names:       schools.slice(0, 5).map(s => s.SCH_NAME || s.NAME).filter(Boolean),
+      city_count:          cityCount,
+      suburb_count:        suburbCount,
+      rural_town_count:    ruralCount,
+      example_names:       schools.slice(0, 5).map(s => s.NAME).filter(Boolean),
       source:              'NCES EDGE Public School Locations',
     };
     return _rdCacheSet(k, result);
@@ -12337,7 +12354,9 @@ async function _rdFetchCDCSVI(lat, lng) {
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
     // CDC SVI 2022 ArcGIS feature service — point-in-tract query
-    const url = `https://services3.arcgis.com/0H2dKpzCAR1efkVR/arcgis/rest/services/Overall_2022_Tracts/FeatureServer/0/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=FIPS,RPL_THEMES,RPL_THEME1,RPL_THEME2,RPL_THEME3,RPL_THEME4&returnGeometry=false&f=json`;
+    // CDC/ATSDR SVI 2022 hosted by onemap.cdc.gov (services3.arcgis.com endpoint
+    // returns 400 Invalid URL). Layer 8 = US tract level SVI 2022.
+    const url = `https://onemap.cdc.gov/onemapservices/rest/services/SVI/CDC_ATSDR_Social_Vulnerability_Index_2022_USA/FeatureServer/8/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=FIPS,RPL_THEMES,RPL_THEME1,RPL_THEME2,RPL_THEME3,RPL_THEME4&returnGeometry=false&f=json`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
@@ -12496,8 +12515,9 @@ async function _rdFetchHRSAHPSA(stateFips, countyFips) {
   const k = 'rdhpsa:'+fips;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // HRSA ArcGIS REST — HPSA Primary Care + Mental Health + Dental
-    const url = `https://services.arcgis.com/qWZ7BaZXaP5isnfT/arcgis/rest/services/HPSA_PC_2024/FeatureServer/0/query?where=COUNTY_EQUIVALENT_FIPS_CODE='${fips}'&outFields=*&returnGeometry=false&f=json&resultRecordCount=10`;
+    // HRSA HPSA Primary Care - component polygons layer (11) on the public HRSA GIS portal.
+    // Filter to designated (HPSA_STATUS_CD = 'D') HPSAs in the county.
+    const url = `https://gisportal.hrsa.gov/server/rest/services/Shortage/HealthProfessionalShortageAreas_FS/MapServer/11/query?where=STATE_COUNTY_FIPS_CD%3D%27${fips}%27%20AND%20HPSA_STATUS_CD%3D%27D%27&outFields=HPSA_NM,HPSA_SCORE,HPSA_FTE,HPSA_DESIGNATION_POP,HPSA_ESTIMATED_UNDERSERVED_POP&returnGeometry=false&f=json&resultRecordCount=10`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
@@ -12506,7 +12526,7 @@ async function _rdFetchHRSAHPSA(stateFips, countyFips) {
     const designations = feats.map(f => f.attributes || {});
     const totalScore = designations.reduce((s, a) => s + (a.HPSA_SCORE || 0), 0);
     const avgScore = designations.length ? Math.round(totalScore / designations.length) : null;
-    const popUnderserved = designations.reduce((s, a) => s + (a.HPSA_DESIGNATION_POPULATION || 0), 0);
+    const popUnderserved = designations.reduce((s, a) => s + (a.HPSA_ESTIMATED_UNDERSERVED_POP || a.HPSA_DESIGNATION_POP || 0), 0);
     const ftesNeeded = designations.reduce((s, a) => s + (a.HPSA_FTE || 0), 0);
     const result = {
       designations_count:    designations.length,
