@@ -13465,11 +13465,10 @@ function buildRealDataCtx(keys) {
   // ── Phase I: more accuracy data ───────────────────────────────────────────
   if (want('fcc_broadband') && d.fcc_broadband) {
     const f = d.fcc_broadband;
-    lines.push(`📡 FCC BROADBAND [${f.source}]`);
-    if (f.max_download_mbps != null) lines.push(`  max_download_mbps: ${f.max_download_mbps}`);
-    if (f.max_upload_mbps != null)   lines.push(`  max_upload_mbps: ${f.max_upload_mbps}`);
-    if (f.provider_count != null)    lines.push(`  provider_count: ${f.provider_count}`);
-    if (f.fiber_available !== null)  lines.push(`  fiber_available: ${f.fiber_available}`);
+    lines.push(`📡 FCC AREA [${f.source}]`);
+    if (f.block_pop_2020 != null) lines.push(`  block_pop_2020: ${f.block_pop_2020.toLocaleString()}`);
+    if (f.county_name)            lines.push(`  county: ${f.county_name}`);
+    if (f.block_fips)             lines.push(`  census_block_fips: ${f.block_fips}`);
   }
 
   if (want('county_health') && d.county_health) {
@@ -14886,30 +14885,23 @@ async function _rdFetchFCCBroadband(lat, lng) {
   const k = `rdfcc:${lat.toFixed(3)}:${lng.toFixed(3)}`;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // FCC Broadband Map ArcGIS — query broadband availability at point
-    const url = `https://geoapi.fcc.gov/area?lat=${lat}&lon=${lng}&format=json`;
+    // FCC Area API — geographic lookup for census block + 2020 block population (no key).
+    // The previously-attempted broadbandmap.fcc.gov BDC summary endpoint is
+    // not public and times out, so we report block geography only.
+    const url = `https://geo.fcc.gov/api/census/area?lat=${lat}&lon=${lng}&format=json`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const block = d?.results?.[0];
     if (!block) return null;
-    // FCC Broadband performance — use BDC summary by census block
-    const bdcUrl = `https://broadbandmap.fcc.gov/nbm/map/api/published/locations/${block.block_fips || ''}/summary`;
-    let bdcData = null;
-    try {
-      const bdcRes = await fetch(bdcUrl, { signal:_rdAbortTimeout(8000) });
-      if (bdcRes.ok) bdcData = await bdcRes.json();
-    } catch {}
     const result = {
-      block_fips:        block.block_fips,
-      county_fips:       block.county_fips,
+      block_fips:        block.block_fips || null,
+      county_fips:       block.county_fips || null,
+      county_name:       block.county_name || null,
+      state_fips:        block.state_fips || null,
+      state_code:        block.state_code || null,
       block_pop_2020:    block.block_pop_2020 || null,
-      fiber_available:   bdcData?.fiber_available ?? null,
-      cable_available:   bdcData?.cable_available ?? null,
-      max_download_mbps: bdcData?.max_download ?? null,
-      max_upload_mbps:   bdcData?.max_upload ?? null,
-      provider_count:    bdcData?.provider_count ?? null,
-      source:            'FCC Broadband Map BDC',
+      source:            'FCC Area API (Census 2020 block geography)',
     };
     return _rdCacheSet(k, result);
   } catch(e) { console.warn('[RealData] FCC Broadband failed:', e.message); return null; }
@@ -14944,22 +14936,34 @@ async function _rdFetchCountyHealthRankings(stateFips, countyFips) {
   const k = 'rdchr:'+fips;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // CHR via Robert Wood Johnson Foundation public ArcGIS layer
-    const url = `https://services.arcgis.com/uUvqNMGPm7axC2dD/ArcGIS/rest/services/CHRR_2024/FeatureServer/0/query?where=fips5%3D'${fips}'&outFields=*&returnGeometry=false&f=json`;
+    // CHR 2024 via University of Wisconsin Population Health Institute / RWJF hosted FeatureServer
+    // Layer 2 = County-level; raw fields are v###_rawvalue:
+    //   v001 = Premature death (YPLL rate)
+    //   v003 = Uninsured 18-64 (proportion, 0-1)
+    //   v004 = PCP per 100k (rate)
+    //   v024 = Children in poverty (proportion, 0-1)
+    //   v062 = Mental health providers per 100k (rate)
+    //   v063 = Median household income (USD)
+    const url = `https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/County_Health_Rankings_2024_Test_2/FeatureServer/2/query?where=fipscode%3D%27${fips}%27&outFields=fipscode,county,state,v001_rawvalue,v003_rawvalue,v004_rawvalue,v024_rawvalue,v062_rawvalue,v063_rawvalue&returnGeometry=false&f=json`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const a = d.features?.[0]?.attributes;
     if (!a) return null;
+    // CHR raw values for percent measures are already in 0-100 scale (not 0-1 proportion).
+    const uninsuredPct = a.v003_rawvalue != null ? Math.round(a.v003_rawvalue * 10) / 10 : null;
+    const childPovPct  = a.v024_rawvalue != null ? Math.round(a.v024_rawvalue * 10) / 10 : null;
     const result = {
       county_fips:           fips,
-      health_outcomes_rank:  a.health_outcomes_rank || a.HEALTH_OUTCOMES_RANK || null,
-      health_factors_rank:   a.health_factors_rank || a.HEALTH_FACTORS_RANK || null,
-      premature_death:       a.premature_death || null,
-      uninsured_pct:         a.uninsured_pct || null,
-      pcp_ratio:             a.primary_care_physicians_ratio || null,
-      mental_health_provider_ratio: a.mental_health_providers_ratio || null,
-      source:                'County Health Rankings 2024 (RWJF)',
+      county_name:           a.county || null,
+      state:                 a.state || null,
+      premature_death_ypll:  a.v001_rawvalue != null ? Math.round(a.v001_rawvalue) : null,
+      uninsured_pct:         uninsuredPct,
+      pcp_ratio:             a.v004_rawvalue != null ? Math.round(a.v004_rawvalue) : null,
+      mental_health_provider_ratio: a.v062_rawvalue != null ? Math.round(a.v062_rawvalue) : null,
+      child_poverty_pct:     childPovPct,
+      median_hh_income:      a.v063_rawvalue != null ? Math.round(a.v063_rawvalue) : null,
+      source:                'County Health Rankings 2024 (UW-PHI / RWJF)',
     };
     return _rdCacheSet(k, result);
   } catch(e) { console.warn('[RealData] CHR failed:', e.message); return null; }
@@ -14971,20 +14975,22 @@ async function _rdFetchOpportunityZone(lat, lng) {
   const k = `rdoz:${lat.toFixed(3)}:${lng.toFixed(3)}`;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // CDFI Fund / Treasury OZ ArcGIS feature service — point-in-tract
-    const url = `https://services1.arcgis.com/ZCw5pcVj9ChTbktV/arcgis/rest/services/QOZ_NMTC_OZ/FeatureServer/0/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=GEOID10,QOZ_STATUS,POPULATION,STATE_NAME&returnGeometry=false&f=json`;
+    // HUD hosted Treasury-designated QOZ tract FeatureServer (layer ID 13)
+    // Layer only contains the ~8,764 designated tracts — a hit means the point is in a QOZ,
+    // an empty features array means the point is NOT in a QOZ (a valid negative answer).
+    const url = `https://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/Opportunity_Zones/FeatureServer/13/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=GEOID10,STATE,STATE_NAME,Rural&returnGeometry=false&f=json`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const a = d.features?.[0]?.attributes;
-    const isOZ = a && (a.QOZ_STATUS === 'Qualified Opportunity Zone' || a.QOZ_STATUS === 'QOZ');
+    const isOZ = !!a; // any feature returned = point intersects an OZ tract
     const result = {
-      tract_geoid:     a?.GEOID10 || null,
-      is_opportunity_zone: !!isOZ,
-      tract_population: a?.POPULATION || null,
-      state_name:      a?.STATE_NAME || null,
-      tax_benefit:     isOZ ? 'Federal capital gains deferral + 10-year basis step-up + tax-free appreciation after 10yr' : null,
-      source:          'Treasury CDFI QOZ',
+      tract_geoid:         a?.GEOID10 || null,
+      is_opportunity_zone: isOZ,
+      state_name:          a?.STATE_NAME || null,
+      rural:               a?.Rural != null ? !!a.Rural : null,
+      tax_benefit:         isOZ ? 'Federal capital gains deferral + 10-year basis step-up + tax-free appreciation after 10yr' : null,
+      source:              'HUD / Treasury Designated QOZ',
     };
     return _rdCacheSet(k, result);
   } catch(e) { console.warn('[RealData] Opportunity Zone failed:', e.message); return null; }
@@ -15036,7 +15042,8 @@ async function _rdFetchCDCPlacesExpanded(stateAbbr, countyName) {
   try {
     const cnClean = countyName.replace(/\s+(County|Parish|Borough)$/i, '');
     // CDC PLACES 2024 county data via Socrata SODA API (no key needed for limited queries)
-    const url = `https://data.cdc.gov/resource/swc5-untb.json?stateabbr=${stateAbbr}&countyname=${encodeURIComponent(cnClean)}&$limit=50`;
+    // NOTE: actual fields are lowercase: stateabbr + locationname (county name), NOT countyname.
+    const url = `https://data.cdc.gov/resource/swc5-untb.json?stateabbr=${stateAbbr}&locationname=${encodeURIComponent(cnClean)}&$limit=50`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const rows = await res.json();
