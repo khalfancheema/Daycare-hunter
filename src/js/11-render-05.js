@@ -32,7 +32,7 @@ Return ONLY:
       "walk_score": 0, "walk_score_label": "Car-Dependent|Bikeable|Very Walkable",
       "transit_score": 0, "transit_description": "Transit options description",
       "nearest_school_name": "School name", "nearest_school_rating": 0, "nearest_school_distance_mi": 0.0,
-      "school_avg_rating_2mi": 0.0,
+      "school_avg_rating_2mi": 0.0, "schools_within_2mi": 0,
       "reasoning_sources": ["Source 1", "Source 2"]
     }
   ]

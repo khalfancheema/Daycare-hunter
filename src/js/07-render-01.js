@@ -73,16 +73,23 @@ Return ONLY this JSON (use real data from the sources above, note source and "es
     "total_pop_metro": 6200000,
     "pop_growth_pct_1yr": 1.8,
     "median_hh_income_metro": 78000,
+    "median_family_income": 92000,
+    "per_capita_income": 41500,
+    "per_capita_personal_income": 58200,
     "unemployment_rate_pct": 3.4,
+    "poverty_rate_pct": 11.8,
+    "uninsured_pct": 12.4,
     "net_migration_annual": 45000,
+    "net_migration_annual_pct": 0.7,
     "birth_rate_per_1000": 11.2,
-    "source": "Census PEP 2023 / FRED / Vital Statistics"
+    "source": "Census PEP 2023 / FRED / ACS B17001/B19301 / BEA CAINC1 / Vital Statistics"
   },
   "cities": [
     {
       "name": "City A", "county": "County", "distance_miles": 10,
       "pop_total": 82000, "pop_under5": 4800, "pop_under5_pct": 5.8,
       "median_hh_income": 112000, "income_distribution": {"under_50k_pct": 12, "50_100k_pct": 28, "over_100k_pct": 60},
+      "poverty_rate_pct": 6.4,
       "labor_force_pct": 68, "women_25_44_lfp_pct": 74,
       "pop_growth_pct_5yr": 4.2, "pop_growth_pct_1yr": 1.1,
       "households": 28000, "owner_occupied_pct": 72, "renter_pct": 28,
@@ -100,6 +107,7 @@ Return ONLY this JSON (use real data from the sources above, note source and "es
       "name": "City B", "county": "County", "distance_miles": 28,
       "pop_total": 18000, "pop_under5": 1400, "pop_under5_pct": 7.8,
       "median_hh_income": 52000, "income_distribution": {"under_50k_pct": 45, "50_100k_pct": 38, "over_100k_pct": 17},
+      "poverty_rate_pct": 18.6,
       "labor_force_pct": 65, "women_25_44_lfp_pct": 68,
       "pop_growth_pct_5yr": 14, "pop_growth_pct_1yr": 3.2,
       "households": 6800, "owner_occupied_pct": 58, "renter_pct": 42,

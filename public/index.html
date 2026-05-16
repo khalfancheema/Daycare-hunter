@@ -2258,16 +2258,23 @@ Return ONLY this JSON (use real data from the sources above, note source and "es
     "total_pop_metro": 6200000,
     "pop_growth_pct_1yr": 1.8,
     "median_hh_income_metro": 78000,
+    "median_family_income": 92000,
+    "per_capita_income": 41500,
+    "per_capita_personal_income": 58200,
     "unemployment_rate_pct": 3.4,
+    "poverty_rate_pct": 11.8,
+    "uninsured_pct": 12.4,
     "net_migration_annual": 45000,
+    "net_migration_annual_pct": 0.7,
     "birth_rate_per_1000": 11.2,
-    "source": "Census PEP 2023 / FRED / Vital Statistics"
+    "source": "Census PEP 2023 / FRED / ACS B17001/B19301 / BEA CAINC1 / Vital Statistics"
   },
   "cities": [
     {
       "name": "City A", "county": "County", "distance_miles": 10,
       "pop_total": 82000, "pop_under5": 4800, "pop_under5_pct": 5.8,
       "median_hh_income": 112000, "income_distribution": {"under_50k_pct": 12, "50_100k_pct": 28, "over_100k_pct": 60},
+      "poverty_rate_pct": 6.4,
       "labor_force_pct": 68, "women_25_44_lfp_pct": 74,
       "pop_growth_pct_5yr": 4.2, "pop_growth_pct_1yr": 1.1,
       "households": 28000, "owner_occupied_pct": 72, "renter_pct": 28,
@@ -2285,6 +2292,7 @@ Return ONLY this JSON (use real data from the sources above, note source and "es
       "name": "City B", "county": "County", "distance_miles": 28,
       "pop_total": 18000, "pop_under5": 1400, "pop_under5_pct": 7.8,
       "median_hh_income": 52000, "income_distribution": {"under_50k_pct": 45, "50_100k_pct": 38, "over_100k_pct": 17},
+      "poverty_rate_pct": 18.6,
       "labor_force_pct": 65, "women_25_44_lfp_pct": 68,
       "pop_growth_pct_5yr": 14, "pop_growth_pct_1yr": 3.2,
       "households": 6800, "owner_occupied_pct": 58, "renter_pct": 42,
@@ -3201,7 +3209,7 @@ Return ONLY:
       "walk_score": 0, "walk_score_label": "Car-Dependent|Bikeable|Very Walkable",
       "transit_score": 0, "transit_description": "Transit options description",
       "nearest_school_name": "School name", "nearest_school_rating": 0, "nearest_school_distance_mi": 0.0,
-      "school_avg_rating_2mi": 0.0,
+      "school_avg_rating_2mi": 0.0, "schools_within_2mi": 0,
       "reasoning_sources": ["Source 1", "Source 2"]
     }
   ]
@@ -10758,12 +10766,12 @@ async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
     (stateFips && countyFips) ? _rdFetchCensusPEP(stateFips, countyFips) : Promise.resolve(null),
   ]);
 
-  // Phase I batch
+  // Phase I batch — LEHD LODES skipped (CSV.gz unfetchable from browser; placeholder for future JSON endpoint)
+  const lodesR = { status: 'fulfilled', value: null };
   const [
-    fccR, lodesR, chrR, ozR, noaaR, placesXR,
+    fccR, chrR, ozR, noaaR, placesXR,
   ] = await Promise.allSettled([
     lat && lng ? _rdFetchFCCBroadband(lat, lng) : Promise.resolve(null),
-    (stateFips && countyFips) ? _rdFetchLEHDLODES(stateFips, countyFips) : Promise.resolve(null),
     (stateFips && countyFips) ? _rdFetchCountyHealthRankings(stateFips, countyFips) : Promise.resolve(null),
     lat && lng ? _rdFetchOpportunityZone(lat, lng) : Promise.resolve(null),
     (stateFips && countyFips) ? _rdFetchNOAAClimate(stateFips, countyFips) : Promise.resolve(null),
@@ -10844,6 +10852,20 @@ async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
     .filter(([k, v2]) => v2 && !k.startsWith('_'))
     .map(([k]) => k);
   console.log(`[RealData] ✓ ${loaded.length} sources loaded for ZIP ${zipCode}:`, loaded.join(', '));
+
+  // Warn about absent API keys that silently null out sources
+  if (typeof window !== 'undefined') {
+    const missing = [];
+    if (!window.HUD_TOKEN)      missing.push('HUD_TOKEN (HUD FMR/Income/Vacancy)');
+    if (!window.BEA_API_KEY)    missing.push('BEA_API_KEY (BEA per-capita income)');
+    if (!window.NOAA_TOKEN)     missing.push('NOAA_TOKEN (NOAA climate normals)');
+    if (!window.AIRNOW_API_KEY) missing.push('AIRNOW_API_KEY (EPA AirNow AQI)');
+    if (!window.BLS_API_KEY)    missing.push('BLS_API_KEY (BLS OES occupation wages)');
+    if (!window.FRED_API_KEY)   missing.push('FRED_API_KEY (FRED LAUS county unemployment)');
+    if (missing.length) {
+      console.warn(`[RealData] ⚠ ${missing.length} API keys absent (sources will return null):\n  - ` + missing.join('\n  - ') + '\nSet via window.<KEY_NAME> = "..." before pipeline runs to enable.');
+    }
+  }
   return R.real;
 }
 

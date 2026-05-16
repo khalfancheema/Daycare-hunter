@@ -204,12 +204,12 @@ async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
     (stateFips && countyFips) ? _rdFetchCensusPEP(stateFips, countyFips) : Promise.resolve(null),
   ]);
 
-  // Phase I batch
+  // Phase I batch — LEHD LODES skipped (CSV.gz unfetchable from browser; placeholder for future JSON endpoint)
+  const lodesR = { status: 'fulfilled', value: null };
   const [
-    fccR, lodesR, chrR, ozR, noaaR, placesXR,
+    fccR, chrR, ozR, noaaR, placesXR,
   ] = await Promise.allSettled([
     lat && lng ? _rdFetchFCCBroadband(lat, lng) : Promise.resolve(null),
-    (stateFips && countyFips) ? _rdFetchLEHDLODES(stateFips, countyFips) : Promise.resolve(null),
     (stateFips && countyFips) ? _rdFetchCountyHealthRankings(stateFips, countyFips) : Promise.resolve(null),
     lat && lng ? _rdFetchOpportunityZone(lat, lng) : Promise.resolve(null),
     (stateFips && countyFips) ? _rdFetchNOAAClimate(stateFips, countyFips) : Promise.resolve(null),
@@ -290,6 +290,20 @@ async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
     .filter(([k, v2]) => v2 && !k.startsWith('_'))
     .map(([k]) => k);
   console.log(`[RealData] ✓ ${loaded.length} sources loaded for ZIP ${zipCode}:`, loaded.join(', '));
+
+  // Warn about absent API keys that silently null out sources
+  if (typeof window !== 'undefined') {
+    const missing = [];
+    if (!window.HUD_TOKEN)      missing.push('HUD_TOKEN (HUD FMR/Income/Vacancy)');
+    if (!window.BEA_API_KEY)    missing.push('BEA_API_KEY (BEA per-capita income)');
+    if (!window.NOAA_TOKEN)     missing.push('NOAA_TOKEN (NOAA climate normals)');
+    if (!window.AIRNOW_API_KEY) missing.push('AIRNOW_API_KEY (EPA AirNow AQI)');
+    if (!window.BLS_API_KEY)    missing.push('BLS_API_KEY (BLS OES occupation wages)');
+    if (!window.FRED_API_KEY)   missing.push('FRED_API_KEY (FRED LAUS county unemployment)');
+    if (missing.length) {
+      console.warn(`[RealData] ⚠ ${missing.length} API keys absent (sources will return null):\n  - ` + missing.join('\n  - ') + '\nSet via window.<KEY_NAME> = "..." before pipeline runs to enable.');
+    }
+  }
   return R.real;
 }
 
