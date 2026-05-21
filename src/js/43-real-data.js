@@ -1085,28 +1085,35 @@ async function _rdFetchFRED() {
 }
 
 async function _rdFetchHUDRents(zip, stateAbbr) {
-  const fips = _rdStateFips(stateAbbr);
-  if (!fips) return null;
-  const k = `rdhud:${fips}`;
+  // HUD FMR API requires Bearer token (window.HUD_TOKEN). Without it 401.
+  const token = (typeof window !== 'undefined' && window.HUD_TOKEN) ? window.HUD_TOKEN : null;
+  if (!token) return null;
+  if (!stateAbbr) return null;
+  const k = `rdhud:${stateAbbr}`;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // HUD FMR statedata endpoint — no API key required for this public endpoint
-    const url = `https://www.huduser.gov/hudapi/public/fmr/statedata/${fips}`;
-    const res = await fetch(url, { signal: _rdAbortTimeout(10000) });
+    // statedata returns { data: { year, counties: [...], metroareas: [...] } }
+    // (NOT basicdata — that's a different endpoint shape from older docs.)
+    const url = `https://www.huduser.gov/hudapi/public/fmr/statedata/${stateAbbr}`;
+    const res = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      signal:  _rdAbortTimeout(10000),
+    });
     if (!res.ok) return null;
     const data = await res.json();
-    // Parse: find first entry (closest/largest metro) or use state-level
-    const rows = (data?.data?.basicdata || data?.basicdata || []);
-    if (!rows.length) return null;
-    // Pick first row (typically metro for state capital / largest MSA)
-    const row = rows[0];
+    const counties = data?.data?.counties || [];
+    if (!counties.length) return null;
+    // Median across all counties for state-level baseline
+    const med = arr => { const s=[...arr].sort((a,b)=>a-b); return s[Math.floor(s.length/2)] || null; };
     const result = {
-      fmr_1br: row['One-Bedroom']   || row.onebr   || null,
-      fmr_2br: row['Two-Bedroom']   || row.twobr   || null,
-      fmr_3br: row['Three-Bedroom'] || row.threebr || null,
-      fmr_eff: row['Efficiency']    || row.eff     || null,
-      area:    row.AreaName || row.areaname || stateAbbr,
-      year:    row.year || '2024',
+      fmr_eff: med(counties.map(c => c['Efficiency']).filter(Boolean)),
+      fmr_1br: med(counties.map(c => c['One-Bedroom']).filter(Boolean)),
+      fmr_2br: med(counties.map(c => c['Two-Bedroom']).filter(Boolean)),
+      fmr_3br: med(counties.map(c => c['Three-Bedroom']).filter(Boolean)),
+      fmr_4br: med(counties.map(c => c['Four-Bedroom']).filter(Boolean)),
+      counties_count: counties.length,
+      area:    `${stateAbbr} (state median across ${counties.length} counties)`,
+      year:    data?.data?.year || '2024',
       source:  'HUD FMR FY2024',
     };
     return _rdCacheSet(k, result);
@@ -1518,28 +1525,40 @@ async function _rdFetchACSExpanded(zip) {
 // Without token: gracefully fail (returns null). With token in window.HUD_TOKEN: returns FMR.
 async function _rdFetchHUDFMR(zip, stateAbbr) {
   const token = (typeof window !== 'undefined' && window.HUD_TOKEN) ? window.HUD_TOKEN : null;
-  if (!token || !zip) return null;
-  const k = 'rdhudfmr:'+zip;
+  if (!token || !stateAbbr) return null;
+  const k = `rdhudfmr:${stateAbbr}:${zip || ''}`;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    // First try ZIP-level Small Area FMR endpoint
-    const url = `https://www.huduser.gov/hudapi/public/fmr/data/${zip}99999`;
+    // The ZIP-level endpoint /fmr/data/<zip>99999 returns "No data found" for most ZIPs
+    // because HUD only assigns Small Area FMRs in certain SAFMR-designated metros.
+    // Always use the statedata endpoint and filter by county_name from the geocoder —
+    // this works for all 50 states and 3,000+ counties.
+    const url = `https://www.huduser.gov/hudapi/public/fmr/statedata/${stateAbbr}`;
     const res = await fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` },
       signal: _rdAbortTimeout(10000),
     });
     if (!res.ok) return null;
     const d = await res.json();
-    const data = d.data || d;
+    const counties = d?.data?.counties || [];
+    if (!counties.length) return null;
+    // Try to match the user's county from the geocoder
+    const userCounty = (R?.real?.geo?.county || '').toLowerCase().replace(/\s+county$/, '').trim();
+    const match = userCounty
+      ? counties.find(c => (c.county_name||'').toLowerCase().replace(/\s+county$/, '').includes(userCounty))
+      : null;
+    const row = match || counties[0]; // fall back to first county if no match
     const result = {
-      fmr_studio: data.basicdata?.['Efficiency'] || data.fmr_0 || null,
-      fmr_1br:    data.basicdata?.['One-Bedroom'] || data.fmr_1 || null,
-      fmr_2br:    data.basicdata?.['Two-Bedroom'] || data.fmr_2 || null,
-      fmr_3br:    data.basicdata?.['Three-Bedroom'] || data.fmr_3 || null,
-      fmr_4br:    data.basicdata?.['Four-Bedroom'] || data.fmr_4 || null,
-      area_name:  data.metroname || data.area_name || stateAbbr,
-      year:       data.year || '2026',
-      source:     'HUD FMR FY2026',
+      fmr_studio: row['Efficiency']    || null,
+      fmr_1br:    row['One-Bedroom']   || null,
+      fmr_2br:    row['Two-Bedroom']   || null,
+      fmr_3br:    row['Three-Bedroom'] || null,
+      fmr_4br:    row['Four-Bedroom']  || null,
+      area_name:  row.metro_name || row.county_name || stateAbbr,
+      county_fips:row.fips_code  || null,
+      matched:    !!match,
+      year:       d?.data?.year || '2024',
+      source:     'HUD FMR (state→county filter)',
     };
     return _rdCacheSet(k, result);
   } catch(e) { console.warn('[RealData] HUD FMR failed:', e.message); return null; }
@@ -1959,7 +1978,8 @@ async function _rdFetchHUDIncome(stateAbbr) {
   const k = 'rdhudinc:'+stateAbbr;
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
-    const url = `https://www.huduser.gov/hudapi/public/il/data/${stateAbbr}`;
+    // Correct endpoint: /il/statedata/<abbr> NOT /il/data/<abbr> (which 400s).
+    const url = `https://www.huduser.gov/hudapi/public/il/statedata/${stateAbbr}`;
     const res = await fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` },
       signal: _rdAbortTimeout(10000),
@@ -1967,14 +1987,15 @@ async function _rdFetchHUDIncome(stateAbbr) {
     if (!res.ok) return null;
     const d = await res.json();
     const data = d.data || d;
+    // Response shape: { year, statecode, median_income, very_low:{il50_p1..p8}, low:{il80_p1..p8}, extr_low:{il30_p1..p8} }
     const result = {
       state:                stateAbbr,
       median_family_income: data.median_income || null,
-      low_income_4_person:  data.low?.l50_4 || data.l50_4 || null,
-      very_low_income_4p:   data.very_low?.l30_4 || data.l30_4 || null,
-      extremely_low_4p:     data.extremely_low?.l30_4 || null,
-      year:                 data.year || '2025',
-      source:               'HUD Income Limits 2025',
+      low_income_4_person:  data.low?.il80_p4    || null,
+      very_low_income_4p:   data.very_low?.il50_p4 || null,
+      extremely_low_4p:     data.extr_low?.il30_p4 || data.extremely_low?.il30_p4 || null,
+      year:                 data.year || '2026',
+      source:               'HUD Income Limits',
     };
     return _rdCacheSet(k, result);
   } catch(e) { console.warn('[RealData] HUD Income failed:', e.message); return null; }
