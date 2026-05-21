@@ -19,6 +19,7 @@ const KEYS = {};
 const KEY_NAMES = [
   'CENSUS_API_KEY','HUD_TOKEN','BEA_API_KEY','NOAA_TOKEN',
   'AIRNOW_API_KEY','BLS_API_KEY','FRED_API_KEY','SAM_API_KEY',
+  'NREL_API_KEY','FBI_API_KEY',
 ];
 
 // env vars first
@@ -162,6 +163,41 @@ test('FRED', async () => {
     const obs = d.observations?.[0];
     if (!obs) return { fail: 'no observations returned' };
     return { pass: `GA unemployment ${obs.date} = ${obs.value}%` };
+  } catch { return { fail: 'non-JSON' }; }
+});
+
+test('NREL', async () => {
+  const k = KEYS.NREL_API_KEY;
+  if (!k) return { skip: 'no key (DEMO_KEY works for low volume)' };
+  const r = await probe(`https://developer.nrel.gov/api/utility_rates/v3.json?api_key=${k}&lat=33.93&lon=-84.07`);
+  if (r.status === 403) return { fail: 'HTTP 403 (invalid key)' };
+  if (r.status === 429) return { fail: 'HTTP 429 (rate limited — DEMO_KEY caps at 10 req/day)' };
+  if (!r.ok) return { fail: `HTTP ${r.status}` };
+  try {
+    const d = JSON.parse(r.text);
+    if (d.errors?.length) return { fail: 'NREL errors: ' + d.errors.join('; ') };
+    const out = d.outputs;
+    if (!out) return { fail: 'no outputs in response' };
+    return { pass: `${out.utility_name} commercial=${out.commercial}/kWh, residential=${out.residential}/kWh` };
+  } catch { return { fail: 'non-JSON' }; }
+});
+
+test('FBI', async () => {
+  const k = KEYS.FBI_API_KEY;
+  if (!k) return { skip: 'no key (DEMO_KEY works for low volume)' };
+  const r = await probe(`https://api.usa.gov/crime/fbi/cde/summarized/state/GA/violent-crime?from=01-2022&to=12-2022&API_KEY=${k}`);
+  if (r.status === 403) return { fail: 'HTTP 403 (invalid key)' };
+  if (r.status === 429) return { fail: 'HTTP 429 (rate limited)' };
+  if (!r.ok) return { fail: `HTTP ${r.status}` };
+  try {
+    const d = JSON.parse(r.text);
+    const ratesObj = d?.offenses?.rates;
+    if (!ratesObj) return { fail: 'no offenses.rates in response' };
+    const stateKey = Object.keys(ratesObj).find(k => k.includes('Offenses') && !k.includes('United States') && !k.includes('Clearances'));
+    if (!stateKey) return { fail: 'state rates key not found' };
+    const months = Object.values(ratesObj[stateKey]).filter(v => typeof v === 'number');
+    const annual = months.reduce((s,n)=>s+n, 0);
+    return { pass: `GA violent crime 2022 = ${Math.round(annual)}/100k (${months.length} months summed)` };
   } catch { return { fail: 'non-JSON' }; }
 });
 
