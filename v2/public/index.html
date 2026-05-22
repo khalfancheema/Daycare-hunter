@@ -13111,6 +13111,90 @@ async function _rdViaProxy(source, path, opts = {}) {
   return res;
 }
 
+// ── _rdGovFetch ───────────────────────────────────────────────────────────────
+// Smart fetch helper for the 8 key-gated government APIs. Branches at runtime:
+//   • window.USE_PROXY === true → route through /api/proxy (server-side keys)
+//   • otherwise                 → direct fetch with client-side key injection
+//
+// Sources accepted: census, hud, bea, noaa, airnow, bls, fred, sam, nrel, fbi
+// `path` is the URL path relative to the source's base (must start with '/').
+// Direct mode injects the key per the source's auth scheme; proxy mode strips
+// keys client-side because the proxy adds them server-side.
+async function _rdGovFetch(source, path, opts = {}) {
+  if (typeof window !== 'undefined' && window.USE_PROXY) {
+    return _rdViaProxy(source, path, opts);
+  }
+  // Direct fetch — inject key from window.<KEY>
+  const SOURCES = {
+    census: { base:'https://api.census.gov',        key:'CENSUS_API_KEY',  mode:'query',  name:'key' },
+    hud:    { base:'https://www.huduser.gov',       key:'HUD_TOKEN',       mode:'header', name:'Authorization', prefix:'Bearer ' },
+    bea:    { base:'https://apps.bea.gov',          key:'BEA_API_KEY',     mode:'query',  name:'UserID' },
+    noaa:   { base:'https://www.ncei.noaa.gov',     key:'NOAA_TOKEN',      mode:'header', name:'token' },
+    airnow: { base:'https://www.airnowapi.org',     key:'AIRNOW_API_KEY',  mode:'query',  name:'API_KEY' },
+    bls:    { base:'https://api.bls.gov',           key:'BLS_API_KEY',     mode:'body',   name:'registrationkey' },
+    fred:   { base:'https://api.stlouisfed.org',    key:'FRED_API_KEY',    mode:'query',  name:'api_key' },
+    sam:    { base:'https://api.sam.gov',           key:'SAM_API_KEY',     mode:'query',  name:'api_key' },
+    nrel:   { base:'https://developer.nrel.gov',    key:'NREL_API_KEY',    mode:'query',  name:'api_key',  fallback:'DEMO_KEY' },
+    fbi:    { base:'https://api.usa.gov',           key:'FBI_API_KEY',     mode:'query',  name:'API_KEY',  fallback:'DEMO_KEY' },
+  };
+  const cfg = SOURCES[source];
+  if (!cfg) throw new Error('_rdGovFetch: unknown source ' + source);
+  const k = (typeof window !== 'undefined' && window[cfg.key]) || cfg.fallback;
+  if (!k) return new Response(null, { status: 503, statusText: 'missing client key ' + cfg.key });
+
+  let url = cfg.base + path;
+  const headers = Object.assign({ 'Accept':'application/json' }, opts.headers || {});
+  let body = opts.body != null ? opts.body : null;
+  const method = opts.method || 'GET';
+
+  if (cfg.mode === 'query') {
+    url += (url.includes('?') ? '&' : '?') + cfg.name + '=' + encodeURIComponent(k);
+  } else if (cfg.mode === 'header') {
+    headers[cfg.name] = (cfg.prefix || '') + k;
+  } else if (cfg.mode === 'body' && method === 'POST') {
+    headers['Content-Type'] = 'application/json';
+    const obj = (typeof body === 'string') ? JSON.parse(body) : (body || {});
+    obj[cfg.name] = k;
+    body = JSON.stringify(obj);
+  }
+
+  return fetch(url, { method, headers, body, signal: opts.signal });
+}
+
+// ── _rdFetchWithProxy ─────────────────────────────────────────────────────────
+// Intercepting wrapper used by existing fetchers — when USE_PROXY is true and
+// the URL matches a known source base, the request is rewritten through
+// /api/proxy with the key stripped client-side. Otherwise the original
+// fetch(url, opts) is executed as-is. Lets existing fetchers stay untouched.
+const _RD_PROXY_MAP = {
+  'https://api.census.gov':          'census',
+  'https://www.huduser.gov':         'hud',
+  'https://apps.bea.gov':            'bea',
+  'https://www.ncei.noaa.gov':       'noaa',
+  'https://www.airnowapi.org':       'airnow',
+  'https://api.bls.gov':             'bls',
+  'https://api.stlouisfed.org':      'fred',
+  'https://api.sam.gov':             'sam',
+  'https://developer.nrel.gov':      'nrel',
+  'https://api.usa.gov':             'fbi',
+};
+async function _rdFetchWithProxy(url, opts = {}) {
+  if (typeof window === 'undefined' || !window.USE_PROXY) return fetch(url, opts);
+  const baseMatch = Object.keys(_RD_PROXY_MAP).find(b => url.startsWith(b));
+  if (!baseMatch) return fetch(url, opts); // not a key-gated source — direct fetch
+  const source = _RD_PROXY_MAP[baseMatch];
+  let path = url.slice(baseMatch.length);
+  // Strip key from URL — server proxy adds it
+  path = path.replace(/[?&](key|api_key|UserID|API_KEY)=[^&]*/gi, m => m[0] === '?' ? '?' : '&');
+  path = path.replace(/\?&/, '?').replace(/&$/, '').replace(/\?$/, '');
+  if (!path.startsWith('/')) path = '/' + path;
+  return _rdViaProxy(source, path, {
+    method: opts.method || 'GET',
+    body:   opts.body ? (typeof opts.body === 'string' ? JSON.parse(opts.body) : opts.body) : undefined,
+    signal: opts.signal,
+  });
+}
+
 if (typeof window !== 'undefined' && window.USE_PROXY === undefined) {
   // Auto-enable proxy if it responds to a HEAD/OPTIONS probe — gives zero-config
   // behavior when api/proxy.mjs is deployed alongside the static bundle.
@@ -13845,7 +13929,7 @@ async function _rdFetchACS(zip) {
     // bachelors (B15003_022), masters (023), professional (024), doctorate (025), renter
     const vars = 'B01003_001E,B19013_001E,B25003_002E,B09001_001E,B23025_004E,B15003_022E,B15003_023E,B15003_024E,B15003_025E,B25003_003E';
     const url = `https://api.census.gov/data/2024/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
     if (text.includes('<title>Missing Key')) return null;
@@ -13893,7 +13977,7 @@ async function _rdFetchZBP(zip, naics) {
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
     const url = `https://api.census.gov/data/2021/zbp?get=EMP,ESTAB,PAYANN&for=zipcode:${zip}&NAICS2017=${naics}${_rdCensusKeySuffix()}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
     if (text.includes('<title>Missing Key')) return null;
@@ -13923,7 +14007,7 @@ async function _rdFetchBLSWages(stateAbbr) {
     if (!stateFips) return null;
     const seriesId = `ENU${stateFips}50000000`;
     const url = `https://api.bls.gov/publicAPI/v2/timeseries/data/${seriesId}?startyear=2023&endyear=2023`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const latest = d?.Results?.series?.[0]?.data?.find(r => r.period === 'Q04') || d?.Results?.series?.[0]?.data?.[0];
@@ -14005,7 +14089,7 @@ async function _rdFetchHUDRents(zip, stateAbbr) {
     // statedata returns { data: { year, counties: [...], metroareas: [...] } }
     // (NOT basicdata — that's a different endpoint shape from older docs.)
     const url = `https://www.huduser.gov/hudapi/public/fmr/statedata/${stateAbbr}`;
-    const res = await fetch(url, {
+    const res = await _rdFetchWithProxy(url, {
       headers: { 'Authorization': `Bearer ${token}` },
       signal:  _rdAbortTimeout(10000),
     });
@@ -14173,7 +14257,7 @@ async function _rdFetchSAMGov(naics, stateAbbr) {
     const today = new Date();
     const fromDate = `${(today.getMonth()+1).toString().padStart(2,'0')}/01/${today.getFullYear()-1}`;
     const url = `https://api.sam.gov/opportunities/v2/search?limit=5&postedFrom=${fromDate}&naics=${naics}&ptype=o&active=Yes&api_key=${samKey}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const opportunities = (d.opportunitiesData||[]).slice(0,5).map(o => ({
@@ -14197,7 +14281,7 @@ async function _rdFetchFEMAFlood(lat, lng) {
     // FEMA migrated NFHL to a hosted FeatureServer on services.arcgis.com in late 2024;
     // hazards.fema.gov/.../MapServer/28 now returns a 404 WebSEAL error.
     const url = `https://services.arcgis.com/2gdL2gxYNFY2TOUb/arcgis/rest/services/FEMA_National_Flood_Hazard_Layer/FeatureServer/0/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=FLD_ZONE,ZONE_SUBTY,SFHA_TF&returnGeometry=false&f=json`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const zone = d.features?.[0]?.attributes?.FLD_ZONE || 'X';
@@ -14221,7 +14305,7 @@ async function _rdFetchFBICrime(stateAbbr) {
     // is MM-YYYY. DEMO_KEY works for light use; users can set window.FBI_API_KEY.
     const fbiKey = (typeof window !== 'undefined' && window.FBI_API_KEY) ? window.FBI_API_KEY : 'DEMO_KEY';
     const url = `https://api.usa.gov/crime/fbi/cde/summarized/state/${stateAbbr}/violent-crime?from=01-2022&to=12-2022&API_KEY=${fbiKey}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     // Response shape: {offenses:{rates:{"<State> Offenses":{MM-YYYY: rate, ...}}}}
@@ -14253,7 +14337,7 @@ async function _rdFetchNREL(zip, lat, lng) {
     // DEMO_KEY works for low volume (~10 req/day); users can set window.NREL_API_KEY.
     const nrelKey = (typeof window !== 'undefined' && window.NREL_API_KEY) ? window.NREL_API_KEY : 'DEMO_KEY';
     const url = `https://developer.nrel.gov/api/utility_rates/v3.json?api_key=${nrelKey}&lat=${lat}&lon=${lng}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const o = d?.outputs || {};
@@ -14278,7 +14362,7 @@ async function _rdFetchECFR(ecfrConfig) {
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
     const url = `https://www.ecfr.gov/api/versioner/v1/versions/title-${title}?part=${part}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const versions = Array.isArray(d) ? d : (d.content_versions || []);
@@ -14330,7 +14414,7 @@ async function _rdFetchCMSNPI(city, stateAbbr, industryKey) {
       `city=${cityEnc}&state=${stateAbbr}&` +
       `taxonomy_description=${encodeURIComponent(taxonomy)}&` +
       `limit=200&version=2.1`;
-    const res = await fetch(url, { signal: _rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal: _rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const results = d.results || [];
@@ -14444,7 +14528,7 @@ async function _rdFetchHUDFMR(zip, stateAbbr) {
     // Always use the statedata endpoint and filter by county_name from the geocoder —
     // this works for all 50 states and 3,000+ counties.
     const url = `https://www.huduser.gov/hudapi/public/fmr/statedata/${stateAbbr}`;
-    const res = await fetch(url, {
+    const res = await _rdFetchWithProxy(url, {
       headers: { 'Authorization': `Bearer ${token}` },
       signal: _rdAbortTimeout(10000),
     });
@@ -14532,7 +14616,7 @@ async function _rdFetchUSDARural(stateFips, countyFips) {
     // The standalone 2023 RUCC MapServer is not exposed publicly; the 2013 service is the
     // current public REST endpoint (methodology unchanged for the metro/rural cutoff).
     const url = `https://gisportal.ers.usda.gov/server/rest/services/Rural_Atlas_Data/County_Classifications/MapServer/0/query?where=FIPSTXT%3D%27${fips}%27&outFields=FIPSTXT,County,State,RuralUrbanContinuumCode2013,Metro2013&returnGeometry=false&f=json`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const feat = d.features?.[0]?.attributes;
@@ -14559,7 +14643,7 @@ async function _rdFetchCBPCounty(stateFips, countyFips, naics) {
   try {
     // Census CBP requires window.CENSUS_API_KEY (free at api.census.gov/data/key_signup.html)
     const url = `https://api.census.gov/data/2023/cbp?get=ESTAB,EMP,PAYANN&for=county:${countyFips}&in=state:${stateFips}&NAICS2017=${naics}${_rdCensusKeySuffix()}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
     if (text.includes('<title>Missing Key')) return null;
@@ -14595,7 +14679,7 @@ async function _rdFetchBLSOES(stateAbbr, industryKey) {
     const body = blsKey
       ? { seriesid:[seriesId], registrationkey:blsKey, latest:true }
       : { seriesid:[seriesId], latest:true };
-    const res = await fetch('https://api.bls.gov/publicAPI/v2/timeseries/data/', {
+    const res = await _rdFetchWithProxy('https://api.bls.gov/publicAPI/v2/timeseries/data/', {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify(body),
@@ -14646,7 +14730,7 @@ async function _rdFetchUSDAFARA(lat, lng) {
     // USDA ERS FARA 2019. Folder is /FARA/FARA_2019 (NOT /FoodAccessResearchAtlas/...)
     // Layer 30 = "All tracts" with full attribute schema for point-in-polygon lookup.
     const url = `https://gisportal.ers.usda.gov/server/rest/services/FARA/FARA_2019/MapServer/30/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=CensusTract,LILATracts_1And10,LILATracts_halfAnd10,LowIncomeTracts,TractSNAP,TractLOWI&returnGeometry=false&f=json`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const a = d.features?.[0]?.attributes;
@@ -14676,7 +14760,7 @@ async function _rdFetchFREDLocal(stateFips, countyFips) {
     // LAUCN{fips}0000000003 = unemployment rate, LAUCN{fips}0000000005 = civilian labor force
     const series = `LAUCN${fips}0000000003`;
     const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${series}&api_key=${fredKey}&file_type=json&sort_order=desc&limit=1`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const obs = d.observations?.[0];
@@ -14701,7 +14785,7 @@ async function _rdFetchHUDVacancy(zip) {
   try {
     // USPS Vacancy data via HUD; type=1 = ZIP→county crosswalk with vacancy
     const url = `https://www.huduser.gov/hudapi/public/usps?type=1&query=${zip}&year=2024&quarter=4`;
-    const res = await fetch(url, {
+    const res = await _rdFetchWithProxy(url, {
       headers: { 'Authorization': `Bearer ${token}` },
       signal: _rdAbortTimeout(10000),
     });
@@ -14732,7 +14816,7 @@ async function _rdFetchFBICityCrime(city, stateAbbr) {
     // The api.usa.gov endpoint list-by-state path is /agencies/byStateAbbr/{abbr}.
     const fbiKey = (typeof window !== 'undefined' && window.FBI_API_KEY) ? window.FBI_API_KEY : 'DEMO_KEY';
     const url = `https://api.usa.gov/crime/fbi/cde/agency/byStateAbbr/${stateAbbr}?API_KEY=${fbiKey}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const agencies = Array.isArray(d) ? d : (d.data || []);
@@ -14767,7 +14851,7 @@ async function _rdFetchNCESSchools(lat, lng) {
     // The schema does NOT include SCH_NAME/LEVEL/ENROLLMENT — only NAME/STATE/CITY/LOCALE.
     // Locale code: 11-13 city, 21-23 suburb, 31-33 town, 41-43 rural.
     const url = `https://services1.arcgis.com/Ua5sjt3LWTPigjyD/ArcGIS/rest/services/Public_School_Locations_Current/FeatureServer/0/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&distance=8047&units=esriSRUnit_Meter&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=NAME,STATE,CITY,LOCALE&returnGeometry=false&f=json&resultRecordCount=50`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const feats = d.features || [];
@@ -14796,7 +14880,7 @@ async function _rdFetchACSHomeValue(zip) {
     // B25077_001E = median value of owner-occupied housing units
     // B25104_001E = monthly housing costs (median) — owner+renter combined
     const url = `https://api.census.gov/data/2024/acs/acs5?get=B25077_001E,B25104_001E,B25088_001E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
     if (text.includes('<title>Missing Key')) return null;
@@ -14829,7 +14913,7 @@ async function _rdFetchCDCSVI(lat, lng) {
     // CDC/ATSDR SVI 2022 hosted by onemap.cdc.gov (services3.arcgis.com endpoint
     // returns 400 Invalid URL). Layer 8 = US tract level SVI 2022.
     const url = `https://onemap.cdc.gov/onemapservices/rest/services/SVI/CDC_ATSDR_Social_Vulnerability_Index_2022_USA/FeatureServer/8/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=FIPS,RPL_THEMES,RPL_THEME1,RPL_THEME2,RPL_THEME3,RPL_THEME4&returnGeometry=false&f=json`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const a = d.features?.[0]?.attributes;
@@ -14858,7 +14942,7 @@ async function _rdFetchOpenFEMA(stateAbbr, countyName) {
     const cutoff = `${new Date().getFullYear() - 10}-01-01T00:00:00.000Z`;
     const cnClean = countyName.replace(/\s+(County|Parish|Borough)$/i, '');
     const url = `https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?$filter=state eq '${stateAbbr}' and incidentBeginDate ge '${cutoff}' and designatedArea eq '${cnClean} (County)'&$select=disasterNumber,declarationDate,incidentType,declarationTitle&$top=20`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const events = d.DisasterDeclarationsSummaries || [];
@@ -14890,7 +14974,7 @@ async function _rdFetchHUDIncome(stateAbbr) {
   try {
     // Correct endpoint: /il/statedata/<abbr> NOT /il/data/<abbr> (which 400s).
     const url = `https://www.huduser.gov/hudapi/public/il/statedata/${stateAbbr}`;
-    const res = await fetch(url, {
+    const res = await _rdFetchWithProxy(url, {
       headers: { 'Authorization': `Bearer ${token}` },
       signal: _rdAbortTimeout(10000),
     });
@@ -14920,7 +15004,7 @@ async function _rdFetchBuildingPermits(stateFips, countyFips) {
     // Census BPS county-level annual; latest year typically year-1
     const yr = new Date().getFullYear() - 1;
     const url = `https://api.census.gov/data/timeseries/eits/bps?get=permits,units_total&for=county:${countyFips}&in=state:${stateFips}&time=${yr}${_rdCensusKeySuffix()}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
     if (text.includes('<title>Missing Key')) return null;
@@ -14949,7 +15033,7 @@ async function _rdFetchACSIndustryMix(zip) {
     const vars = 'C24050_001E,C24050_005E,C24050_009E,C24050_010E,C24050_011E,B19301_001E';
     // B19301_001E = per capita income
     const url = `https://api.census.gov/data/2024/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
     if (text.includes('<title>Missing Key')) return null;
@@ -14992,7 +15076,7 @@ async function _rdFetchHRSAHPSA(stateFips, countyFips) {
     // HRSA HPSA Primary Care - component polygons layer (11) on the public HRSA GIS portal.
     // Filter to designated (HPSA_STATUS_CD = 'D') HPSAs in the county.
     const url = `https://gisportal.hrsa.gov/server/rest/services/Shortage/HealthProfessionalShortageAreas_FS/MapServer/11/query?where=STATE_COUNTY_FIPS_CD%3D%27${fips}%27%20AND%20HPSA_STATUS_CD%3D%27D%27&outFields=HPSA_NM,HPSA_SCORE,HPSA_FTE,HPSA_DESIGNATION_POP,HPSA_ESTIMATED_UNDERSERVED_POP&returnGeometry=false&f=json&resultRecordCount=10`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const feats = d.features || [];
@@ -15026,7 +15110,7 @@ async function _rdFetchBEAIncome(stateFips, countyFips) {
   try {
     // BEA CAINC1 - Per Capita Personal Income (county)
     const url = `https://apps.bea.gov/api/data?UserID=${beaKey}&method=GetData&datasetname=Regional&TableName=CAINC1&LineCode=3&GeoFIPS=${fips}&Year=LAST5&ResultFormat=JSON`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const rows = d.BEAAPI?.Results?.Data || [];
@@ -15058,7 +15142,7 @@ async function _rdFetchACSMigration(zip) {
     // _049 = different county same state; _065 = different state; _081 = abroad
     const vars = 'B07001_001E,B07001_017E,B07001_033E,B07001_049E,B07001_065E,B07001_081E';
     const url = `https://api.census.gov/data/2024/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
     if (text.includes('<title>Missing Key')) return null;
@@ -15093,7 +15177,7 @@ async function _rdFetchUSGSQuakes(lat, lng) {
     // USGS Earthquake catalog API — past 50 years, M3.0+, within 100km
     const startDate = `${new Date().getFullYear() - 50}-01-01`;
     const url = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${startDate}&latitude=${lat}&longitude=${lng}&maxradiuskm=100&minmagnitude=3.0&limit=200`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const quakes = d.features || [];
@@ -15126,7 +15210,7 @@ async function _rdFetchEPAAirNow(zip) {
     try {
       // OpenAQ v2 location measurement endpoint (no key required)
       const url = `https://api.openaq.org/v2/latest?limit=10&country=US&radius=10000&order_by=lastUpdated&sort=desc`;
-      const res = await fetch(url, { signal:_rdAbortTimeout(8000) });
+      const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(8000) });
       if (!res.ok) return null;
       // We don't have coords; bail. OpenAQ needs lat/lon for radius search.
       return null;
@@ -15134,7 +15218,7 @@ async function _rdFetchEPAAirNow(zip) {
   }
   try {
     const url = `https://www.airnowapi.org/aq/observation/zipCode/current/?format=application/json&zipCode=${zip}&distance=25&API_KEY=${airKey}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const data = await res.json();
     if (!Array.isArray(data) || !data.length) return null;
@@ -15163,7 +15247,7 @@ async function _rdFetchCensusPEP(stateFips, countyFips) {
   try {
     // Population Estimates 2023 county-level
     const url = `https://api.census.gov/data/2023/pep/population?get=POP_2023,POP_2022,POP_2020,NAME&for=county:${countyFips}&in=state:${stateFips}${_rdCensusKeySuffix()}`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
     if (text.includes('<title>Missing Key')) return null;
@@ -15201,7 +15285,7 @@ async function _rdFetchFCCBroadband(lat, lng) {
     // The previously-attempted broadbandmap.fcc.gov BDC summary endpoint is
     // not public and times out, so we report block geography only.
     const url = `https://geo.fcc.gov/api/census/area?lat=${lat}&lon=${lng}&format=json`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const block = d?.results?.[0];
@@ -15257,7 +15341,7 @@ async function _rdFetchCountyHealthRankings(stateFips, countyFips) {
     //   v062 = Mental health providers per 100k (rate)
     //   v063 = Median household income (USD)
     const url = `https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/County_Health_Rankings_2024_Test_2/FeatureServer/2/query?where=fipscode%3D%27${fips}%27&outFields=fipscode,county,state,v001_rawvalue,v003_rawvalue,v004_rawvalue,v024_rawvalue,v062_rawvalue,v063_rawvalue&returnGeometry=false&f=json`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const a = d.features?.[0]?.attributes;
@@ -15291,7 +15375,7 @@ async function _rdFetchOpportunityZone(lat, lng) {
     // Layer only contains the ~8,764 designated tracts — a hit means the point is in a QOZ,
     // an empty features array means the point is NOT in a QOZ (a valid negative answer).
     const url = `https://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/Opportunity_Zones/FeatureServer/13/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=GEOID10,STATE,STATE_NAME,Rural&returnGeometry=false&f=json`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const d = await res.json();
     const a = d.features?.[0]?.attributes;
@@ -15319,7 +15403,7 @@ async function _rdFetchNOAAClimate(stateFips, countyFips) {
   try {
     // NOAA NCEI normals API — county-level climate
     const url = `https://www.ncei.noaa.gov/cdo-web/api/v2/data?datasetid=NORMAL_ANN&locationid=FIPS:${fips}&startdate=2010-01-01&enddate=2010-12-31&limit=20`;
-    const res = await fetch(url, {
+    const res = await _rdFetchWithProxy(url, {
       headers: { 'token': noaaKey },
       signal: _rdAbortTimeout(10000),
     });
@@ -15356,7 +15440,7 @@ async function _rdFetchCDCPlacesExpanded(stateAbbr, countyName) {
     // CDC PLACES 2024 county data via Socrata SODA API (no key needed for limited queries)
     // NOTE: actual fields are lowercase: stateabbr + locationname (county name), NOT countyname.
     const url = `https://data.cdc.gov/resource/swc5-untb.json?stateabbr=${stateAbbr}&locationname=${encodeURIComponent(cnClean)}&$limit=50`;
-    const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
+    const res = await _rdFetchWithProxy(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const rows = await res.json();
     if (!Array.isArray(rows) || !rows.length) return null;
