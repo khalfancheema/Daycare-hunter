@@ -26,24 +26,27 @@ SITE: ${ctx3}
 FINANCIALS: ${ctx7}
 VERDICT: ${ctx8}
 
-Return ONLY:
+Return ONLY this JSON. All values are placeholders — populate from upstream
+context. Do not echo example strings like "Georgia LLC" if the user's state
+is different; do not echo example numbers.
+
 {
-  "business_name": "string",
-  "entity_type": "LLC",
+  "business_name":     null,
+  "entity_type":       null,    // "LLC" | "S-Corp" | "C-Corp"
   "owner_placeholder": "[Owner Name]",
   "executive_summary": {
-    "concept": "3-paragraph concept: mission, services, target market, differentiation",
-    "opportunity": "2-paragraph market opportunity citing specific numbers from demographics and gap analysis",
-    "ask": "Total capital requested, use of funds breakdown, expected ROI for lender"
+    "concept":     null,    // 3 paragraphs
+    "opportunity": null,    // 2 paragraphs citing specific numbers from upstream
+    "ask":         null     // capital requested + use of funds + ROI for lender
   },
   "company_overview": {
-    "mission": "Full mission statement",
-    "vision": "Full vision statement",
-    "values": ["Value 1 with one-sentence explanation","Value 2","Value 3","Value 4"],
-    "legal_structure": "Georgia LLC detail",
-    "location_rationale": "Detailed paragraph why the chosen city/submarket was selected, citing data from site selection",
+    "mission":            null,
+    "vision":             null,
+    "values":             [],
+    "legal_structure":    null,    // include user's actual state
+    "location_rationale": null,
     "services": [
-      {"name":"Service name","capacity":12,"ratio":"1:4","monthly_price":2050,"annual_revenue":246000,"description":"Full description of what is included"}
+      {"name": null, "capacity": null, "ratio": null, "monthly_price": null, "annual_revenue": null, "description": null}
     ]
   }
 }`;
@@ -58,32 +61,21 @@ GAP ANALYSIS: ${ctx(a2,['summary','cities','overall_opportunity_score'])}
 COMPETITORS: ${ctx(a6,['summary','cities','top_chains'])}
 SITE: ${ctx3}
 
-Return ONLY:
+Return ONLY this JSON. All values are placeholders.
+
 {
   "market_analysis": {
-    "target_market": "Detailed 2-paragraph description of primary customer demographics, income, needs",
+    "target_market": null,    // 2 paragraphs citing real demographics
     "market_size": {
-      "total_addressable": "String — total population / households in radius with data source",
-      "serviceable": "String — customers in target income bracket and demographic segment",
-      "target_share": "String — target market share % and what that equals in customers/revenue"
+      "total_addressable": null,    // string with data source
+      "serviceable":       null,
+      "target_share":      null
     },
     "competitor_comparison": [
-      {"name":"Competitor","locations":3,"monthly_primary_rate":2100,"rating":4.1,"waitlist":true,"our_advantage":"Why we win against this competitor"}
+      {"name": null, "locations": null, "monthly_primary_rate": null, "rating": null, "waitlist": null, "our_advantage": null}
     ],
-    "differentiators": [
-      "Specific differentiator 1 with detail",
-      "Specific differentiator 2",
-      "Specific differentiator 3",
-      "Specific differentiator 4",
-      "Specific differentiator 5",
-      "Specific differentiator 6"
-    ],
-    "trends": [
-      "Market trend 1 supporting investment with data",
-      "Market trend 2",
-      "Market trend 3",
-      "Market trend 4"
-    ]
+    "differentiators": [],    // 5-6 specific
+    "trends":          []     // 4 trends with data
   }
 }`;
 
@@ -97,44 +89,47 @@ REAL ESTATE: ${ctx(a4,['summary','by_city_summary'])}
 COMPLIANCE: ${ctx(a5,['summary','requirements','timeline_phases'])}
 FINANCIALS: ${ctx7}
 
-Return ONLY:
+Return ONLY this JSON. All values are placeholders — every number must be
+derived from the FINANCIALS / SITE / COMPLIANCE upstream context, not from
+this schema.
+
 {
   "operations_plan": {
     "facility": {
-      "total_sqft": 8000,
-      "indoor_sqft_per_unit": 37,
-      "outdoor_sqft_per_unit": 80,
+      "total_sqft":             null,
+      "indoor_sqft_per_unit":   null,
+      "outdoor_sqft_per_unit":  null,
       "rooms": [
-        {"name":"Room name","sqft":480,"capacity":6,"ratio":"1:4"}
+        {"name": null, "sqft": null, "capacity": null, "ratio": null}
       ]
     },
-    "hours": "Operating hours string",
+    "hours":         null,
     "staffing_plan": [
-      {"role":"Role title","count":1,"salary":78000,"requirement":"Required credentials/experience"}
+      {"role": null, "count": null, "salary": null, "requirement": null}
     ],
-    "curriculum": "Curriculum/service approach description",
-    "technology": ["Technology platform 1","Platform 2","Platform 3"]
+    "curriculum": null,
+    "technology": []
   },
   "financial_plan": {
-    "startup_capital_needed": 542000,
+    "startup_capital_needed": null,
     "one_time_costs": [
-      {"item":"Cost item","amount":42000,"category":"Real Estate","notes":"What drives this cost"}
+      {"item": null, "amount": null, "category": null, "notes": null}
     ],
     "fixed_monthly_costs": [
-      {"item":"Cost item","amount":13000,"notes":"Fixed regardless of volume"}
+      {"item": null, "amount": null, "notes": null}
     ],
     "variable_monthly_costs": [
-      {"item":"Cost item","amount":3400,"per_unit":"per child/customer","notes":"Scales with revenue"}
+      {"item": null, "amount": null, "per_unit": null, "notes": null}
     ],
     "funding_sources": [
-      {"source":"SBA 7(a) Loan","amount":400000,"pct":73.8,"terms":"10 year, prime + 2.75%","lender_contacts":["Contact 1","Contact 2"]}
+      {"source": null, "amount": null, "pct": null, "terms": null, "lender_contacts": []}
     ],
-    "year1_projections": {"revenue":580000,"gross_profit":580000,"operating_expenses":480000,"ebitda":100000,"net_income":68000},
-    "year2_projections": {"revenue":820000,"gross_profit":820000,"operating_expenses":510000,"ebitda":310000,"net_income":248000},
-    "year3_projections": {"revenue":980000,"gross_profit":980000,"operating_expenses":545000,"ebitda":435000,"net_income":360000},
-    "breakeven_analysis": "Break-even at X customers/units at average price of $Y. Expected to reach break-even in Month Z.",
-    "debt_service_coverage": "DSCR at full operation: X.Xx (above SBA minimum of 1.25x)",
-    "collateral": "Collateral offered to lender"
+    "year1_projections": {"revenue": null, "gross_profit": null, "operating_expenses": null, "ebitda": null, "net_income": null},
+    "year2_projections": {"revenue": null, "gross_profit": null, "operating_expenses": null, "ebitda": null, "net_income": null},
+    "year3_projections": {"revenue": null, "gross_profit": null, "operating_expenses": null, "ebitda": null, "net_income": null},
+    "breakeven_analysis":     null,
+    "debt_service_coverage":  null,    // must reference SBA minimum 1.25x if loan involved
+    "collateral":             null
   }
 }`;
 
@@ -147,21 +142,23 @@ Return ONLY:
 VERDICT: ${ctx8}
 FINANCIALS: ${ctx7}
 
-Return ONLY:
+Return ONLY this JSON. The slide titles are required structure; content
+fields must be populated from upstream context, not from this schema.
+
 {
   "sba_checklist": [
-    {"item":"Document name","status":"Required","notes":"What to include / where to get it","link":"https://..."}
+    {"item": null, "status": null, "notes": null, "link": null}
   ],
   "investor_slides": [
-    {"slide":1,"title":"The Problem","content":"3-4 sentence compelling problem statement with specific data points"},
-    {"slide":2,"title":"The Solution","content":"3-4 sentence solution description"},
-    {"slide":3,"title":"Market Opportunity","content":"TAM/SAM/SOM with specific numbers"},
-    {"slide":4,"title":"Business Model","content":"Revenue streams and unit economics"},
-    {"slide":5,"title":"Financial Projections","content":"3-year summary with key milestones"},
-    {"slide":6,"title":"Competitive Advantage","content":"5 specific moats vs named competitors"},
-    {"slide":7,"title":"Use of Funds","content":"Itemized $X breakdown with percentages"},
-    {"slide":8,"title":"The Team","content":"Owner/operator background and advisory team"},
-    {"slide":9,"title":"The Ask","content":"Specific loan amount, terms, lender return analysis"}
+    {"slide": 1, "title": "The Problem",            "content": null},
+    {"slide": 2, "title": "The Solution",           "content": null},
+    {"slide": 3, "title": "Market Opportunity",     "content": null},
+    {"slide": 4, "title": "Business Model",         "content": null},
+    {"slide": 5, "title": "Financial Projections",  "content": null},
+    {"slide": 6, "title": "Competitive Advantage",  "content": null},
+    {"slide": 7, "title": "Use of Funds",           "content": null},
+    {"slide": 8, "title": "The Team",               "content": null},
+    {"slide": 9, "title": "The Ask",                "content": null}
   ]
 }`;
 

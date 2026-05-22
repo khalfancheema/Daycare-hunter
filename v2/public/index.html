@@ -4804,31 +4804,33 @@ async function runAgent5() {
 Regulatory authority: ${ind.regulatory}
 Key compliance areas: ${ind.compliance}
 
-Return ONLY this JSON (no apply_instructions yet — those come separately):
+Return ONLY this JSON (no apply_instructions yet). All values are placeholders —
+populate them from verified federal/state/local sources for the user's ZIP.
+
 {
-  "summary": "4-sentence overview of main regulatory requirements mentioning key agencies by name",
-  "state_portal_url": "https://[actual state licensing portal URL]",
-  "sba_permits_url": "https://www.sba.gov/business-guide/launch-your-business/apply-licenses-permits",
-  "total_timeline_months": 14,
+  "summary":                null,
+  "state_portal_url":       null,
+  "sba_permits_url":        "https://www.sba.gov/business-guide/launch-your-business/apply-licenses-permits",
+  "total_timeline_months":  null,
   "requirements": [
     {
-      "category": "Business Formation|Tax|Licensing|Zoning|Building|Fire|Insurance|Staffing",
-      "item": "Requirement name",
-      "detail": "1-2 sentence detail",
-      "timeline_weeks": 2,
-      "cost_usd": 100,
-      "source": "Agency short name",
-      "priority": "Critical|High|Medium",
-      "agency_name": "Full official agency name",
-      "apply_url": "https://actual-portal-url",
-      "form_name": "Form name/number or null",
-      "apply_phone": "Phone number or null",
-      "apply_email": "Email or null",
-      "online_available": true
+      "category":          null,
+      "item":              null,
+      "detail":            null,
+      "timeline_weeks":    null,
+      "cost_usd":          null,
+      "source":            null,
+      "priority":          null,
+      "agency_name":       null,
+      "apply_url":         null,
+      "form_name":         null,
+      "apply_phone":       null,
+      "apply_email":       null,
+      "online_available":  null
     }
   ],
   "timeline_phases": [
-    {"phase": "Phase name", "weeks": 4, "tasks": "Brief task list"}
+    {"phase": null, "weeks": null, "tasks": null}
   ]
 }
 Include 8-10 requirements covering: LLC formation, EIN, state ${ind.unit} license, zoning/CUP, building permit, fire inspection, certificate of occupancy, insurance, background checks.
@@ -5011,43 +5013,59 @@ Key competitors: ${ind.competitors}
 
 Search: Google Maps "${ind.unit} near ${zip()}", Yelp, state licensing portal, Winnie.com, NAEYC accreditation finder, Head Start locator (eclkc.acf.hhs.gov), NDCP (DOL Women's Bureau county rates).
 
-Return ONLY this JSON (no individual center details — aggregate data only):
+Return ONLY this JSON (aggregate only — no individual center details).
+Every value is a placeholder; populate from verified sources for the user's ZIP.
+
 {
-  "summary": "5-sentence competitive landscape with specific numbers and sources",
-  "total_licensed_estimated": 40,
-  "total_accredited_naeyc": 4,
-  "total_head_start_slots": 280,
-  "ndcp_county_median_infant": 1820,
-  "ndcp_county_median_preschool": 1280,
-  "ndcp_source": "DOL NDCP 2022 — [County] County",
-  "data_sources": ["Source 1", "Source 2"],
-  "home_daycares_estimated": 20,
-  "faith_based_count": 4,
-  "subsidized_seats_total": 180,
-  "competitive_intensity_score": 6,
-  "market_structure_note": "Brief market structure description",
+  "summary":                       null,
+  "total_licensed_estimated":      null,
+  "total_accredited_naeyc":        null,
+  "total_head_start_slots":        null,
+  "ndcp_county_median_infant":     null,
+  "ndcp_county_median_preschool":  null,
+  "ndcp_source":                   null,
+  "data_sources":                  [],
+  "home_daycares_estimated":       null,
+  "faith_based_count":             null,
+  "subsidized_seats_total":        null,
+  "competitive_intensity_score":   null,    // 0-10
+  "market_structure_note":         null,
   "cities": [
     {
-      "city": "City name",
-      "center_count": 8, "licensed_capacity_total": 640,
-      "chain_count": 3, "independent_count": 4, "nonprofit_count": 1,
-      "naeyc_accredited_count": 2, "qris_avg_stars": 3.4, "head_start_slots_city": 60,
-      "avg_monthly_infant": 1950, "avg_monthly_preschool": 1580,
-      "avg_rating": 4.1, "avg_review_count": 87,
-      "capacity_utilization_pct": 88, "waitlist_common": false, "avg_waitlist_weeks": 4,
-      "gap_score": 7,
-      "gap_score_explanation": "1-2 sentence explanation citing sources"
+      "city":                       null,
+      "center_count":               null,
+      "licensed_capacity_total":    null,
+      "chain_count":                null,
+      "independent_count":          null,
+      "nonprofit_count":            null,
+      "naeyc_accredited_count":     null,
+      "qris_avg_stars":             null,
+      "head_start_slots_city":      null,
+      "avg_monthly_infant":         null,
+      "avg_monthly_preschool":      null,
+      "avg_rating":                 null,
+      "avg_review_count":           null,
+      "capacity_utilization_pct":   null,
+      "waitlist_common":            null,
+      "avg_waitlist_weeks":         null,
+      "gap_score":                  null,
+      "gap_score_explanation":      null
     }
   ],
   "top_chains": [
     {
-      "name": "Chain name", "locations_in_area": 4,
-      "monthly_tuition_range": "$1,600–$2,100", "rating": 4.1,
-      "type": "Chain|Independent|Non-profit|Home-based|Faith-based|Subsidized",
-      "provider_type": "Premium|Budget|Subsidized|Home-based|Faith-based",
-      "nonprofit": false, "market_share_pct": 22,
-      "accepts_subsidy": false, "naeyc_accredited": true,
-      "strengths": "Key strengths", "weaknesses": "Key weaknesses"
+      "name":                  null,
+      "locations_in_area":     null,
+      "monthly_tuition_range": null,
+      "rating":                null,
+      "type":                  null,   // "Chain" | "Independent" | "Non-profit" | "Home-based" | "Faith-based" | "Subsidized"
+      "provider_type":         null,   // "Premium" | "Budget" | "Subsidized" | "Home-based" | "Faith-based"
+      "nonprofit":             null,
+      "market_share_pct":      null,
+      "accepts_subsidy":       null,
+      "naeyc_accredited":      null,
+      "strengths":             null,
+      "weaknesses":            null
     }
   ]
 }
@@ -5332,40 +5350,51 @@ SEARCH STRATEGY:
 - Search "KIDS COUNT [state] child care" on datacenter.kidscount.org
 - Check if county is a "child care desert" per Child Care Aware criteria
 
-Return ONLY:
+Return ONLY this JSON. All example text/numbers are placeholders — replace every value
+with one derived from the AUTHORITATIVE DATA SOURCES + KEY FINDINGS above. Do NOT echo
+literal strings from this schema. Use null when a value cannot be verified.
+
 {
-  "summary": "5-sentence gap analysis citing specific data sources and numbers",
-  "overall_opportunity_score": 81,
-  "data_sources_used": ["US Census ACS 2022 (Tables B01001, S0901)", "State CAPS licensing database", "NDCP DOL county childcare prices", "Child Care Aware of America state report", "Head Start locator", "Google Maps search", "KIDS COUNT Data Center"],
-  "is_childcare_desert": true,
-  "childcare_desert_ratio": "1 slot per 4.8 children (Child Care Aware threshold: >3 children per slot)",
-  "ndcp_median_infant_rate": 1820,
-  "ndcp_median_toddler_rate": 1540,
-  "ndcp_median_preschool_rate": 1280,
-  "ndcp_source": "National Database of Childcare Prices, DOL Women's Bureau 2022",
+  "summary":                  null,   // 5-sentence narrative citing specific data sources + numbers
+  "overall_opportunity_score":null,   // 0-100 integer
+  "data_sources_used":        [],     // list of source names actually used
+  "is_childcare_desert":      null,   // boolean (Child Care Aware: >3 children per slot)
+  "childcare_desert_ratio":   null,   // free-text like "1 slot per N.N children"
+  "ndcp_median_infant_rate":  null,   // USD/mo from NDCP county data
+  "ndcp_median_toddler_rate": null,   // USD/mo
+  "ndcp_median_preschool_rate":null,  // USD/mo
+  "ndcp_source":              null,   // citation string
   "cities": [
     {
-      "city": "City name", "rank": 1,
-      "demand_score": 0, "supply_score": 0, "gap_score": 0,
-      "unserved_children": 0, "licensed_centers_count": 0, "total_licensed_capacity_est": 0,
-      "children_under5_census": 0, "demand_to_supply_ratio": 0.0,
-      "income_tier": "Premium|Mid-Market|Affordable",
-      "recommended_tuition_infant": 0, "recommended_tuition_preschool": 0,
-      "ndcp_county_median_infant": 0, "pricing_premium_vs_market_pct": 0,
-      "head_start_slots": 0, "subsidized_slots_est": 0,
-      "is_desert": true,
-      "priority": "Critical Opportunity|High Opportunity|Moderate|Saturated",
-      "rationale": "1-sentence reason",
-      "why_gap": "2-3 sentences citing data sources with specific numbers",
+      "city":                       null,
+      "rank":                       null,
+      "demand_score":               null,   // 0-100
+      "supply_score":               null,   // 0-100
+      "gap_score":                  null,   // 0-100
+      "unserved_children":          null,   // integer
+      "licensed_centers_count":     null,
+      "total_licensed_capacity_est":null,
+      "children_under5_census":     null,   // ACS B09001
+      "demand_to_supply_ratio":     null,
+      "income_tier":                null,   // "Premium" | "Mid-Market" | "Affordable"
+      "recommended_tuition_infant": null,   // USD/mo
+      "recommended_tuition_preschool":null, // USD/mo
+      "ndcp_county_median_infant":  null,
+      "pricing_premium_vs_market_pct":null,
+      "head_start_slots":           null,
+      "subsidized_slots_est":       null,
+      "is_desert":                  null,
+      "priority":                   null,   // "Critical Opportunity" | "High Opportunity" | "Moderate" | "Saturated"
+      "rationale":                  null,
+      "why_gap":                    null,
       "data_points": [
-        {"label": "Metric name", "value": "Formatted value", "source": "Source name"}
+        {"label": null, "value": null, "source": null}
       ],
-      "sources": ["Source 1", "Source 2"]
+      "sources": []
     }
   ],
   "age_gaps": [
-    {"age": "${ind.tiers[0]||'Tier 1'}", "demand_idx": 0, "supply_idx": 0, "gap": 0, "source": "Source name"},
-    {"age": "${ind.tiers[1]||'Tier 2'}", "demand_idx": 0, "supply_idx": 0, "gap": 0, "source": "Source name"}
+    {"age": "${ind.tiers[0]||'Tier 1'}", "demand_idx": null, "supply_idx": null, "gap": null, "source": null}
   ]
 }
 
@@ -5517,26 +5546,38 @@ REGULATORY: ${ctx(a5,['summary','requirements','timeline_phases'])}
 
 Return ONLY:
 {
-  "summary": "5-sentence site selection strategy",
-  "locations": [
+  "summary":   null,   // 5-sentence site selection strategy
+  "locations": [        // 5 entries, ranked
     {
-      "rank": 1, "city": "City name", "submarket": "Submarket / corridor description",
-      "overall_score": 0,
-      "scores": {"demand": 0, "competition": 0, "demographics": 0, "real_estate": 0, "regulatory": 0, "walkability": 0, "transit": 0, "schools": 0},
-      "capacity_recommended": 0, "target_infant_tuition": 0, "target_preschool_tuition": 0,
-      "risk": "Low|Low-Medium|Medium|High", "timeline_months": 0,
-      "children_under5_nearby": 0, "competitors_within_2mi": 0,
-      "sqft_needed": 0, "est_monthly_rent_range": "$X,000-$X,000",
-      "ideal_property_type": "Property type description",
-      "zoning_needed": "Zone type",
-      "pros": ["Pro 1", "Pro 2", "Pro 3"],
-      "cons": ["Con 1", "Con 2"],
-      "reasoning": "2-3 sentence analysis citing specific Census/licensing data and traffic counts",
-      "walk_score": 0, "walk_score_label": "Car-Dependent|Bikeable|Very Walkable",
-      "transit_score": 0, "transit_description": "Transit options description",
-      "nearest_school_name": "School name", "nearest_school_rating": 0, "nearest_school_distance_mi": 0.0,
-      "school_avg_rating_2mi": 0.0, "schools_within_2mi": 0,
-      "reasoning_sources": ["Source 1", "Source 2"]
+      "rank":                       null,
+      "city":                       null,
+      "submarket":                  null,
+      "overall_score":              null,   // 0-100
+      "scores": {"demand": null, "competition": null, "demographics": null, "real_estate": null, "regulatory": null, "walkability": null, "transit": null, "schools": null},
+      "capacity_recommended":       null,
+      "target_infant_tuition":      null,
+      "target_preschool_tuition":   null,
+      "risk":                       null,   // "Low" | "Low-Medium" | "Medium" | "High"
+      "timeline_months":            null,
+      "children_under5_nearby":     null,
+      "competitors_within_2mi":     null,
+      "sqft_needed":                null,
+      "est_monthly_rent_range":     null,
+      "ideal_property_type":        null,
+      "zoning_needed":              null,
+      "pros":                       [],
+      "cons":                       [],
+      "reasoning":                  null,
+      "walk_score":                 null,
+      "walk_score_label":           null,   // "Car-Dependent" | "Bikeable" | "Very Walkable"
+      "transit_score":              null,
+      "transit_description":        null,
+      "nearest_school_name":        null,
+      "nearest_school_rating":      null,
+      "nearest_school_distance_mi": null,
+      "school_avg_rating_2mi":      null,
+      "schools_within_2mi":         null,
+      "reasoning_sources":          []
     }
   ]
 }`;
@@ -5669,36 +5710,48 @@ Top recommended locations: ${ctx(a3,['summary','locations'])}
 
 Property requirements: ${ind.real_estate}
 
-Return ONLY:
+Return ONLY this JSON. URLs in search_urls must be REAL filtered URLs built from the user's
+ZIP/city/state — do not echo the literal template strings shown here.
+
 {
-  "summary": "3-4 sentence overview of the commercial real estate market for a ${ind.unit} in this area",
-  "search_urls": {
-    "loopnet_primary": "https://www.loopnet.com/search/commercial-real-estate/ZIP-CITY/for-lease/?ListingType=1&MinSize=5000&MaxSize=15000",
-    "loopnet_secondary": "https://www.loopnet.com/search/commercial-real-estate/nearby-city/for-lease/",
-    "bizbuysell": "https://www.bizbuysell.com/STATE/INDUSTRY-businesses-for-sale/",
-    "crexi_primary": "https://www.crexi.com/lease/properties?address=PRIMARY+CITY+STATE&minSqft=5000&maxSqft=15000",
-    "crexi_secondary": "https://www.crexi.com/lease/properties?address=SECONDARY+CITY+STATE",
-    "zillow_commercial": "https://www.zillow.com/commercial/",
-    "costar": "https://www.costar.com/",
-    "county_gis": "https://www.COUNTY.gov/planning",
-    "economic_dev": "https://www.CITY.gov/economic-development"
+  "summary":     null,    // 3-4 sentence market overview
+  "search_urls": {        // each value must be a real URL with ZIP/CITY filled in
+    "loopnet_primary":   null,
+    "loopnet_secondary": null,
+    "bizbuysell":        null,
+    "crexi_primary":     null,
+    "crexi_secondary":   null,
+    "zillow_commercial": null,
+    "costar":            null,
+    "county_gis":        null,
+    "economic_dev":      null
   },
-  "listings": [
+  "listings": [           // only include listings you actually verified
     {
-      "id": 1, "address": "Full street address, City, ST ZIP", "city": "City name",
-      "property_type": "Freestanding Retail|Office Conversion|Strip Mall End-Cap|Flex/Retail|Build-to-Suit",
-      "sqft": 0, "monthly_rent": 0, "price_per_sqft": 0.00,
-      "zoning": "C-1|C-2|O-I|PUD", "outdoor_space_available": true, "outdoor_sqft_est": 0,
-      "suitable_for_daycare": true, "buildout_cost_est": 0,
-      "source": "LoopNet|BizBuySell|Crexi|CoStar",
-      "listing_url": "https://www.loopnet.com/search/commercial-real-estate/city-st/for-lease/",
-      "broker_name": "Broker name", "broker_phone": "XXX-XXX-XXXX", "broker_email": "email or empty string",
-      "availability": "Available Now|Immediate|Q1 2026|Negotiable",
-      "score": 0, "notes": "Key notes about the property"
+      "id":              null,
+      "address":         null,
+      "city":            null,
+      "property_type":   null,   // "Freestanding Retail" | "Office Conversion" | "Strip Mall End-Cap" | "Flex/Retail" | "Build-to-Suit"
+      "sqft":            null,
+      "monthly_rent":    null,
+      "price_per_sqft":  null,
+      "zoning":          null,
+      "outdoor_space_available": null,
+      "outdoor_sqft_est":null,
+      "suitable_for_daycare":    null,
+      "buildout_cost_est":null,
+      "source":          null,   // "LoopNet" | "BizBuySell" | "Crexi" | "CoStar"
+      "listing_url":     null,   // actual listing page if found, else null
+      "broker_name":     null,
+      "broker_phone":    null,
+      "broker_email":    null,
+      "availability":    null,
+      "score":           null,
+      "notes":           null
     }
   ],
   "by_city_summary": [
-    {"city": "City name", "avg_rent_sqft": 0.00, "available_listings_est": 0, "best_zoning": "C-1", "market_note": "Brief market note"}
+    {"city": null, "avg_rent_sqft": null, "available_listings_est": null, "best_zoning": null, "market_note": null}
   ]
 }`;
   try {
@@ -6469,34 +6522,32 @@ DEMOGRAPHICS: ${ctx(a1,['summary','cities'],600)}
 GAP ANALYSIS: ${ctx(a2,['summary','cities','overall_opportunity_score'],600)}
 REAL ESTATE: ${ctx(a4,['summary','by_city_summary'],400)}
 
-Return ONLY this JSON:
+Return ONLY this JSON. All values are placeholders.
+
 {
-  "center": {"lat": 0.0000, "lng": 0.0000, "label": "ZIP ${zip()} — City, ST"},
+  "center": {"lat": null, "lng": null, "label": null},
   "cities": [
     {
-      "name": "City name", "county": "County name",
-      "lat": 0.0000, "lng": 0.0000,
-      "gap_score": 8, "demand_score": 8, "supply_score": 3,
-      "unserved_children": 400, "median_income": 95000, "competitor_count": 2,
-      "priority": "Critical Opportunity|High Opportunity|Moderate|Saturated",
-      "recommended_action": "Open Here #1",
-      "real_estate_url": "https://www.loopnet.com/search/commercial-real-estate/city-st/for-lease/"
+      "name":               null,
+      "county":             null,
+      "lat":                null,
+      "lng":                null,
+      "gap_score":          null,    // 0-10
+      "demand_score":       null,    // 0-10
+      "supply_score":       null,    // 0-10
+      "unserved_children":  null,
+      "median_income":      null,    // USD/yr from ACS B19013
+      "competitor_count":   null,
+      "priority":           null,    // "Critical Opportunity" | "High Opportunity" | "Moderate" | "Saturated"
+      "recommended_action": null,
+      "real_estate_url":    null     // real filtered LoopNet/Crexi URL
     }
   ],
   "real_estate_pins": [
-    {
-      "label": "Location label", "lat": 0.0000, "lng": 0.0000,
-      "rent": 12000, "sqft": 8000,
-      "url": "https://www.loopnet.com/search/commercial-real-estate/city-st/for-lease/"
-    }
+    {"label": null, "lat": null, "lng": null, "rent": null, "sqft": null, "url": null}
   ],
   "directions": [
-    {
-      "from": "ZIP ${zip()} — City, ST",
-      "to": "Top city name",
-      "drive_mins": 15, "miles": 10.2,
-      "google_url": "https://maps.google.com/?saddr=ZIP+${zip()}&daddr=City+ST"
-    }
+    {"from": null, "to": null, "drive_mins": null, "miles": null, "google_url": null}
   ]
 }
 Use REAL coordinates for all cities. Cap at 8 cities, 4 real estate pins at top locations, 5 driving directions. LoopNet URLs must use actual city slugs (e.g. suwanee-ga not generic). Hard cap on counts prevents max_tokens truncation.`;
@@ -8080,24 +8131,27 @@ SITE: ${ctx3}
 FINANCIALS: ${ctx7}
 VERDICT: ${ctx8}
 
-Return ONLY:
+Return ONLY this JSON. All values are placeholders — populate from upstream
+context. Do not echo example strings like "Georgia LLC" if the user's state
+is different; do not echo example numbers.
+
 {
-  "business_name": "string",
-  "entity_type": "LLC",
+  "business_name":     null,
+  "entity_type":       null,    // "LLC" | "S-Corp" | "C-Corp"
   "owner_placeholder": "[Owner Name]",
   "executive_summary": {
-    "concept": "3-paragraph concept: mission, services, target market, differentiation",
-    "opportunity": "2-paragraph market opportunity citing specific numbers from demographics and gap analysis",
-    "ask": "Total capital requested, use of funds breakdown, expected ROI for lender"
+    "concept":     null,    // 3 paragraphs
+    "opportunity": null,    // 2 paragraphs citing specific numbers from upstream
+    "ask":         null     // capital requested + use of funds + ROI for lender
   },
   "company_overview": {
-    "mission": "Full mission statement",
-    "vision": "Full vision statement",
-    "values": ["Value 1 with one-sentence explanation","Value 2","Value 3","Value 4"],
-    "legal_structure": "Georgia LLC detail",
-    "location_rationale": "Detailed paragraph why the chosen city/submarket was selected, citing data from site selection",
+    "mission":            null,
+    "vision":             null,
+    "values":             [],
+    "legal_structure":    null,    // include user's actual state
+    "location_rationale": null,
     "services": [
-      {"name":"Service name","capacity":12,"ratio":"1:4","monthly_price":2050,"annual_revenue":246000,"description":"Full description of what is included"}
+      {"name": null, "capacity": null, "ratio": null, "monthly_price": null, "annual_revenue": null, "description": null}
     ]
   }
 }`;
@@ -8112,32 +8166,21 @@ GAP ANALYSIS: ${ctx(a2,['summary','cities','overall_opportunity_score'])}
 COMPETITORS: ${ctx(a6,['summary','cities','top_chains'])}
 SITE: ${ctx3}
 
-Return ONLY:
+Return ONLY this JSON. All values are placeholders.
+
 {
   "market_analysis": {
-    "target_market": "Detailed 2-paragraph description of primary customer demographics, income, needs",
+    "target_market": null,    // 2 paragraphs citing real demographics
     "market_size": {
-      "total_addressable": "String — total population / households in radius with data source",
-      "serviceable": "String — customers in target income bracket and demographic segment",
-      "target_share": "String — target market share % and what that equals in customers/revenue"
+      "total_addressable": null,    // string with data source
+      "serviceable":       null,
+      "target_share":      null
     },
     "competitor_comparison": [
-      {"name":"Competitor","locations":3,"monthly_primary_rate":2100,"rating":4.1,"waitlist":true,"our_advantage":"Why we win against this competitor"}
+      {"name": null, "locations": null, "monthly_primary_rate": null, "rating": null, "waitlist": null, "our_advantage": null}
     ],
-    "differentiators": [
-      "Specific differentiator 1 with detail",
-      "Specific differentiator 2",
-      "Specific differentiator 3",
-      "Specific differentiator 4",
-      "Specific differentiator 5",
-      "Specific differentiator 6"
-    ],
-    "trends": [
-      "Market trend 1 supporting investment with data",
-      "Market trend 2",
-      "Market trend 3",
-      "Market trend 4"
-    ]
+    "differentiators": [],    // 5-6 specific
+    "trends":          []     // 4 trends with data
   }
 }`;
 
@@ -8151,44 +8194,47 @@ REAL ESTATE: ${ctx(a4,['summary','by_city_summary'])}
 COMPLIANCE: ${ctx(a5,['summary','requirements','timeline_phases'])}
 FINANCIALS: ${ctx7}
 
-Return ONLY:
+Return ONLY this JSON. All values are placeholders — every number must be
+derived from the FINANCIALS / SITE / COMPLIANCE upstream context, not from
+this schema.
+
 {
   "operations_plan": {
     "facility": {
-      "total_sqft": 8000,
-      "indoor_sqft_per_unit": 37,
-      "outdoor_sqft_per_unit": 80,
+      "total_sqft":             null,
+      "indoor_sqft_per_unit":   null,
+      "outdoor_sqft_per_unit":  null,
       "rooms": [
-        {"name":"Room name","sqft":480,"capacity":6,"ratio":"1:4"}
+        {"name": null, "sqft": null, "capacity": null, "ratio": null}
       ]
     },
-    "hours": "Operating hours string",
+    "hours":         null,
     "staffing_plan": [
-      {"role":"Role title","count":1,"salary":78000,"requirement":"Required credentials/experience"}
+      {"role": null, "count": null, "salary": null, "requirement": null}
     ],
-    "curriculum": "Curriculum/service approach description",
-    "technology": ["Technology platform 1","Platform 2","Platform 3"]
+    "curriculum": null,
+    "technology": []
   },
   "financial_plan": {
-    "startup_capital_needed": 542000,
+    "startup_capital_needed": null,
     "one_time_costs": [
-      {"item":"Cost item","amount":42000,"category":"Real Estate","notes":"What drives this cost"}
+      {"item": null, "amount": null, "category": null, "notes": null}
     ],
     "fixed_monthly_costs": [
-      {"item":"Cost item","amount":13000,"notes":"Fixed regardless of volume"}
+      {"item": null, "amount": null, "notes": null}
     ],
     "variable_monthly_costs": [
-      {"item":"Cost item","amount":3400,"per_unit":"per child/customer","notes":"Scales with revenue"}
+      {"item": null, "amount": null, "per_unit": null, "notes": null}
     ],
     "funding_sources": [
-      {"source":"SBA 7(a) Loan","amount":400000,"pct":73.8,"terms":"10 year, prime + 2.75%","lender_contacts":["Contact 1","Contact 2"]}
+      {"source": null, "amount": null, "pct": null, "terms": null, "lender_contacts": []}
     ],
-    "year1_projections": {"revenue":580000,"gross_profit":580000,"operating_expenses":480000,"ebitda":100000,"net_income":68000},
-    "year2_projections": {"revenue":820000,"gross_profit":820000,"operating_expenses":510000,"ebitda":310000,"net_income":248000},
-    "year3_projections": {"revenue":980000,"gross_profit":980000,"operating_expenses":545000,"ebitda":435000,"net_income":360000},
-    "breakeven_analysis": "Break-even at X customers/units at average price of $Y. Expected to reach break-even in Month Z.",
-    "debt_service_coverage": "DSCR at full operation: X.Xx (above SBA minimum of 1.25x)",
-    "collateral": "Collateral offered to lender"
+    "year1_projections": {"revenue": null, "gross_profit": null, "operating_expenses": null, "ebitda": null, "net_income": null},
+    "year2_projections": {"revenue": null, "gross_profit": null, "operating_expenses": null, "ebitda": null, "net_income": null},
+    "year3_projections": {"revenue": null, "gross_profit": null, "operating_expenses": null, "ebitda": null, "net_income": null},
+    "breakeven_analysis":     null,
+    "debt_service_coverage":  null,    // must reference SBA minimum 1.25x if loan involved
+    "collateral":             null
   }
 }`;
 
@@ -8201,21 +8247,23 @@ Return ONLY:
 VERDICT: ${ctx8}
 FINANCIALS: ${ctx7}
 
-Return ONLY:
+Return ONLY this JSON. The slide titles are required structure; content
+fields must be populated from upstream context, not from this schema.
+
 {
   "sba_checklist": [
-    {"item":"Document name","status":"Required","notes":"What to include / where to get it","link":"https://..."}
+    {"item": null, "status": null, "notes": null, "link": null}
   ],
   "investor_slides": [
-    {"slide":1,"title":"The Problem","content":"3-4 sentence compelling problem statement with specific data points"},
-    {"slide":2,"title":"The Solution","content":"3-4 sentence solution description"},
-    {"slide":3,"title":"Market Opportunity","content":"TAM/SAM/SOM with specific numbers"},
-    {"slide":4,"title":"Business Model","content":"Revenue streams and unit economics"},
-    {"slide":5,"title":"Financial Projections","content":"3-year summary with key milestones"},
-    {"slide":6,"title":"Competitive Advantage","content":"5 specific moats vs named competitors"},
-    {"slide":7,"title":"Use of Funds","content":"Itemized $X breakdown with percentages"},
-    {"slide":8,"title":"The Team","content":"Owner/operator background and advisory team"},
-    {"slide":9,"title":"The Ask","content":"Specific loan amount, terms, lender return analysis"}
+    {"slide": 1, "title": "The Problem",            "content": null},
+    {"slide": 2, "title": "The Solution",           "content": null},
+    {"slide": 3, "title": "Market Opportunity",     "content": null},
+    {"slide": 4, "title": "Business Model",         "content": null},
+    {"slide": 5, "title": "Financial Projections",  "content": null},
+    {"slide": 6, "title": "Competitive Advantage",  "content": null},
+    {"slide": 7, "title": "Use of Funds",           "content": null},
+    {"slide": 8, "title": "The Team",               "content": null},
+    {"slide": 9, "title": "The Ask",                "content": null}
   ]
 }`;
 
@@ -8275,32 +8323,36 @@ async function runAgent10Parts(a3,a4,a5,a7,a9) {
 SITE: ${ctx3}
 COMPLIANCE: ${ctx(a5,['summary','requirements','timeline_phases'])}
 
-Return ONLY:
+Return ONLY this JSON. All values are placeholders — populate every one from
+the upstream SITES / FINANCIALS / COMPLIANCE context. The single example task
+shown is structural ONLY; do not echo "Form Business Entity" or its dollar
+amount as a literal output.
+
 {
-  "project_name": "string",
-  "total_duration_months": 18,
-  "target_open_date": "Month 19 from start",
+  "project_name":          null,
+  "total_duration_months": null,
+  "target_open_date":      null,
   "phases": [
     {
-      "phase": "Phase 1: Foundation & Funding",
-      "months": "1-3",
-      "color": "#4a9eff",
+      "phase":  null,    // "Phase 1: Foundation & Funding" | "Phase 2: ..." (etc.)
+      "months": null,    // e.g. "1-3"
+      "color":  null,    // hex like "#4a9eff"
       "tasks": [
         {
-          "task": "Form Business Entity",
-          "month_start": 1,
-          "duration": 0.5,
-          "owner": "Owner",
-          "priority": "Critical",
-          "cost": 150,
-          "detail": "Detailed step-by-step instructions with specific URLs and phone numbers",
-          "links": ["https://specific-link.com"]
+          "task":        null,
+          "month_start": null,
+          "duration":    null,   // months as decimal (0.25, 0.5, 1, 2...)
+          "owner":       null,
+          "priority":    null,   // "Critical" | "High" | "Medium" (exact strings)
+          "cost":        null,   // USD
+          "detail":      null,   // step-by-step instructions with real URLs/phones for user's ZIP+state
+          "links":       []
         }
       ]
     }
   ]
 }
-Include ALL 5 phases: Foundation & Funding (months 1-3), Legal/Lease/Design (months 3-6), Construction & Licensing (months 6-12), Staffing & Pre-Opening (months 12-16), Soft Open & Ramp (months 16-18). Each phase should have 8-12 tasks with detailed step-by-step instructions, specific vendor names, phone numbers, and URLs. Priority must be exactly "Critical", "High", or "Medium".`;
+Include ALL 5 phases: Foundation & Funding (1-3), Legal/Lease/Design (3-6), Construction & Licensing (6-12), Staffing & Pre-Opening (12-16), Soft Open & Ramp (16-18). Each phase 8-12 tasks. Priority strings exactly "Critical", "High", "Medium".`;
 
   // ── Part 2 of 3: Milestones + Budget Tracker ─────────────
   const p1 = await claudeJSON(sys1, usr1, {webSearch:true});
@@ -8310,28 +8362,29 @@ Include ALL 5 phases: Foundation & Funding (months 1-3), Legal/Lease/Design (mon
 FINANCIALS: ${ctx7}
 BUSINESS PLAN: ${ctx9}
 
-Return ONLY:
+Return ONLY this JSON. All values are placeholders.
+
 {
   "milestones": [
     {
-      "month": "Week 1",
-      "title": "Milestone title",
-      "detail": "Specific criteria that prove this milestone is complete",
-      "owner": "Owner",
-      "priority": "critical"
+      "month":    null,
+      "title":    null,
+      "detail":   null,
+      "owner":    null,
+      "priority": null   // "critical" | "high"
     }
   ],
   "budget_tracker": [
     {
-      "category": "Budget category",
-      "budgeted": 8000,
-      "phase": "Phase 1",
-      "due": "Month 3",
-      "notes": "What drives this cost and how to minimize it"
+      "category": null,
+      "budgeted": null,   // USD
+      "phase":    null,
+      "due":      null,
+      "notes":    null
     }
   ]
 }
-Include 15-20 milestones from Week 1 through Month 18 (use "critical" or "high" for priority). Include 15-20 budget line items covering all startup costs with notes on cost drivers.`;
+15-20 milestones from Week 1 through Month 18. 15-20 budget line items covering all startup costs with cost-driver notes.`;
 
   // ── Part 3 of 3: Risk Register + Team + Checklist ────────
   const p2 = await claudeJSON(sys2, usr2, {webSearch:true});
@@ -8342,42 +8395,39 @@ SITE: ${ctx3}
 COMPLIANCE: ${ctx(a5,['summary','requirements'])}
 FINANCIALS: ${ctx7}
 
-Return ONLY:
+Return ONLY this JSON. All values are placeholders.
+
 {
   "risk_register": [
     {
-      "risk": "Risk description",
-      "probability": "High",
-      "impact": "Critical",
-      "mitigation": "Specific mitigation steps with named resources and contacts",
-      "owner": "Owner",
-      "phase": "Phase 1"
+      "risk":        null,
+      "probability": null,   // "High" | "Medium" | "Low"
+      "impact":      null,   // "Critical" | "High" | "Medium"
+      "mitigation":  null,
+      "owner":       null,
+      "phase":       null
     }
   ],
   "team_vendors": [
     {
-      "role": "SBA Lender",
-      "name": "Specific company name",
-      "contact": "website.com",
-      "phone": "phone number",
-      "type": "Financial",
-      "notes": "Why this vendor, what makes them right for this business type"
+      "role":    null,
+      "name":    null,   // real verified vendor for user's location, or null
+      "contact": null,
+      "phone":   null,
+      "type":    null,   // "Financial" | "Legal" | "Real Estate" | "Operations" | etc.
+      "notes":   null
     }
   ],
   "checklist_phases": [
     {
-      "phase": "Month 1-3: Foundation",
+      "phase": null,
       "items": [
-        {
-          "task": "Specific actionable task",
-          "owner": "Owner",
-          "critical": true
-        }
+        {"task": null, "owner": null, "critical": null}
       ]
     }
   ]
 }
-Risk register: 8-10 risks with probability (High/Medium/Low) and impact (Critical/High/Medium). Team/vendors: 10-14 specific named vendors with real phone numbers and websites. Checklist: 5 phases with 10-15 items each.`;
+Risk register: 8-10. Team/vendors: 10-14 (only include vendors you can actually verify — null phone/contact if unknown). Checklist: 5 phases × 10-15 items.`;
 
   const p3 = await claudeJSON(sys3, usr3, {webSearch:true});
 
@@ -16276,6 +16326,23 @@ function rdRenderFinancialBadge(elId) {
     });
     const droppedFallback = beforeFilter - realChecks.length;
 
+    // ── Classify each check by match type ────────────────────────
+    // exact            — same field, same geography, same unit (e.g. ZIP ACS median income vs city0.median_hh_income WHEN city0 = primary ZIP city)
+    // tolerance_rate   — percentage rate with bounded tolerance (e.g. unemployment ±2pp)
+    // proxy            — derived/inferred comparison (e.g. commercial rent = HUD FMR 2BR × 3, OSM-only competitor count)
+    // cross_agent      — internal consistency (A9 year1 revenue vs A7 base × 12)
+    // direction_only   — high/low/match flag, not a numeric comparison
+    function _classify(c) {
+      const s   = (c.source || '').toLowerCase();
+      const fld = (c.field  || '').toLowerCase();
+      if (/×|proxy|hud×3|osm overpass|usps$|estimated|proxy/i.test(c.source || '')) return 'proxy';
+      if (/cross[- ]?agent/.test(s)) return 'cross_agent';
+      if (/availability|tight/i.test(fld)) return 'direction_only';
+      if (/rate|%|pct/.test(fld) || /\bpct\b/.test(fld)) return 'tolerance_rate';
+      return 'exact';
+    }
+    realChecks.forEach(c => { c.match_type = _classify(c); });
+
     // ── Need at least 2 valid checks to display ──────────────────
     const valid = realChecks.filter(c => c.acc !== null && !isNaN(c.acc));
     if (valid.length < 2) {
@@ -16284,14 +16351,38 @@ function rdRenderFinancialBadge(elId) {
       return;
     }
 
-    const avgAcc = valid.reduce((s, c) => s + c.acc, 0) / valid.length;
-    const pct    = Math.round(avgAcc * 100);
+    // ── Three weighted scores: strict (exact only), normal (exact+rate), and broad (incl proxy/cross-agent) ──
+    const buckets = { exact:[], tolerance_rate:[], proxy:[], cross_agent:[], direction_only:[] };
+    valid.forEach(c => (buckets[c.match_type] || buckets.exact).push(c));
 
-    R.accuracy = { score: pct, checks: valid, checked_at: Date.now(),
-                   fallback_agents: fallbackAgents, dropped_checks: droppedFallback };
-    console.log(`[Verifier] Consistency score: ${pct}% (${valid.length} checks; ${droppedFallback} dropped due to fallbacks)`);
+    const avg = arr => arr.length ? arr.reduce((s,c)=>s+c.acc,0)/arr.length : null;
+    const pctOf = v => v == null ? null : Math.round(v*100);
 
-    _renderAccuracyCard(pct, valid, { fallbackAgents, droppedFallback });
+    const strictPct = pctOf(avg(buckets.exact));                                       // strict field equality
+    const normalPct = pctOf(avg([...buckets.exact, ...buckets.tolerance_rate]));        // field+rate tolerance
+    const broadPct  = pctOf(avg(valid));                                                // includes proxy / cross-agent
+
+    // Headline = strict if enough exact checks, else normal
+    const pct = (buckets.exact.length >= 3 ? strictPct : normalPct) ?? broadPct ?? 0;
+
+    R.accuracy = {
+      score: pct,
+      score_strict: strictPct,
+      score_normal: normalPct,
+      score_broad:  broadPct,
+      checks: valid,
+      checked_at: Date.now(),
+      fallback_agents: fallbackAgents,
+      dropped_checks:  droppedFallback,
+      buckets: Object.fromEntries(Object.entries(buckets).map(([k,v])=>[k,v.length])),
+    };
+    console.log(`[Verifier] Consistency: strict=${strictPct}% normal=${normalPct}% broad=${broadPct}% (${valid.length} checks; ${droppedFallback} dropped due to fallbacks; buckets: ${JSON.stringify(R.accuracy.buckets)})`);
+
+    _renderAccuracyCard(pct, valid, {
+      fallbackAgents, droppedFallback,
+      strictPct, normalPct, broadPct,
+      buckets: R.accuracy.buckets,
+    });
   }
 
   // ── Render ─────────────────────────────────────────────────────
@@ -16304,10 +16395,21 @@ function rdRenderFinancialBadge(elId) {
     const color = pct >= 85 ? 'var(--green)' : pct >= 70 ? 'var(--amber)' : 'var(--red)';
     const grade = pct >= 90 ? 'A' : pct >= 80 ? 'B' : pct >= 70 ? 'C' : 'D';
 
-    const rows = checks.map(c => {
+    const typeBadge = {
+      exact:          {label:'EXACT',     color:'var(--green)',  bg:'rgba(34,197,94,0.15)'},
+      tolerance_rate: {label:'±RATE',     color:'var(--blue)',   bg:'rgba(74,158,255,0.15)'},
+      proxy:          {label:'PROXY',     color:'var(--amber)',  bg:'rgba(245,158,11,0.15)'},
+      cross_agent:    {label:'X-AGENT',   color:'var(--purple)', bg:'rgba(167,139,250,0.15)'},
+      direction_only: {label:'DIR ONLY',  color:'var(--muted)',  bg:'rgba(138,141,150,0.15)'},
+    };
+    // Sort: exact first, then tolerance_rate, then proxy, then cross_agent, then direction_only
+    const order = {exact:0,tolerance_rate:1,proxy:2,cross_agent:3,direction_only:4};
+    const sorted = [...checks].sort((a,b) => (order[a.match_type]??9) - (order[b.match_type]??9));
+    const rows = sorted.map(c => {
       const ap  = Math.round(c.acc * 100);
       const col = ap >= 85 ? 'var(--green)' : ap >= 70 ? 'var(--amber)' : 'var(--red)';
       const bar = `<div style="width:${ap}%;height:3px;background:${col};border-radius:2px"></div>`;
+      const tb  = typeBadge[c.match_type] || typeBadge.exact;
       return `<tr style="border-top:1px solid var(--border)">
         <td style="font-size:10px;color:var(--blue);padding:3px 8px;font-weight:700;white-space:nowrap">${c.agent}</td>
         <td style="font-size:10px;color:var(--text);padding:3px 8px">${c.field}</td>
@@ -16317,6 +16419,7 @@ function rdRenderFinancialBadge(elId) {
           <div style="font-size:10px;font-weight:700;color:${col};margin-bottom:2px">${ap}%</div>
           <div style="background:var(--surface3);border-radius:2px;overflow:hidden">${bar}</div>
         </td>
+        <td style="padding:3px 8px;white-space:nowrap"><span style="font-size:9px;font-weight:700;color:${tb.color};background:${tb.bg};padding:1px 5px;border-radius:3px">${tb.label}</span></td>
         <td style="font-size:9px;color:var(--faint);padding:3px 8px;white-space:nowrap">${c.source}</td>
       </tr>`;
     }).join('');
@@ -16325,6 +16428,19 @@ function rdRenderFinancialBadge(elId) {
     card.id    = 'rdAccuracyCard';
     card.style.cssText = 'margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden';
 
+    // Sub-score chips
+    const subScore = (lbl, v, n, tipExtra) => v == null ? '' : `
+      <div title="${tipExtra}" style="display:flex;flex-direction:column;align-items:center;padding:3px 8px;background:var(--surface3);border-radius:6px;min-width:62px">
+        <div style="font-size:13px;font-weight:700;font-family:'Syne',sans-serif;color:${v>=85?'var(--green)':v>=70?'var(--amber)':'var(--red)'}">${v}%</div>
+        <div style="font-size:8px;color:var(--faint);text-transform:uppercase;letter-spacing:0.05em">${lbl} · ${n}</div>
+      </div>`;
+    const b = meta.buckets || {};
+    const subChips = [
+      subScore('Strict', meta.strictPct, b.exact || 0, 'Same field, same geography, same unit — strictest field-level match'),
+      subScore('+Rate',  meta.normalPct, (b.exact||0) + (b.tolerance_rate||0), 'Adds percentage rates with bounded tolerance (e.g. ±2pp unemployment)'),
+      subScore('+Proxy', meta.broadPct,  Object.values(b).reduce((s,n)=>s+(n||0),0), 'Includes proxy comparisons (HUD×3 rent, OSM-only competitor count) and cross-agent consistency'),
+    ].join('');
+
     card.innerHTML = `
       <div style="padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
         <div style="display:flex;align-items:baseline;gap:6px">
@@ -16332,16 +16448,10 @@ function rdRenderFinancialBadge(elId) {
           <span style="font-size:11px;font-weight:700;background:${color};color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center">${grade}</span>
         </div>
         <div>
-          <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--text)" title="Compares AI output fields against proxy values from live government APIs. Not field-for-field equality — proxies use different geographies, units, or sectors (e.g. HUD×3 for commercial rent). Best read as 'AI tracks real-world benchmarks'.">Data Consistency Score</div>
-          <div style="font-size:10px;color:var(--faint)">${checks.length} AI fields cross-checked vs government proxy data${meta.fallbackAgents && meta.fallbackAgents.length ? ` · ⚠ ${meta.fallbackAgents.length} agent${meta.fallbackAgents.length===1?'':'s'} on fallback (excluded): A${meta.fallbackAgents.join(', A')}` : ''}</div>
+          <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--text)" title="Headline = strict-only score when there are ≥3 exact-match checks, else exact+rate. Sub-scores break it down by match strictness.">Data Consistency Score</div>
+          <div style="font-size:10px;color:var(--faint)">${checks.length} cross-checks · field-level match-typed${meta.fallbackAgents && meta.fallbackAgents.length ? ` · ⚠ ${meta.fallbackAgents.length} agent${meta.fallbackAgents.length===1?'':'s'} on fallback (excluded): A${meta.fallbackAgents.join(', A')}` : ''}</div>
         </div>
-        <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
-          ${pct >= 85
-            ? '<span style="font-size:10px;color:var(--green)">✓ High confidence</span>'
-            : pct >= 70
-            ? '<span style="font-size:10px;color:var(--amber)">△ Moderate confidence</span>'
-            : '<span style="font-size:10px;color:var(--red)">⚠ Review figures</span>'}
-        </div>
+        <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">${subChips}</div>
       </div>
       <div style="overflow-x:auto">
         <table style="border-collapse:collapse;width:100%">
@@ -16352,6 +16462,7 @@ function rdRenderFinancialBadge(elId) {
               <th style="font-size:9px;color:var(--faint);text-align:left;padding:4px 8px;text-transform:uppercase;letter-spacing:0.06em">Real</th>
               <th style="font-size:9px;color:var(--faint);text-align:left;padding:4px 8px;text-transform:uppercase;letter-spacing:0.06em">AI Said</th>
               <th style="font-size:9px;color:var(--faint);text-align:left;padding:4px 8px;text-transform:uppercase;letter-spacing:0.06em">Match</th>
+              <th style="font-size:9px;color:var(--faint);text-align:left;padding:4px 8px;text-transform:uppercase;letter-spacing:0.06em">Type</th>
               <th style="font-size:9px;color:var(--faint);text-align:left;padding:4px 8px;text-transform:uppercase;letter-spacing:0.06em">Source</th>
             </tr>
           </thead>

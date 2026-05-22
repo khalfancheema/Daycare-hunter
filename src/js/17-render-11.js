@@ -21,34 +21,32 @@ DEMOGRAPHICS: ${ctx(a1,['summary','cities'],600)}
 GAP ANALYSIS: ${ctx(a2,['summary','cities','overall_opportunity_score'],600)}
 REAL ESTATE: ${ctx(a4,['summary','by_city_summary'],400)}
 
-Return ONLY this JSON:
+Return ONLY this JSON. All values are placeholders.
+
 {
-  "center": {"lat": 0.0000, "lng": 0.0000, "label": "ZIP ${zip()} — City, ST"},
+  "center": {"lat": null, "lng": null, "label": null},
   "cities": [
     {
-      "name": "City name", "county": "County name",
-      "lat": 0.0000, "lng": 0.0000,
-      "gap_score": 8, "demand_score": 8, "supply_score": 3,
-      "unserved_children": 400, "median_income": 95000, "competitor_count": 2,
-      "priority": "Critical Opportunity|High Opportunity|Moderate|Saturated",
-      "recommended_action": "Open Here #1",
-      "real_estate_url": "https://www.loopnet.com/search/commercial-real-estate/city-st/for-lease/"
+      "name":               null,
+      "county":             null,
+      "lat":                null,
+      "lng":                null,
+      "gap_score":          null,    // 0-10
+      "demand_score":       null,    // 0-10
+      "supply_score":       null,    // 0-10
+      "unserved_children":  null,
+      "median_income":      null,    // USD/yr from ACS B19013
+      "competitor_count":   null,
+      "priority":           null,    // "Critical Opportunity" | "High Opportunity" | "Moderate" | "Saturated"
+      "recommended_action": null,
+      "real_estate_url":    null     // real filtered LoopNet/Crexi URL
     }
   ],
   "real_estate_pins": [
-    {
-      "label": "Location label", "lat": 0.0000, "lng": 0.0000,
-      "rent": 12000, "sqft": 8000,
-      "url": "https://www.loopnet.com/search/commercial-real-estate/city-st/for-lease/"
-    }
+    {"label": null, "lat": null, "lng": null, "rent": null, "sqft": null, "url": null}
   ],
   "directions": [
-    {
-      "from": "ZIP ${zip()} — City, ST",
-      "to": "Top city name",
-      "drive_mins": 15, "miles": 10.2,
-      "google_url": "https://maps.google.com/?saddr=ZIP+${zip()}&daddr=City+ST"
-    }
+    {"from": null, "to": null, "drive_mins": null, "miles": null, "google_url": null}
   ]
 }
 Use REAL coordinates for all cities. Cap at 8 cities, 4 real estate pins at top locations, 5 driving directions. LoopNet URLs must use actual city slugs (e.g. suwanee-ga not generic). Hard cap on counts prevents max_tokens truncation.`;

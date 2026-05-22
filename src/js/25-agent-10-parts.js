@@ -26,32 +26,36 @@ async function runAgent10Parts(a3,a4,a5,a7,a9) {
 SITE: ${ctx3}
 COMPLIANCE: ${ctx(a5,['summary','requirements','timeline_phases'])}
 
-Return ONLY:
+Return ONLY this JSON. All values are placeholders — populate every one from
+the upstream SITES / FINANCIALS / COMPLIANCE context. The single example task
+shown is structural ONLY; do not echo "Form Business Entity" or its dollar
+amount as a literal output.
+
 {
-  "project_name": "string",
-  "total_duration_months": 18,
-  "target_open_date": "Month 19 from start",
+  "project_name":          null,
+  "total_duration_months": null,
+  "target_open_date":      null,
   "phases": [
     {
-      "phase": "Phase 1: Foundation & Funding",
-      "months": "1-3",
-      "color": "#4a9eff",
+      "phase":  null,    // "Phase 1: Foundation & Funding" | "Phase 2: ..." (etc.)
+      "months": null,    // e.g. "1-3"
+      "color":  null,    // hex like "#4a9eff"
       "tasks": [
         {
-          "task": "Form Business Entity",
-          "month_start": 1,
-          "duration": 0.5,
-          "owner": "Owner",
-          "priority": "Critical",
-          "cost": 150,
-          "detail": "Detailed step-by-step instructions with specific URLs and phone numbers",
-          "links": ["https://specific-link.com"]
+          "task":        null,
+          "month_start": null,
+          "duration":    null,   // months as decimal (0.25, 0.5, 1, 2...)
+          "owner":       null,
+          "priority":    null,   // "Critical" | "High" | "Medium" (exact strings)
+          "cost":        null,   // USD
+          "detail":      null,   // step-by-step instructions with real URLs/phones for user's ZIP+state
+          "links":       []
         }
       ]
     }
   ]
 }
-Include ALL 5 phases: Foundation & Funding (months 1-3), Legal/Lease/Design (months 3-6), Construction & Licensing (months 6-12), Staffing & Pre-Opening (months 12-16), Soft Open & Ramp (months 16-18). Each phase should have 8-12 tasks with detailed step-by-step instructions, specific vendor names, phone numbers, and URLs. Priority must be exactly "Critical", "High", or "Medium".`;
+Include ALL 5 phases: Foundation & Funding (1-3), Legal/Lease/Design (3-6), Construction & Licensing (6-12), Staffing & Pre-Opening (12-16), Soft Open & Ramp (16-18). Each phase 8-12 tasks. Priority strings exactly "Critical", "High", "Medium".`;
 
   // ── Part 2 of 3: Milestones + Budget Tracker ─────────────
   const p1 = await claudeJSON(sys1, usr1, {webSearch:true});
@@ -61,28 +65,29 @@ Include ALL 5 phases: Foundation & Funding (months 1-3), Legal/Lease/Design (mon
 FINANCIALS: ${ctx7}
 BUSINESS PLAN: ${ctx9}
 
-Return ONLY:
+Return ONLY this JSON. All values are placeholders.
+
 {
   "milestones": [
     {
-      "month": "Week 1",
-      "title": "Milestone title",
-      "detail": "Specific criteria that prove this milestone is complete",
-      "owner": "Owner",
-      "priority": "critical"
+      "month":    null,
+      "title":    null,
+      "detail":   null,
+      "owner":    null,
+      "priority": null   // "critical" | "high"
     }
   ],
   "budget_tracker": [
     {
-      "category": "Budget category",
-      "budgeted": 8000,
-      "phase": "Phase 1",
-      "due": "Month 3",
-      "notes": "What drives this cost and how to minimize it"
+      "category": null,
+      "budgeted": null,   // USD
+      "phase":    null,
+      "due":      null,
+      "notes":    null
     }
   ]
 }
-Include 15-20 milestones from Week 1 through Month 18 (use "critical" or "high" for priority). Include 15-20 budget line items covering all startup costs with notes on cost drivers.`;
+15-20 milestones from Week 1 through Month 18. 15-20 budget line items covering all startup costs with cost-driver notes.`;
 
   // ── Part 3 of 3: Risk Register + Team + Checklist ────────
   const p2 = await claudeJSON(sys2, usr2, {webSearch:true});
@@ -93,42 +98,39 @@ SITE: ${ctx3}
 COMPLIANCE: ${ctx(a5,['summary','requirements'])}
 FINANCIALS: ${ctx7}
 
-Return ONLY:
+Return ONLY this JSON. All values are placeholders.
+
 {
   "risk_register": [
     {
-      "risk": "Risk description",
-      "probability": "High",
-      "impact": "Critical",
-      "mitigation": "Specific mitigation steps with named resources and contacts",
-      "owner": "Owner",
-      "phase": "Phase 1"
+      "risk":        null,
+      "probability": null,   // "High" | "Medium" | "Low"
+      "impact":      null,   // "Critical" | "High" | "Medium"
+      "mitigation":  null,
+      "owner":       null,
+      "phase":       null
     }
   ],
   "team_vendors": [
     {
-      "role": "SBA Lender",
-      "name": "Specific company name",
-      "contact": "website.com",
-      "phone": "phone number",
-      "type": "Financial",
-      "notes": "Why this vendor, what makes them right for this business type"
+      "role":    null,
+      "name":    null,   // real verified vendor for user's location, or null
+      "contact": null,
+      "phone":   null,
+      "type":    null,   // "Financial" | "Legal" | "Real Estate" | "Operations" | etc.
+      "notes":   null
     }
   ],
   "checklist_phases": [
     {
-      "phase": "Month 1-3: Foundation",
+      "phase": null,
       "items": [
-        {
-          "task": "Specific actionable task",
-          "owner": "Owner",
-          "critical": true
-        }
+        {"task": null, "owner": null, "critical": null}
       ]
     }
   ]
 }
-Risk register: 8-10 risks with probability (High/Medium/Low) and impact (Critical/High/Medium). Team/vendors: 10-14 specific named vendors with real phone numbers and websites. Checklist: 5 phases with 10-15 items each.`;
+Risk register: 8-10. Team/vendors: 10-14 (only include vendors you can actually verify — null phone/contact if unknown). Checklist: 5 phases × 10-15 items.`;
 
   const p3 = await claudeJSON(sys3, usr3, {webSearch:true});
 

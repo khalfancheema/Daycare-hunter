@@ -55,40 +55,51 @@ SEARCH STRATEGY:
 - Search "KIDS COUNT [state] child care" on datacenter.kidscount.org
 - Check if county is a "child care desert" per Child Care Aware criteria
 
-Return ONLY:
+Return ONLY this JSON. All example text/numbers are placeholders — replace every value
+with one derived from the AUTHORITATIVE DATA SOURCES + KEY FINDINGS above. Do NOT echo
+literal strings from this schema. Use null when a value cannot be verified.
+
 {
-  "summary": "5-sentence gap analysis citing specific data sources and numbers",
-  "overall_opportunity_score": 81,
-  "data_sources_used": ["US Census ACS 2022 (Tables B01001, S0901)", "State CAPS licensing database", "NDCP DOL county childcare prices", "Child Care Aware of America state report", "Head Start locator", "Google Maps search", "KIDS COUNT Data Center"],
-  "is_childcare_desert": true,
-  "childcare_desert_ratio": "1 slot per 4.8 children (Child Care Aware threshold: >3 children per slot)",
-  "ndcp_median_infant_rate": 1820,
-  "ndcp_median_toddler_rate": 1540,
-  "ndcp_median_preschool_rate": 1280,
-  "ndcp_source": "National Database of Childcare Prices, DOL Women's Bureau 2022",
+  "summary":                  null,   // 5-sentence narrative citing specific data sources + numbers
+  "overall_opportunity_score":null,   // 0-100 integer
+  "data_sources_used":        [],     // list of source names actually used
+  "is_childcare_desert":      null,   // boolean (Child Care Aware: >3 children per slot)
+  "childcare_desert_ratio":   null,   // free-text like "1 slot per N.N children"
+  "ndcp_median_infant_rate":  null,   // USD/mo from NDCP county data
+  "ndcp_median_toddler_rate": null,   // USD/mo
+  "ndcp_median_preschool_rate":null,  // USD/mo
+  "ndcp_source":              null,   // citation string
   "cities": [
     {
-      "city": "City name", "rank": 1,
-      "demand_score": 0, "supply_score": 0, "gap_score": 0,
-      "unserved_children": 0, "licensed_centers_count": 0, "total_licensed_capacity_est": 0,
-      "children_under5_census": 0, "demand_to_supply_ratio": 0.0,
-      "income_tier": "Premium|Mid-Market|Affordable",
-      "recommended_tuition_infant": 0, "recommended_tuition_preschool": 0,
-      "ndcp_county_median_infant": 0, "pricing_premium_vs_market_pct": 0,
-      "head_start_slots": 0, "subsidized_slots_est": 0,
-      "is_desert": true,
-      "priority": "Critical Opportunity|High Opportunity|Moderate|Saturated",
-      "rationale": "1-sentence reason",
-      "why_gap": "2-3 sentences citing data sources with specific numbers",
+      "city":                       null,
+      "rank":                       null,
+      "demand_score":               null,   // 0-100
+      "supply_score":               null,   // 0-100
+      "gap_score":                  null,   // 0-100
+      "unserved_children":          null,   // integer
+      "licensed_centers_count":     null,
+      "total_licensed_capacity_est":null,
+      "children_under5_census":     null,   // ACS B09001
+      "demand_to_supply_ratio":     null,
+      "income_tier":                null,   // "Premium" | "Mid-Market" | "Affordable"
+      "recommended_tuition_infant": null,   // USD/mo
+      "recommended_tuition_preschool":null, // USD/mo
+      "ndcp_county_median_infant":  null,
+      "pricing_premium_vs_market_pct":null,
+      "head_start_slots":           null,
+      "subsidized_slots_est":       null,
+      "is_desert":                  null,
+      "priority":                   null,   // "Critical Opportunity" | "High Opportunity" | "Moderate" | "Saturated"
+      "rationale":                  null,
+      "why_gap":                    null,
       "data_points": [
-        {"label": "Metric name", "value": "Formatted value", "source": "Source name"}
+        {"label": null, "value": null, "source": null}
       ],
-      "sources": ["Source 1", "Source 2"]
+      "sources": []
     }
   ],
   "age_gaps": [
-    {"age": "${ind.tiers[0]||'Tier 1'}", "demand_idx": 0, "supply_idx": 0, "gap": 0, "source": "Source name"},
-    {"age": "${ind.tiers[1]||'Tier 2'}", "demand_idx": 0, "supply_idx": 0, "gap": 0, "source": "Source name"}
+    {"age": "${ind.tiers[0]||'Tier 1'}", "demand_idx": null, "supply_idx": null, "gap": null, "source": null}
   ]
 }
 

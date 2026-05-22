@@ -21,31 +21,33 @@ async function runAgent5() {
 Regulatory authority: ${ind.regulatory}
 Key compliance areas: ${ind.compliance}
 
-Return ONLY this JSON (no apply_instructions yet — those come separately):
+Return ONLY this JSON (no apply_instructions yet). All values are placeholders —
+populate them from verified federal/state/local sources for the user's ZIP.
+
 {
-  "summary": "4-sentence overview of main regulatory requirements mentioning key agencies by name",
-  "state_portal_url": "https://[actual state licensing portal URL]",
-  "sba_permits_url": "https://www.sba.gov/business-guide/launch-your-business/apply-licenses-permits",
-  "total_timeline_months": 14,
+  "summary":                null,
+  "state_portal_url":       null,
+  "sba_permits_url":        "https://www.sba.gov/business-guide/launch-your-business/apply-licenses-permits",
+  "total_timeline_months":  null,
   "requirements": [
     {
-      "category": "Business Formation|Tax|Licensing|Zoning|Building|Fire|Insurance|Staffing",
-      "item": "Requirement name",
-      "detail": "1-2 sentence detail",
-      "timeline_weeks": 2,
-      "cost_usd": 100,
-      "source": "Agency short name",
-      "priority": "Critical|High|Medium",
-      "agency_name": "Full official agency name",
-      "apply_url": "https://actual-portal-url",
-      "form_name": "Form name/number or null",
-      "apply_phone": "Phone number or null",
-      "apply_email": "Email or null",
-      "online_available": true
+      "category":          null,
+      "item":              null,
+      "detail":            null,
+      "timeline_weeks":    null,
+      "cost_usd":          null,
+      "source":            null,
+      "priority":          null,
+      "agency_name":       null,
+      "apply_url":         null,
+      "form_name":         null,
+      "apply_phone":       null,
+      "apply_email":       null,
+      "online_available":  null
     }
   ],
   "timeline_phases": [
-    {"phase": "Phase name", "weeks": 4, "tasks": "Brief task list"}
+    {"phase": null, "weeks": null, "tasks": null}
   ]
 }
 Include 8-10 requirements covering: LLC formation, EIN, state ${ind.unit} license, zoning/CUP, building permit, fire inspection, certificate of occupancy, insurance, background checks.

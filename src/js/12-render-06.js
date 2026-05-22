@@ -25,36 +25,48 @@ Top recommended locations: ${ctx(a3,['summary','locations'])}
 
 Property requirements: ${ind.real_estate}
 
-Return ONLY:
+Return ONLY this JSON. URLs in search_urls must be REAL filtered URLs built from the user's
+ZIP/city/state — do not echo the literal template strings shown here.
+
 {
-  "summary": "3-4 sentence overview of the commercial real estate market for a ${ind.unit} in this area",
-  "search_urls": {
-    "loopnet_primary": "https://www.loopnet.com/search/commercial-real-estate/ZIP-CITY/for-lease/?ListingType=1&MinSize=5000&MaxSize=15000",
-    "loopnet_secondary": "https://www.loopnet.com/search/commercial-real-estate/nearby-city/for-lease/",
-    "bizbuysell": "https://www.bizbuysell.com/STATE/INDUSTRY-businesses-for-sale/",
-    "crexi_primary": "https://www.crexi.com/lease/properties?address=PRIMARY+CITY+STATE&minSqft=5000&maxSqft=15000",
-    "crexi_secondary": "https://www.crexi.com/lease/properties?address=SECONDARY+CITY+STATE",
-    "zillow_commercial": "https://www.zillow.com/commercial/",
-    "costar": "https://www.costar.com/",
-    "county_gis": "https://www.COUNTY.gov/planning",
-    "economic_dev": "https://www.CITY.gov/economic-development"
+  "summary":     null,    // 3-4 sentence market overview
+  "search_urls": {        // each value must be a real URL with ZIP/CITY filled in
+    "loopnet_primary":   null,
+    "loopnet_secondary": null,
+    "bizbuysell":        null,
+    "crexi_primary":     null,
+    "crexi_secondary":   null,
+    "zillow_commercial": null,
+    "costar":            null,
+    "county_gis":        null,
+    "economic_dev":      null
   },
-  "listings": [
+  "listings": [           // only include listings you actually verified
     {
-      "id": 1, "address": "Full street address, City, ST ZIP", "city": "City name",
-      "property_type": "Freestanding Retail|Office Conversion|Strip Mall End-Cap|Flex/Retail|Build-to-Suit",
-      "sqft": 0, "monthly_rent": 0, "price_per_sqft": 0.00,
-      "zoning": "C-1|C-2|O-I|PUD", "outdoor_space_available": true, "outdoor_sqft_est": 0,
-      "suitable_for_daycare": true, "buildout_cost_est": 0,
-      "source": "LoopNet|BizBuySell|Crexi|CoStar",
-      "listing_url": "https://www.loopnet.com/search/commercial-real-estate/city-st/for-lease/",
-      "broker_name": "Broker name", "broker_phone": "XXX-XXX-XXXX", "broker_email": "email or empty string",
-      "availability": "Available Now|Immediate|Q1 2026|Negotiable",
-      "score": 0, "notes": "Key notes about the property"
+      "id":              null,
+      "address":         null,
+      "city":            null,
+      "property_type":   null,   // "Freestanding Retail" | "Office Conversion" | "Strip Mall End-Cap" | "Flex/Retail" | "Build-to-Suit"
+      "sqft":            null,
+      "monthly_rent":    null,
+      "price_per_sqft":  null,
+      "zoning":          null,
+      "outdoor_space_available": null,
+      "outdoor_sqft_est":null,
+      "suitable_for_daycare":    null,
+      "buildout_cost_est":null,
+      "source":          null,   // "LoopNet" | "BizBuySell" | "Crexi" | "CoStar"
+      "listing_url":     null,   // actual listing page if found, else null
+      "broker_name":     null,
+      "broker_phone":    null,
+      "broker_email":    null,
+      "availability":    null,
+      "score":           null,
+      "notes":           null
     }
   ],
   "by_city_summary": [
-    {"city": "City name", "avg_rent_sqft": 0.00, "available_listings_est": 0, "best_zoning": "C-1", "market_note": "Brief market note"}
+    {"city": null, "avg_rent_sqft": null, "available_listings_est": null, "best_zoning": null, "market_note": null}
   ]
 }`;
   try {

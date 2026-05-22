@@ -14,26 +14,38 @@ REGULATORY: ${ctx(a5,['summary','requirements','timeline_phases'])}
 
 Return ONLY:
 {
-  "summary": "5-sentence site selection strategy",
-  "locations": [
+  "summary":   null,   // 5-sentence site selection strategy
+  "locations": [        // 5 entries, ranked
     {
-      "rank": 1, "city": "City name", "submarket": "Submarket / corridor description",
-      "overall_score": 0,
-      "scores": {"demand": 0, "competition": 0, "demographics": 0, "real_estate": 0, "regulatory": 0, "walkability": 0, "transit": 0, "schools": 0},
-      "capacity_recommended": 0, "target_infant_tuition": 0, "target_preschool_tuition": 0,
-      "risk": "Low|Low-Medium|Medium|High", "timeline_months": 0,
-      "children_under5_nearby": 0, "competitors_within_2mi": 0,
-      "sqft_needed": 0, "est_monthly_rent_range": "$X,000-$X,000",
-      "ideal_property_type": "Property type description",
-      "zoning_needed": "Zone type",
-      "pros": ["Pro 1", "Pro 2", "Pro 3"],
-      "cons": ["Con 1", "Con 2"],
-      "reasoning": "2-3 sentence analysis citing specific Census/licensing data and traffic counts",
-      "walk_score": 0, "walk_score_label": "Car-Dependent|Bikeable|Very Walkable",
-      "transit_score": 0, "transit_description": "Transit options description",
-      "nearest_school_name": "School name", "nearest_school_rating": 0, "nearest_school_distance_mi": 0.0,
-      "school_avg_rating_2mi": 0.0, "schools_within_2mi": 0,
-      "reasoning_sources": ["Source 1", "Source 2"]
+      "rank":                       null,
+      "city":                       null,
+      "submarket":                  null,
+      "overall_score":              null,   // 0-100
+      "scores": {"demand": null, "competition": null, "demographics": null, "real_estate": null, "regulatory": null, "walkability": null, "transit": null, "schools": null},
+      "capacity_recommended":       null,
+      "target_infant_tuition":      null,
+      "target_preschool_tuition":   null,
+      "risk":                       null,   // "Low" | "Low-Medium" | "Medium" | "High"
+      "timeline_months":            null,
+      "children_under5_nearby":     null,
+      "competitors_within_2mi":     null,
+      "sqft_needed":                null,
+      "est_monthly_rent_range":     null,
+      "ideal_property_type":        null,
+      "zoning_needed":              null,
+      "pros":                       [],
+      "cons":                       [],
+      "reasoning":                  null,
+      "walk_score":                 null,
+      "walk_score_label":           null,   // "Car-Dependent" | "Bikeable" | "Very Walkable"
+      "transit_score":              null,
+      "transit_description":        null,
+      "nearest_school_name":        null,
+      "nearest_school_rating":      null,
+      "nearest_school_distance_mi": null,
+      "school_avg_rating_2mi":      null,
+      "schools_within_2mi":         null,
+      "reasoning_sources":          []
     }
   ]
 }`;

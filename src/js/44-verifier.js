@@ -663,6 +663,23 @@
     });
     const droppedFallback = beforeFilter - realChecks.length;
 
+    // ── Classify each check by match type ────────────────────────
+    // exact            — same field, same geography, same unit (e.g. ZIP ACS median income vs city0.median_hh_income WHEN city0 = primary ZIP city)
+    // tolerance_rate   — percentage rate with bounded tolerance (e.g. unemployment ±2pp)
+    // proxy            — derived/inferred comparison (e.g. commercial rent = HUD FMR 2BR × 3, OSM-only competitor count)
+    // cross_agent      — internal consistency (A9 year1 revenue vs A7 base × 12)
+    // direction_only   — high/low/match flag, not a numeric comparison
+    function _classify(c) {
+      const s   = (c.source || '').toLowerCase();
+      const fld = (c.field  || '').toLowerCase();
+      if (/×|proxy|hud×3|osm overpass|usps$|estimated|proxy/i.test(c.source || '')) return 'proxy';
+      if (/cross[- ]?agent/.test(s)) return 'cross_agent';
+      if (/availability|tight/i.test(fld)) return 'direction_only';
+      if (/rate|%|pct/.test(fld) || /\bpct\b/.test(fld)) return 'tolerance_rate';
+      return 'exact';
+    }
+    realChecks.forEach(c => { c.match_type = _classify(c); });
+
     // ── Need at least 2 valid checks to display ──────────────────
     const valid = realChecks.filter(c => c.acc !== null && !isNaN(c.acc));
     if (valid.length < 2) {
@@ -671,14 +688,38 @@
       return;
     }
 
-    const avgAcc = valid.reduce((s, c) => s + c.acc, 0) / valid.length;
-    const pct    = Math.round(avgAcc * 100);
+    // ── Three weighted scores: strict (exact only), normal (exact+rate), and broad (incl proxy/cross-agent) ──
+    const buckets = { exact:[], tolerance_rate:[], proxy:[], cross_agent:[], direction_only:[] };
+    valid.forEach(c => (buckets[c.match_type] || buckets.exact).push(c));
 
-    R.accuracy = { score: pct, checks: valid, checked_at: Date.now(),
-                   fallback_agents: fallbackAgents, dropped_checks: droppedFallback };
-    console.log(`[Verifier] Consistency score: ${pct}% (${valid.length} checks; ${droppedFallback} dropped due to fallbacks)`);
+    const avg = arr => arr.length ? arr.reduce((s,c)=>s+c.acc,0)/arr.length : null;
+    const pctOf = v => v == null ? null : Math.round(v*100);
 
-    _renderAccuracyCard(pct, valid, { fallbackAgents, droppedFallback });
+    const strictPct = pctOf(avg(buckets.exact));                                       // strict field equality
+    const normalPct = pctOf(avg([...buckets.exact, ...buckets.tolerance_rate]));        // field+rate tolerance
+    const broadPct  = pctOf(avg(valid));                                                // includes proxy / cross-agent
+
+    // Headline = strict if enough exact checks, else normal
+    const pct = (buckets.exact.length >= 3 ? strictPct : normalPct) ?? broadPct ?? 0;
+
+    R.accuracy = {
+      score: pct,
+      score_strict: strictPct,
+      score_normal: normalPct,
+      score_broad:  broadPct,
+      checks: valid,
+      checked_at: Date.now(),
+      fallback_agents: fallbackAgents,
+      dropped_checks:  droppedFallback,
+      buckets: Object.fromEntries(Object.entries(buckets).map(([k,v])=>[k,v.length])),
+    };
+    console.log(`[Verifier] Consistency: strict=${strictPct}% normal=${normalPct}% broad=${broadPct}% (${valid.length} checks; ${droppedFallback} dropped due to fallbacks; buckets: ${JSON.stringify(R.accuracy.buckets)})`);
+
+    _renderAccuracyCard(pct, valid, {
+      fallbackAgents, droppedFallback,
+      strictPct, normalPct, broadPct,
+      buckets: R.accuracy.buckets,
+    });
   }
 
   // ── Render ─────────────────────────────────────────────────────
@@ -691,10 +732,21 @@
     const color = pct >= 85 ? 'var(--green)' : pct >= 70 ? 'var(--amber)' : 'var(--red)';
     const grade = pct >= 90 ? 'A' : pct >= 80 ? 'B' : pct >= 70 ? 'C' : 'D';
 
-    const rows = checks.map(c => {
+    const typeBadge = {
+      exact:          {label:'EXACT',     color:'var(--green)',  bg:'rgba(34,197,94,0.15)'},
+      tolerance_rate: {label:'±RATE',     color:'var(--blue)',   bg:'rgba(74,158,255,0.15)'},
+      proxy:          {label:'PROXY',     color:'var(--amber)',  bg:'rgba(245,158,11,0.15)'},
+      cross_agent:    {label:'X-AGENT',   color:'var(--purple)', bg:'rgba(167,139,250,0.15)'},
+      direction_only: {label:'DIR ONLY',  color:'var(--muted)',  bg:'rgba(138,141,150,0.15)'},
+    };
+    // Sort: exact first, then tolerance_rate, then proxy, then cross_agent, then direction_only
+    const order = {exact:0,tolerance_rate:1,proxy:2,cross_agent:3,direction_only:4};
+    const sorted = [...checks].sort((a,b) => (order[a.match_type]??9) - (order[b.match_type]??9));
+    const rows = sorted.map(c => {
       const ap  = Math.round(c.acc * 100);
       const col = ap >= 85 ? 'var(--green)' : ap >= 70 ? 'var(--amber)' : 'var(--red)';
       const bar = `<div style="width:${ap}%;height:3px;background:${col};border-radius:2px"></div>`;
+      const tb  = typeBadge[c.match_type] || typeBadge.exact;
       return `<tr style="border-top:1px solid var(--border)">
         <td style="font-size:10px;color:var(--blue);padding:3px 8px;font-weight:700;white-space:nowrap">${c.agent}</td>
         <td style="font-size:10px;color:var(--text);padding:3px 8px">${c.field}</td>
@@ -704,6 +756,7 @@
           <div style="font-size:10px;font-weight:700;color:${col};margin-bottom:2px">${ap}%</div>
           <div style="background:var(--surface3);border-radius:2px;overflow:hidden">${bar}</div>
         </td>
+        <td style="padding:3px 8px;white-space:nowrap"><span style="font-size:9px;font-weight:700;color:${tb.color};background:${tb.bg};padding:1px 5px;border-radius:3px">${tb.label}</span></td>
         <td style="font-size:9px;color:var(--faint);padding:3px 8px;white-space:nowrap">${c.source}</td>
       </tr>`;
     }).join('');
@@ -712,6 +765,19 @@
     card.id    = 'rdAccuracyCard';
     card.style.cssText = 'margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden';
 
+    // Sub-score chips
+    const subScore = (lbl, v, n, tipExtra) => v == null ? '' : `
+      <div title="${tipExtra}" style="display:flex;flex-direction:column;align-items:center;padding:3px 8px;background:var(--surface3);border-radius:6px;min-width:62px">
+        <div style="font-size:13px;font-weight:700;font-family:'Syne',sans-serif;color:${v>=85?'var(--green)':v>=70?'var(--amber)':'var(--red)'}">${v}%</div>
+        <div style="font-size:8px;color:var(--faint);text-transform:uppercase;letter-spacing:0.05em">${lbl} · ${n}</div>
+      </div>`;
+    const b = meta.buckets || {};
+    const subChips = [
+      subScore('Strict', meta.strictPct, b.exact || 0, 'Same field, same geography, same unit — strictest field-level match'),
+      subScore('+Rate',  meta.normalPct, (b.exact||0) + (b.tolerance_rate||0), 'Adds percentage rates with bounded tolerance (e.g. ±2pp unemployment)'),
+      subScore('+Proxy', meta.broadPct,  Object.values(b).reduce((s,n)=>s+(n||0),0), 'Includes proxy comparisons (HUD×3 rent, OSM-only competitor count) and cross-agent consistency'),
+    ].join('');
+
     card.innerHTML = `
       <div style="padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
         <div style="display:flex;align-items:baseline;gap:6px">
@@ -719,16 +785,10 @@
           <span style="font-size:11px;font-weight:700;background:${color};color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center">${grade}</span>
         </div>
         <div>
-          <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--text)" title="Compares AI output fields against proxy values from live government APIs. Not field-for-field equality — proxies use different geographies, units, or sectors (e.g. HUD×3 for commercial rent). Best read as 'AI tracks real-world benchmarks'.">Data Consistency Score</div>
-          <div style="font-size:10px;color:var(--faint)">${checks.length} AI fields cross-checked vs government proxy data${meta.fallbackAgents && meta.fallbackAgents.length ? ` · ⚠ ${meta.fallbackAgents.length} agent${meta.fallbackAgents.length===1?'':'s'} on fallback (excluded): A${meta.fallbackAgents.join(', A')}` : ''}</div>
+          <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--text)" title="Headline = strict-only score when there are ≥3 exact-match checks, else exact+rate. Sub-scores break it down by match strictness.">Data Consistency Score</div>
+          <div style="font-size:10px;color:var(--faint)">${checks.length} cross-checks · field-level match-typed${meta.fallbackAgents && meta.fallbackAgents.length ? ` · ⚠ ${meta.fallbackAgents.length} agent${meta.fallbackAgents.length===1?'':'s'} on fallback (excluded): A${meta.fallbackAgents.join(', A')}` : ''}</div>
         </div>
-        <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
-          ${pct >= 85
-            ? '<span style="font-size:10px;color:var(--green)">✓ High confidence</span>'
-            : pct >= 70
-            ? '<span style="font-size:10px;color:var(--amber)">△ Moderate confidence</span>'
-            : '<span style="font-size:10px;color:var(--red)">⚠ Review figures</span>'}
-        </div>
+        <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">${subChips}</div>
       </div>
       <div style="overflow-x:auto">
         <table style="border-collapse:collapse;width:100%">
@@ -739,6 +799,7 @@
               <th style="font-size:9px;color:var(--faint);text-align:left;padding:4px 8px;text-transform:uppercase;letter-spacing:0.06em">Real</th>
               <th style="font-size:9px;color:var(--faint);text-align:left;padding:4px 8px;text-transform:uppercase;letter-spacing:0.06em">AI Said</th>
               <th style="font-size:9px;color:var(--faint);text-align:left;padding:4px 8px;text-transform:uppercase;letter-spacing:0.06em">Match</th>
+              <th style="font-size:9px;color:var(--faint);text-align:left;padding:4px 8px;text-transform:uppercase;letter-spacing:0.06em">Type</th>
               <th style="font-size:9px;color:var(--faint);text-align:left;padding:4px 8px;text-transform:uppercase;letter-spacing:0.06em">Source</th>
             </tr>
           </thead>

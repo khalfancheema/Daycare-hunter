@@ -20,43 +20,59 @@ Key competitors: ${ind.competitors}
 
 Search: Google Maps "${ind.unit} near ${zip()}", Yelp, state licensing portal, Winnie.com, NAEYC accreditation finder, Head Start locator (eclkc.acf.hhs.gov), NDCP (DOL Women's Bureau county rates).
 
-Return ONLY this JSON (no individual center details — aggregate data only):
+Return ONLY this JSON (aggregate only — no individual center details).
+Every value is a placeholder; populate from verified sources for the user's ZIP.
+
 {
-  "summary": "5-sentence competitive landscape with specific numbers and sources",
-  "total_licensed_estimated": 40,
-  "total_accredited_naeyc": 4,
-  "total_head_start_slots": 280,
-  "ndcp_county_median_infant": 1820,
-  "ndcp_county_median_preschool": 1280,
-  "ndcp_source": "DOL NDCP 2022 — [County] County",
-  "data_sources": ["Source 1", "Source 2"],
-  "home_daycares_estimated": 20,
-  "faith_based_count": 4,
-  "subsidized_seats_total": 180,
-  "competitive_intensity_score": 6,
-  "market_structure_note": "Brief market structure description",
+  "summary":                       null,
+  "total_licensed_estimated":      null,
+  "total_accredited_naeyc":        null,
+  "total_head_start_slots":        null,
+  "ndcp_county_median_infant":     null,
+  "ndcp_county_median_preschool":  null,
+  "ndcp_source":                   null,
+  "data_sources":                  [],
+  "home_daycares_estimated":       null,
+  "faith_based_count":             null,
+  "subsidized_seats_total":        null,
+  "competitive_intensity_score":   null,    // 0-10
+  "market_structure_note":         null,
   "cities": [
     {
-      "city": "City name",
-      "center_count": 8, "licensed_capacity_total": 640,
-      "chain_count": 3, "independent_count": 4, "nonprofit_count": 1,
-      "naeyc_accredited_count": 2, "qris_avg_stars": 3.4, "head_start_slots_city": 60,
-      "avg_monthly_infant": 1950, "avg_monthly_preschool": 1580,
-      "avg_rating": 4.1, "avg_review_count": 87,
-      "capacity_utilization_pct": 88, "waitlist_common": false, "avg_waitlist_weeks": 4,
-      "gap_score": 7,
-      "gap_score_explanation": "1-2 sentence explanation citing sources"
+      "city":                       null,
+      "center_count":               null,
+      "licensed_capacity_total":    null,
+      "chain_count":                null,
+      "independent_count":          null,
+      "nonprofit_count":            null,
+      "naeyc_accredited_count":     null,
+      "qris_avg_stars":             null,
+      "head_start_slots_city":      null,
+      "avg_monthly_infant":         null,
+      "avg_monthly_preschool":      null,
+      "avg_rating":                 null,
+      "avg_review_count":           null,
+      "capacity_utilization_pct":   null,
+      "waitlist_common":            null,
+      "avg_waitlist_weeks":         null,
+      "gap_score":                  null,
+      "gap_score_explanation":      null
     }
   ],
   "top_chains": [
     {
-      "name": "Chain name", "locations_in_area": 4,
-      "monthly_tuition_range": "$1,600–$2,100", "rating": 4.1,
-      "type": "Chain|Independent|Non-profit|Home-based|Faith-based|Subsidized",
-      "provider_type": "Premium|Budget|Subsidized|Home-based|Faith-based",
-      "nonprofit": false, "market_share_pct": 22,
-      "accepts_subsidy": false, "naeyc_accredited": true,
-      "strengths": "Key strengths", "weaknesses": "Key weaknesses"
+      "name":                  null,
+      "locations_in_area":     null,
+      "monthly_tuition_range": null,
+      "rating":                null,
+      "type":                  null,   // "Chain" | "Independent" | "Non-profit" | "Home-based" | "Faith-based" | "Subsidized"
+      "provider_type":         null,   // "Premium" | "Budget" | "Subsidized" | "Home-based" | "Faith-based"
+      "nonprofit":             null,
+      "market_share_pct":      null,
+      "accepts_subsidy":       null,
+      "naeyc_accredited":      null,
+      "strengths":             null,
+      "weaknesses":            null
     }
   ]
 }
