@@ -211,6 +211,30 @@ if (typeof window !== 'undefined') {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// PROXY HELPER — fetch government APIs via /api/proxy when window.USE_PROXY
+// is true. Server-side env vars hold the keys; client never sees them.
+// ══════════════════════════════════════════════════════════════════════════════
+async function _rdViaProxy(source, path, opts = {}) {
+  const proxyUrl = (typeof window !== 'undefined' && window.PROXY_URL) || '/api/proxy';
+  const res = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ source, path, method: opts.method || 'GET', body: opts.body }),
+    signal: opts.signal,
+  });
+  return res;
+}
+
+if (typeof window !== 'undefined' && window.USE_PROXY === undefined) {
+  // Auto-enable proxy if it responds to a HEAD/OPTIONS probe — gives zero-config
+  // behavior when api/proxy.mjs is deployed alongside the static bundle.
+  window.USE_PROXY = false;
+  fetch('/api/proxy', { method: 'OPTIONS' })
+    .then(r => { if (r.status === 204 || r.status === 200) window.USE_PROXY = true; })
+    .catch(() => {});
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // MAIN ORCHESTRATOR
 // ══════════════════════════════════════════════════════════════════════════════
 async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
@@ -934,7 +958,7 @@ async function _rdFetchACS(zip) {
     // ACS 5-Year variables: pop, median_income, owner_occ, under_18, employed,
     // bachelors (B15003_022), masters (023), professional (024), doctorate (025), renter
     const vars = 'B01003_001E,B19013_001E,B25003_002E,B09001_001E,B23025_004E,B15003_022E,B15003_023E,B15003_024E,B15003_025E,B25003_003E';
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const url = `https://api.census.gov/data/2024/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
@@ -1066,19 +1090,19 @@ async function _rdFetchFRED() {
     const cpi = lastVal(cpiRes);
     const un  = lastVal(unempRes);
 
-    // fredgraph.csv is CORS-blocked in browsers — fall back to recent hardcoded values
+    // If all three FRED CSVs were blocked (CORS) or failed, return null instead
+    // of hardcoded constants — stale values masquerading as live data would
+    // pollute the verifier's consistency score with false "real" data.
     if (fed === null && cpi === null && un === null) {
-      console.warn('[RealData] FRED CORS blocked — using hardcoded fallback (May 2025)');
-      const fb = { fed_funds_rate:4.33, cpi:319.8, unemployment:4.2, prime_rate:7.33,
-                   source:'FRED (hardcoded May 2025)', _fallback:true };
-      return _rdCacheSet(k, fb);
+      console.warn('[RealData] FRED all CSVs blocked/failed — returning null (no hardcoded fallback)');
+      return null;
     }
     const result = {
-      fed_funds_rate: fed  ?? 4.33,
-      cpi:            cpi  ?? 319.8,
-      unemployment:   un   ?? 4.2,
-      prime_rate:     fed  ? Math.round((fed + 3) * 10) / 10 : 7.33,
-      source:         'FRED (Federal Reserve)',
+      fed_funds_rate: fed,
+      cpi:            cpi,
+      unemployment:   un,
+      prime_rate:     fed != null ? Math.round((fed + 3) * 10) / 10 : null,
+      source:         'FRED (Federal Reserve, live CSV)',
     };
     return _rdCacheSet(k, result);
   } catch(e) { console.warn('[RealData] FRED failed:', e.message); return null; }
@@ -1479,8 +1503,8 @@ async function _rdFetchACSExpanded(zip) {
     // B08303_001E = total commuters; B08303_013E = commuters 60+ min
     const vars = 'S2301_C04_001E,B17001_001E,B17001_002E,B11003_001E,B11003_002E,B25064_001E,B25002_001E,B25002_003E,B08303_001E,B08303_013E';
     // Subject tables (S) must use /subject endpoint
-    const subjUrl = `https://api.census.gov/data/2022/acs/acs5/subject?get=S2301_C04_001E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
-    const detUrl  = `https://api.census.gov/data/2022/acs/acs5?get=B17001_001E,B17001_002E,B11003_001E,B11003_002E,B25064_001E,B25002_001E,B25002_003E,B08303_001E,B08303_013E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const subjUrl = `https://api.census.gov/data/2024/acs/acs5/subject?get=S2301_C04_001E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const detUrl  = `https://api.census.gov/data/2024/acs/acs5?get=B17001_001E,B17001_002E,B11003_001E,B11003_002E,B25064_001E,B25002_001E,B25002_003E,B08303_001E,B08303_013E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const parseCensus = async r => {
       if (!r || !r.ok) return null;
       const t = await r.text();
@@ -1648,7 +1672,7 @@ async function _rdFetchCBPCounty(stateFips, countyFips, naics) {
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
     // Census CBP requires window.CENSUS_API_KEY (free at api.census.gov/data/key_signup.html)
-    const url = `https://api.census.gov/data/2022/cbp?get=ESTAB,EMP,PAYANN&for=county:${countyFips}&in=state:${stateFips}&NAICS2017=${naics}${_rdCensusKeySuffix()}`;
+    const url = `https://api.census.gov/data/2023/cbp?get=ESTAB,EMP,PAYANN&for=county:${countyFips}&in=state:${stateFips}&NAICS2017=${naics}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
@@ -1885,7 +1909,7 @@ async function _rdFetchACSHomeValue(zip) {
   try {
     // B25077_001E = median value of owner-occupied housing units
     // B25104_001E = monthly housing costs (median) — owner+renter combined
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=B25077_001E,B25104_001E,B25088_001E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const url = `https://api.census.gov/data/2024/acs/acs5?get=B25077_001E,B25104_001E,B25088_001E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
@@ -2038,7 +2062,7 @@ async function _rdFetchACSIndustryMix(zip) {
     // _010 educational/health, _011 arts/entertainment, _012 other svc, _013 public admin
     const vars = 'C24050_001E,C24050_005E,C24050_009E,C24050_010E,C24050_011E,B19301_001E';
     // B19301_001E = per capita income
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const url = `https://api.census.gov/data/2024/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
@@ -2147,7 +2171,7 @@ async function _rdFetchACSMigration(zip) {
     // B07001_001 = total pop 1yr+; _017 = same house 1yr ago; _033 = same county;
     // _049 = different county same state; _065 = different state; _081 = abroad
     const vars = 'B07001_001E,B07001_017E,B07001_033E,B07001_049E,B07001_065E,B07001_081E';
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const url = `https://api.census.gov/data/2024/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();

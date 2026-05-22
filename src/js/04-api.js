@@ -81,7 +81,7 @@ async function claudeJSON(system, user, opts={}) {
     return {};
   }
   if(!demoMode) {
-    const cached = getCache(system, user);
+    const cached = getCache(system, user, opts);
     if(cached) { console.log('Cache hit'); return cached; }
   }
   const strictSystem = system + `
@@ -125,7 +125,7 @@ CRITICAL — NUMERIC PRECISION:
     try {
       const raw = await claude(strictSystem, user + (attempt > 1 ? '\n\nRemember: respond with ONLY the JSON object, nothing else.' : ''), opts);
       const d = parseJSON(raw);
-      if (d) { setCache(system, user, d); return d; }
+      if (d) { setCache(system, user, d, opts); return d; }
       console.warn(`Attempt ${attempt} parse fail. Raw:`, (raw||'').substring(0, 200));
     } catch(e) {
       if (attempt === 3) throw e;

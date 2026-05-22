@@ -3975,6 +3975,7 @@ const PROVIDERS = {
     label: 'Anthropic (Claude)',
     url: 'https://api.anthropic.com/v1/messages',
     model_default: 'claude-sonnet-4-6',
+    supports: { webSearch: true },
     headers: key => ({'x-api-key':key,'anthropic-version':'2023-06-01','Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'}),
     buildBody: (system,user,model,opts={}) => {
       const body = {model,max_tokens:8192,system,messages:[{role:'user',content:user}]};
@@ -3992,8 +3993,12 @@ const PROVIDERS = {
     label: 'OpenAI (GPT-4o)',
     url: 'https://api.openai.com/v1/chat/completions',
     model_default: 'gpt-4o',
+    supports: { webSearch: false }, // no built-in tool; would need Responses API + tools[web_search]
     headers: key => ({'Authorization':'Bearer '+key,'Content-Type':'application/json'}),
-    buildBody: (system,user,model) => ({model,max_tokens:8192,messages:[{role:'system',content:system},{role:'user',content:user}]}),
+    buildBody: (system,user,model,opts={}) => {
+      if (opts.webSearch) _warnWebSearchUnsupported('openai');
+      return {model,max_tokens:8192,messages:[{role:'system',content:system},{role:'user',content:user}]};
+    },
     extractText: d => d.choices?.[0]?.message?.content||'',
     extractStop: d => d.choices?.[0]?.finish_reason,
   },
@@ -4001,8 +4006,12 @@ const PROVIDERS = {
     label: 'Google Gemini',
     url: key => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${key}`,
     model_default: 'gemini-1.5-pro',
+    supports: { webSearch: false }, // would need google_search_retrieval tool
     headers: () => ({'Content-Type':'application/json'}),
-    buildBody: (system,user,model) => ({contents:[{role:'user',parts:[{text:system+'\n\n'+user}]}],generationConfig:{maxOutputTokens:8192}}),
+    buildBody: (system,user,model,opts={}) => {
+      if (opts.webSearch) _warnWebSearchUnsupported('gemini');
+      return {contents:[{role:'user',parts:[{text:system+'\n\n'+user}]}],generationConfig:{maxOutputTokens:8192}};
+    },
     extractText: d => d.candidates?.[0]?.content?.parts?.[0]?.text||'',
     extractStop: d => d.candidates?.[0]?.finishReason,
   },
@@ -4010,12 +4019,40 @@ const PROVIDERS = {
     label: 'OpenAI-Compatible (Local)',
     url_custom: true,
     model_default: 'local-model',
+    supports: { webSearch: false },
     headers: key => ({'Authorization':'Bearer '+key,'Content-Type':'application/json'}),
-    buildBody: (system,user,model) => ({model,max_tokens:8192,messages:[{role:'system',content:system},{role:'user',content:user}]}),
+    buildBody: (system,user,model,opts={}) => {
+      if (opts.webSearch) _warnWebSearchUnsupported('openai_compat');
+      return {model,max_tokens:8192,messages:[{role:'system',content:system},{role:'user',content:user}]};
+    },
     extractText: d => d.choices?.[0]?.message?.content||'',
     extractStop: d => d.choices?.[0]?.finish_reason,
   },
 };
+
+// One-shot warning per provider — output accuracy is materially different
+// between web-search-on and web-search-off agents. User should know when a
+// non-Anthropic provider silently drops the request.
+const _webSearchWarned = {};
+function _warnWebSearchUnsupported(providerKey) {
+  if (_webSearchWarned[providerKey]) return;
+  _webSearchWarned[providerKey] = true;
+  console.warn(`[Provider] ⚠ webSearch:true requested but ${providerKey} has no built-in web search. ` +
+    `Anthropic is the only provider with first-class web search; other providers will return less-fresh data. ` +
+    `Switch to Anthropic for accuracy-critical agents, or accept reduced accuracy on this provider.`);
+  // Surface in UI banner if status strip exists
+  if (typeof document !== 'undefined') {
+    const anchor = document.getElementById('realDataStatus');
+    if (anchor && !document.getElementById('rdWebSearchWarn')) {
+      const b = document.createElement('div');
+      b.id = 'rdWebSearchWarn';
+      b.style.cssText = 'background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);border-radius:8px;padding:8px 12px;margin-top:6px;font-size:11px;color:#fbbf24';
+      b.innerHTML = `⚠ <strong>Provider ${providerKey} doesn't support web search.</strong> ` +
+        `Some agents request live web data — those results will be less accurate on this provider. Anthropic Claude is the only fully-supported provider.`;
+      anchor.appendChild(b);
+    }
+  }
+}
 
 // ── RESPONSE CACHE ──────────────────────────────────────────
 
@@ -4024,12 +4061,26 @@ const CACHE_KEY_PREFIX = 'dh_cache_v2_';
 const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
 const memCache = {};
 
-function cacheKey(system, user) {
-  // Hash the FULL system + user. Truncating to 80+120 chars caused
-  // re-runs after changing ZIP/capacity/industry to collide with the
-  // previous cache entry (discriminating values usually appear deep
-  // inside the prompt, not in the boilerplate prefix).
-  const raw = (system || '') + '' + (user || '');
+// Cache schema version — bump to invalidate all cached entries after
+// a breaking change to the prompt or response shape.
+const CACHE_SCHEMA_VERSION = '2';
+
+function _cacheCtx() {
+  // Discriminator: provider + model + schema version. Without these,
+  // switching Anthropic ↔ OpenAI or toggling models would return stale
+  // cached output from the wrong configuration.
+  const provider = (typeof window !== 'undefined' && window.activeProvider) || 'anthropic';
+  const model    = (typeof window !== 'undefined' && window.activeModel)    || 'default';
+  return provider + '|' + model + '|v' + CACHE_SCHEMA_VERSION;
+}
+
+function cacheKey(system, user, opts) {
+  // Hash FULL system + user + provider/model + tool flags.
+  // Includes opts.webSearch because response shape (citations vs none)
+  // materially differs between web-search-enabled and disabled calls.
+  const ctx  = _cacheCtx();
+  const tool = (opts && opts.webSearch) ? '|websearch' : '';
+  const raw  = ctx + tool + '||' + (system || '') + '||' + (user || '');
   let h = 5381;
   for (let i = 0; i < raw.length; i++) {
     h = (Math.imul(33, h) ^ raw.charCodeAt(i)) | 0;
@@ -4037,8 +4088,8 @@ function cacheKey(system, user) {
   return CACHE_KEY_PREFIX + Math.abs(h).toString(36);
 }
 
-function getCache(system, user) {
-  const k = cacheKey(system, user);
+function getCache(system, user, opts) {
+  const k = cacheKey(system, user, opts);
   if(memCache[k]) return memCache[k];
   try {
     const raw = localStorage.getItem(k);
@@ -4050,8 +4101,8 @@ function getCache(system, user) {
   } catch(e) { return null; }
 }
 
-function setCache(system, user, data) {
-  const k = cacheKey(system, user);
+function setCache(system, user, data, opts) {
+  const k = cacheKey(system, user, opts);
   memCache[k] = data;
   try { localStorage.setItem(k, JSON.stringify({ts:Date.now(), data})); } catch(e) {}
 }
@@ -4232,7 +4283,7 @@ async function claudeJSON(system, user, opts={}) {
     return {};
   }
   if(!demoMode) {
-    const cached = getCache(system, user);
+    const cached = getCache(system, user, opts);
     if(cached) { console.log('Cache hit'); return cached; }
   }
   const strictSystem = system + `
@@ -4276,7 +4327,7 @@ CRITICAL — NUMERIC PRECISION:
     try {
       const raw = await claude(strictSystem, user + (attempt > 1 ? '\n\nRemember: respond with ONLY the JSON object, nothing else.' : ''), opts);
       const d = parseJSON(raw);
-      if (d) { setCache(system, user, d); return d; }
+      if (d) { setCache(system, user, d, opts); return d; }
       console.warn(`Attempt ${attempt} parse fail. Raw:`, (raw||'').substring(0, 200));
     } catch(e) {
       if (attempt === 3) throw e;
@@ -4348,6 +4399,28 @@ function getFallback12(){return {summary:'Grant information unavailable — base
 function getFallback13(){return {summary:'Competitor analysis unavailable — run with API key.',competitor_profiles:[],pain_point_analysis:[],differentiation_strategy:[],messaging_guide:[]};}
 function getFallback14(){return {summary:'Code review unavailable.',overall_grade:'N/A',issues:[],performance_metrics:[],cost_analysis:{total_cost_per_run:0,optimized_cost_per_run:0,monthly_cost_10runs:0,monthly_cost_50runs:0,agents:[],optimization_tips:[]},recommended_fixes_priority:[]};}
 function getFallback15(){return {summary:'QA audit unavailable — run with API key for full testing.',overall_pass_rate:0,test_suites:[],data_validation:{fields_checked:0,fields_passed:0,fields_warned:0,fields_failed:0,critical_issues:[],warnings:[],by_agent:[]},ux_audit:[],health_score:{overall:0,dimensions:[]}};}
+
+// ── FALLBACK TAG WRAPPER ───────────────────────────────────────────────
+// Every getFallback* return is monkey-patched to carry _is_fallback:true so
+// the verifier can exclude these from the consistency score and the UI can
+// flag them as "baseline / not real data".
+(function() {
+  if (typeof window === 'undefined') return;
+  for (let n = 1; n <= 17; n++) {
+    const fnName = 'getFallback' + n;
+    const orig = window[fnName];
+    if (typeof orig !== 'function') continue;
+    window[fnName] = function() {
+      const r = orig.apply(this, arguments);
+      if (r && typeof r === 'object') {
+        r._is_fallback   = true;
+        r._fallback_agent= n;
+        r._fallback_at   = Date.now();
+      }
+      return r;
+    };
+  }
+})();
 
 // ── RAW DATA VIEWER ─────────────────────────────────────────
 function showRaw(n) {
@@ -4516,74 +4589,65 @@ Return ONLY this JSON (use real data from the sources above, note source and "es
   ],
   "summary": "5-sentence narrative citing specific numbers and sources on demographic opportunity for a ${ind.unit} in this area",
   "metro_overview": {
-    "metro_name": "Atlanta-Sandy Springs-Alpharetta MSA",
-    "total_pop_metro": 6200000,
-    "pop_growth_pct_1yr": 1.8,
-    "median_hh_income_metro": 78000,
-    "median_family_income": 92000,
-    "per_capita_income": 41500,
-    "per_capita_personal_income": 58200,
-    "unemployment_rate_pct": 3.4,
-    "poverty_rate_pct": 11.8,
-    "uninsured_pct": 12.4,
-    "net_migration_annual": 45000,
-    "net_migration_annual_pct": 0.7,
-    "birth_rate_per_1000": 11.2,
-    "source": "Census PEP 2023 / FRED / ACS B17001/B19301 / BEA CAINC1 / Vital Statistics"
+    "metro_name":              null,
+    "total_pop_metro":         null,
+    "pop_growth_pct_1yr":      null,
+    "median_hh_income_metro":  null,
+    "median_family_income":    null,
+    "per_capita_income":       null,
+    "per_capita_personal_income": null,
+    "unemployment_rate_pct":   null,
+    "poverty_rate_pct":        null,
+    "uninsured_pct":           null,
+    "net_migration_annual":    null,
+    "net_migration_annual_pct":null,
+    "birth_rate_per_1000":     null,
+    "source":                  null
   },
   "cities": [
     {
-      "name": "City A", "county": "County", "distance_miles": 10,
-      "pop_total": 82000, "pop_under5": 4800, "pop_under5_pct": 5.8,
-      "median_hh_income": 112000, "income_distribution": {"under_50k_pct": 12, "50_100k_pct": 28, "over_100k_pct": 60},
-      "poverty_rate_pct": 6.4,
-      "labor_force_pct": 68, "women_25_44_lfp_pct": 74,
-      "pop_growth_pct_5yr": 4.2, "pop_growth_pct_1yr": 1.1,
-      "households": 28000, "owner_occupied_pct": 72, "renter_pct": 28,
-      "working_parents_est_pct": 71, "dual_income_hh_est_pct": 64,
-      "avg_commute_minutes": 28,
-      "school_enrollment_k12": 14200,
-      "annual_births_county_est": 1800,
-      "traffic_aadt_main_corridor": 32000,
-      "walkability_score": 42,
-      "housing_affordability_index": 88,
-      "demand_score": 88,
-      "data_note": "ACS 2022 5yr est. + PEP 2023"
-    },
-    {
-      "name": "City B", "county": "County", "distance_miles": 28,
-      "pop_total": 18000, "pop_under5": 1400, "pop_under5_pct": 7.8,
-      "median_hh_income": 52000, "income_distribution": {"under_50k_pct": 45, "50_100k_pct": 38, "over_100k_pct": 17},
-      "poverty_rate_pct": 18.6,
-      "labor_force_pct": 65, "women_25_44_lfp_pct": 68,
-      "pop_growth_pct_5yr": 14, "pop_growth_pct_1yr": 3.2,
-      "households": 6800, "owner_occupied_pct": 58, "renter_pct": 42,
-      "working_parents_est_pct": 74, "dual_income_hh_est_pct": 55,
-      "avg_commute_minutes": 34,
-      "school_enrollment_k12": 3800,
-      "annual_births_county_est": 620,
-      "traffic_aadt_main_corridor": 14000,
-      "walkability_score": 28,
-      "housing_affordability_index": 112,
-      "demand_score": 72,
-      "data_note": "ACS 2022 5yr est. + Vital Stats 2022"
+      "name":               null,
+      "county":             null,
+      "distance_miles":     null,
+      "pop_total":          null,
+      "pop_under5":         null,
+      "pop_under5_pct":     null,
+      "median_hh_income":   null,
+      "income_distribution": {"under_50k_pct": null, "50_100k_pct": null, "over_100k_pct": null},
+      "poverty_rate_pct":   null,
+      "labor_force_pct":    null,
+      "women_25_44_lfp_pct":null,
+      "pop_growth_pct_5yr": null,
+      "pop_growth_pct_1yr": null,
+      "households":         null,
+      "owner_occupied_pct": null,
+      "renter_pct":         null,
+      "working_parents_est_pct": null,
+      "dual_income_hh_est_pct":  null,
+      "avg_commute_minutes":null,
+      "school_enrollment_k12": null,
+      "annual_births_county_est": null,
+      "traffic_aadt_main_corridor": null,
+      "walkability_score":  null,
+      "housing_affordability_index": null,
+      "demand_score":       null,
+      "data_note":          null
     }
   ],
   "age_breakdown_county": [
-    {"age_group": "Segment 1", "gwinnett_pop": 7200, "fulton_pop": 5100, "gap_capacity": 380, "source": "ACS B01001"},
-    {"age_group": "Segment 2", "gwinnett_pop": 14800, "fulton_pop": 10400, "gap_capacity": 620, "source": "ACS B01001"}
+    {"age_group": null, "gwinnett_pop": null, "fulton_pop": null, "gap_capacity": null, "source": null}
   ],
   "labor_market_summary": {
-    "top_employer_sectors": ["Healthcare", "Professional Services", "Technology", "Education"],
-    "median_wage_primary_occupation": 72000,
-    "female_labor_force_pct_county": 59,
-    "source": "BLS QCEW + OEWS 2023"
+    "top_employer_sectors":          [],
+    "median_wage_primary_occupation": null,
+    "female_labor_force_pct_county":  null,
+    "source": null
   },
   "housing_market_summary": {
-    "median_home_value": 420000,
-    "new_permits_issued_2023": 3200,
-    "yoy_permit_growth_pct": 8.4,
-    "source": "Census Building Permits Survey 2023"
+    "median_home_value":      null,
+    "new_permits_issued_2023":null,
+    "yoy_permit_growth_pct":  null,
+    "source": null
   }
 }`;
   // ── Part 2 prompt (community profile — separate sub-call to avoid max_tokens) ──
@@ -5748,33 +5812,19 @@ KEY FINDINGS:
 - Competitors: ${ctx(a6,['summary','cities','top_chains'])}
 - Financials: ${ctx(a7,['summary','scenarios','by_city_financials'])}
 
-Return ONLY:
+Return ONLY this JSON shape. Every value must derive from the KEY FINDINGS above — do NOT use any example
+text, city name, dollar figure, or company name from this schema (these are field hints only, replace each
+with values grounded in the user's specific ZIP / industry / KEY FINDINGS data).
+
 {
-  "verdict": "Go",
-  "verdict_rationale": "One compelling sentence justifying the Go/Cautious Go/No Go decision with specific data",
-  "assessment": "5-6 sentence executive assessment narrative citing specific cities, numbers, and findings",
-  "success_factors": [
-    "Open in Suwanee: highest gap score (9/10), only 2 competitors within 2 miles, median income $112k",
-    "Target infants and toddlers: biggest supply gap (53-point deficit), highest margin age group",
-    "Price at $1,900-$2,050/month for infants — below Primrose ($2,100) but above independents",
-    "Hire director 6+ months early — DECAL requires director on license application",
-    "Launch pre-enrollment waitlist in Suwanee/Sugar Hill Facebook parent groups before opening"
+  "verdict": null,            // "Go" | "Cautious Go" | "No Go"
+  "verdict_rationale": null,  // 1 sentence citing 2-3 specific numbers from KEY FINDINGS
+  "assessment":        null,  // 5-6 sentence narrative citing specific cities + numbers from KEY FINDINGS
+  "success_factors":   [],    // 5 strings; each cites a specific city/number/source from KEY FINDINGS
+  "risks": [                  // 3+ entries
+    {"risk": null, "mitigation": null, "severity": null}  // severity: "High" | "Medium" | "Low"
   ],
-  "risks": [
-    {"risk":"Infant staffing ratios require 1:6 teacher ratio, limiting revenue per room","mitigation":"Hire experienced infant teachers early; consider premium infant-only room at $2,200/mo","severity":"High"},
-    {"risk":"SBA loan approval timeline can delay opening 60-90 days","mitigation":"Begin SBA pre-qualification immediately; maintain 6-month working capital reserve","severity":"High"},
-    {"risk":"Suwanee/Sugar Hill lease market tightening — suitable spaces limited","mitigation":"Engage broker immediately; identify backup Sugar Hill site; consider build-to-suit","severity":"Medium"}
-  ],
-  "next_steps": [
-    "This week: Engage a Gwinnett County commercial RE broker specializing in childcare to tour Suwanee Town Center and Peachtree Pkwy listings",
-    "Week 2: File Georgia LLC with Secretary of State ($100) and obtain EIN from IRS.gov",
-    "Week 3-4: Begin SBA 7(a) pre-qualification with Regions Bank or Truist (both active childcare lenders)",
-    "Month 2: Hire a Georgia DECAL consultant to pre-review your intended facility layout before signing lease",
-    "Month 2-3: Sign lease, commission architect for DECAL-compliant drawings (35 sqft/child indoor, 75 outdoor)",
-    "Month 3: Post pre-enrollment interest form in Suwanee Parents Facebook group (28k members), NextDoor",
-    "Month 4: Post Director job listing — plan to hire 6 months before opening; they will own DECAL relationship",
-    "Month 5: Submit DECAL application package with background checks for all owners and staff"
-  ]
+  "next_steps": []            // 6-8 strings; each starts with "Week N:" or "Month N:" timeline marker
 }`;
   try {
     // Show panel early so streaming text is visible immediately
@@ -13047,6 +13097,30 @@ if (typeof window !== 'undefined') {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// PROXY HELPER — fetch government APIs via /api/proxy when window.USE_PROXY
+// is true. Server-side env vars hold the keys; client never sees them.
+// ══════════════════════════════════════════════════════════════════════════════
+async function _rdViaProxy(source, path, opts = {}) {
+  const proxyUrl = (typeof window !== 'undefined' && window.PROXY_URL) || '/api/proxy';
+  const res = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ source, path, method: opts.method || 'GET', body: opts.body }),
+    signal: opts.signal,
+  });
+  return res;
+}
+
+if (typeof window !== 'undefined' && window.USE_PROXY === undefined) {
+  // Auto-enable proxy if it responds to a HEAD/OPTIONS probe — gives zero-config
+  // behavior when api/proxy.mjs is deployed alongside the static bundle.
+  window.USE_PROXY = false;
+  fetch('/api/proxy', { method: 'OPTIONS' })
+    .then(r => { if (r.status === 204 || r.status === 200) window.USE_PROXY = true; })
+    .catch(() => {});
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // MAIN ORCHESTRATOR
 // ══════════════════════════════════════════════════════════════════════════════
 async function prefetchRealData(zipCode, industryKey, capacityVal, budgetVal) {
@@ -13770,7 +13844,7 @@ async function _rdFetchACS(zip) {
     // ACS 5-Year variables: pop, median_income, owner_occ, under_18, employed,
     // bachelors (B15003_022), masters (023), professional (024), doctorate (025), renter
     const vars = 'B01003_001E,B19013_001E,B25003_002E,B09001_001E,B23025_004E,B15003_022E,B15003_023E,B15003_024E,B15003_025E,B25003_003E';
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const url = `https://api.census.gov/data/2024/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
@@ -13902,19 +13976,19 @@ async function _rdFetchFRED() {
     const cpi = lastVal(cpiRes);
     const un  = lastVal(unempRes);
 
-    // fredgraph.csv is CORS-blocked in browsers — fall back to recent hardcoded values
+    // If all three FRED CSVs were blocked (CORS) or failed, return null instead
+    // of hardcoded constants — stale values masquerading as live data would
+    // pollute the verifier's consistency score with false "real" data.
     if (fed === null && cpi === null && un === null) {
-      console.warn('[RealData] FRED CORS blocked — using hardcoded fallback (May 2025)');
-      const fb = { fed_funds_rate:4.33, cpi:319.8, unemployment:4.2, prime_rate:7.33,
-                   source:'FRED (hardcoded May 2025)', _fallback:true };
-      return _rdCacheSet(k, fb);
+      console.warn('[RealData] FRED all CSVs blocked/failed — returning null (no hardcoded fallback)');
+      return null;
     }
     const result = {
-      fed_funds_rate: fed  ?? 4.33,
-      cpi:            cpi  ?? 319.8,
-      unemployment:   un   ?? 4.2,
-      prime_rate:     fed  ? Math.round((fed + 3) * 10) / 10 : 7.33,
-      source:         'FRED (Federal Reserve)',
+      fed_funds_rate: fed,
+      cpi:            cpi,
+      unemployment:   un,
+      prime_rate:     fed != null ? Math.round((fed + 3) * 10) / 10 : null,
+      source:         'FRED (Federal Reserve, live CSV)',
     };
     return _rdCacheSet(k, result);
   } catch(e) { console.warn('[RealData] FRED failed:', e.message); return null; }
@@ -14315,8 +14389,8 @@ async function _rdFetchACSExpanded(zip) {
     // B08303_001E = total commuters; B08303_013E = commuters 60+ min
     const vars = 'S2301_C04_001E,B17001_001E,B17001_002E,B11003_001E,B11003_002E,B25064_001E,B25002_001E,B25002_003E,B08303_001E,B08303_013E';
     // Subject tables (S) must use /subject endpoint
-    const subjUrl = `https://api.census.gov/data/2022/acs/acs5/subject?get=S2301_C04_001E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
-    const detUrl  = `https://api.census.gov/data/2022/acs/acs5?get=B17001_001E,B17001_002E,B11003_001E,B11003_002E,B25064_001E,B25002_001E,B25002_003E,B08303_001E,B08303_013E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const subjUrl = `https://api.census.gov/data/2024/acs/acs5/subject?get=S2301_C04_001E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const detUrl  = `https://api.census.gov/data/2024/acs/acs5?get=B17001_001E,B17001_002E,B11003_001E,B11003_002E,B25064_001E,B25002_001E,B25002_003E,B08303_001E,B08303_013E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const parseCensus = async r => {
       if (!r || !r.ok) return null;
       const t = await r.text();
@@ -14484,7 +14558,7 @@ async function _rdFetchCBPCounty(stateFips, countyFips, naics) {
   if (_rdCacheGet(k)) return _rdCacheGet(k);
   try {
     // Census CBP requires window.CENSUS_API_KEY (free at api.census.gov/data/key_signup.html)
-    const url = `https://api.census.gov/data/2022/cbp?get=ESTAB,EMP,PAYANN&for=county:${countyFips}&in=state:${stateFips}&NAICS2017=${naics}${_rdCensusKeySuffix()}`;
+    const url = `https://api.census.gov/data/2023/cbp?get=ESTAB,EMP,PAYANN&for=county:${countyFips}&in=state:${stateFips}&NAICS2017=${naics}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
@@ -14721,7 +14795,7 @@ async function _rdFetchACSHomeValue(zip) {
   try {
     // B25077_001E = median value of owner-occupied housing units
     // B25104_001E = monthly housing costs (median) — owner+renter combined
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=B25077_001E,B25104_001E,B25088_001E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const url = `https://api.census.gov/data/2024/acs/acs5?get=B25077_001E,B25104_001E,B25088_001E&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
@@ -14874,7 +14948,7 @@ async function _rdFetchACSIndustryMix(zip) {
     // _010 educational/health, _011 arts/entertainment, _012 other svc, _013 public admin
     const vars = 'C24050_001E,C24050_005E,C24050_009E,C24050_010E,C24050_011E,B19301_001E';
     // B19301_001E = per capita income
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const url = `https://api.census.gov/data/2024/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
@@ -14983,7 +15057,7 @@ async function _rdFetchACSMigration(zip) {
     // B07001_001 = total pop 1yr+; _017 = same house 1yr ago; _033 = same county;
     // _049 = different county same state; _065 = different state; _081 = abroad
     const vars = 'B07001_001E,B07001_017E,B07001_033E,B07001_049E,B07001_065E,B07001_081E';
-    const url = `https://api.census.gov/data/2022/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
+    const url = `https://api.census.gov/data/2024/acs/acs5?get=${vars}&for=zip%20code%20tabulation%20area:${zip}${_rdCensusKeySuffix()}`;
     const res = await fetch(url, { signal:_rdAbortTimeout(10000) });
     if (!res.ok) return null;
     const text = await res.text();
@@ -15506,6 +15580,15 @@ function rdRenderFinancialBadge(elId) {
     if (!window.R || !R.real) return;
 
     const checks = [];
+
+    // Track which agents fired their fallback — these get EXCLUDED from
+    // the consistency score because comparing baseline placeholder data
+    // against real government data produces a false high or low score.
+    const fallbackAgents = [];
+    for (let n = 1; n <= 17; n++) {
+      const a = R['a' + n];
+      if (a && a._is_fallback) fallbackAgents.push(n);
+    }
 
     // ── A1 Demographics vs ACS ───────────────────────────────────
     const dem = R.real.demographics;
@@ -16101,27 +16184,38 @@ function rdRenderFinancialBadge(elId) {
       }
     }
 
+    // ── Drop checks whose agent fired its fallback (baseline data isn't real) ──
+    const beforeFilter = checks.length;
+    const realChecks = checks.filter(c => {
+      const m = (c.agent || '').match(/^A(\d+)/);
+      return !(m && fallbackAgents.includes(parseInt(m[1])));
+    });
+    const droppedFallback = beforeFilter - realChecks.length;
+
     // ── Need at least 2 valid checks to display ──────────────────
-    const valid = checks.filter(c => c.acc !== null && !isNaN(c.acc));
+    const valid = realChecks.filter(c => c.acc !== null && !isNaN(c.acc));
     if (valid.length < 2) {
-      console.log('[Verifier] Not enough checks to display accuracy card:', valid.length);
+      console.log('[Verifier] Not enough valid checks to display consistency card:', valid.length,
+                  '(dropped', droppedFallback, 'fallback-tainted checks; agents on fallback:', fallbackAgents.join(',') || 'none', ')');
       return;
     }
 
     const avgAcc = valid.reduce((s, c) => s + c.acc, 0) / valid.length;
     const pct    = Math.round(avgAcc * 100);
 
-    R.accuracy = { score: pct, checks: valid, checked_at: Date.now() };
-    console.log(`[Verifier] Accuracy score: ${pct}% (${valid.length} checks)`);
+    R.accuracy = { score: pct, checks: valid, checked_at: Date.now(),
+                   fallback_agents: fallbackAgents, dropped_checks: droppedFallback };
+    console.log(`[Verifier] Consistency score: ${pct}% (${valid.length} checks; ${droppedFallback} dropped due to fallbacks)`);
 
-    _renderAccuracyCard(pct, valid);
+    _renderAccuracyCard(pct, valid, { fallbackAgents, droppedFallback });
   }
 
   // ── Render ─────────────────────────────────────────────────────
 
-  function _renderAccuracyCard(pct, checks) {
+  function _renderAccuracyCard(pct, checks, meta) {
     const statusEl = document.getElementById('realDataStatus');
     if (!statusEl) return;
+    meta = meta || {};
 
     const color = pct >= 85 ? 'var(--green)' : pct >= 70 ? 'var(--amber)' : 'var(--red)';
     const grade = pct >= 90 ? 'A' : pct >= 80 ? 'B' : pct >= 70 ? 'C' : 'D';
@@ -16154,8 +16248,8 @@ function rdRenderFinancialBadge(elId) {
           <span style="font-size:11px;font-weight:700;background:${color};color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center">${grade}</span>
         </div>
         <div>
-          <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--text)">Data Accuracy Score</div>
-          <div style="font-size:10px;color:var(--faint)">${checks.length} AI fields verified vs live government sources</div>
+          <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--text)" title="Compares AI output fields against proxy values from live government APIs. Not field-for-field equality — proxies use different geographies, units, or sectors (e.g. HUD×3 for commercial rent). Best read as 'AI tracks real-world benchmarks'.">Data Consistency Score</div>
+          <div style="font-size:10px;color:var(--faint)">${checks.length} AI fields cross-checked vs government proxy data${meta.fallbackAgents && meta.fallbackAgents.length ? ` · ⚠ ${meta.fallbackAgents.length} agent${meta.fallbackAgents.length===1?'':'s'} on fallback (excluded): A${meta.fallbackAgents.join(', A')}` : ''}</div>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
           ${pct >= 85

@@ -14,6 +14,28 @@ function getFallback13(){return {summary:'Competitor analysis unavailable — ru
 function getFallback14(){return {summary:'Code review unavailable.',overall_grade:'N/A',issues:[],performance_metrics:[],cost_analysis:{total_cost_per_run:0,optimized_cost_per_run:0,monthly_cost_10runs:0,monthly_cost_50runs:0,agents:[],optimization_tips:[]},recommended_fixes_priority:[]};}
 function getFallback15(){return {summary:'QA audit unavailable — run with API key for full testing.',overall_pass_rate:0,test_suites:[],data_validation:{fields_checked:0,fields_passed:0,fields_warned:0,fields_failed:0,critical_issues:[],warnings:[],by_agent:[]},ux_audit:[],health_score:{overall:0,dimensions:[]}};}
 
+// ── FALLBACK TAG WRAPPER ───────────────────────────────────────────────
+// Every getFallback* return is monkey-patched to carry _is_fallback:true so
+// the verifier can exclude these from the consistency score and the UI can
+// flag them as "baseline / not real data".
+(function() {
+  if (typeof window === 'undefined') return;
+  for (let n = 1; n <= 17; n++) {
+    const fnName = 'getFallback' + n;
+    const orig = window[fnName];
+    if (typeof orig !== 'function') continue;
+    window[fnName] = function() {
+      const r = orig.apply(this, arguments);
+      if (r && typeof r === 'object') {
+        r._is_fallback   = true;
+        r._fallback_agent= n;
+        r._fallback_at   = Date.now();
+      }
+      return r;
+    };
+  }
+})();
+
 // ── RAW DATA VIEWER ─────────────────────────────────────────
 function showRaw(n) {
   const el=$('raw-'+n);

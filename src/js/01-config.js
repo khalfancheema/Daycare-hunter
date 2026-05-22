@@ -209,6 +209,7 @@ const PROVIDERS = {
     label: 'Anthropic (Claude)',
     url: 'https://api.anthropic.com/v1/messages',
     model_default: 'claude-sonnet-4-6',
+    supports: { webSearch: true },
     headers: key => ({'x-api-key':key,'anthropic-version':'2023-06-01','Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'}),
     buildBody: (system,user,model,opts={}) => {
       const body = {model,max_tokens:8192,system,messages:[{role:'user',content:user}]};
@@ -226,8 +227,12 @@ const PROVIDERS = {
     label: 'OpenAI (GPT-4o)',
     url: 'https://api.openai.com/v1/chat/completions',
     model_default: 'gpt-4o',
+    supports: { webSearch: false }, // no built-in tool; would need Responses API + tools[web_search]
     headers: key => ({'Authorization':'Bearer '+key,'Content-Type':'application/json'}),
-    buildBody: (system,user,model) => ({model,max_tokens:8192,messages:[{role:'system',content:system},{role:'user',content:user}]}),
+    buildBody: (system,user,model,opts={}) => {
+      if (opts.webSearch) _warnWebSearchUnsupported('openai');
+      return {model,max_tokens:8192,messages:[{role:'system',content:system},{role:'user',content:user}]};
+    },
     extractText: d => d.choices?.[0]?.message?.content||'',
     extractStop: d => d.choices?.[0]?.finish_reason,
   },
@@ -235,8 +240,12 @@ const PROVIDERS = {
     label: 'Google Gemini',
     url: key => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${key}`,
     model_default: 'gemini-1.5-pro',
+    supports: { webSearch: false }, // would need google_search_retrieval tool
     headers: () => ({'Content-Type':'application/json'}),
-    buildBody: (system,user,model) => ({contents:[{role:'user',parts:[{text:system+'\n\n'+user}]}],generationConfig:{maxOutputTokens:8192}}),
+    buildBody: (system,user,model,opts={}) => {
+      if (opts.webSearch) _warnWebSearchUnsupported('gemini');
+      return {contents:[{role:'user',parts:[{text:system+'\n\n'+user}]}],generationConfig:{maxOutputTokens:8192}};
+    },
     extractText: d => d.candidates?.[0]?.content?.parts?.[0]?.text||'',
     extractStop: d => d.candidates?.[0]?.finishReason,
   },
@@ -244,11 +253,39 @@ const PROVIDERS = {
     label: 'OpenAI-Compatible (Local)',
     url_custom: true,
     model_default: 'local-model',
+    supports: { webSearch: false },
     headers: key => ({'Authorization':'Bearer '+key,'Content-Type':'application/json'}),
-    buildBody: (system,user,model) => ({model,max_tokens:8192,messages:[{role:'system',content:system},{role:'user',content:user}]}),
+    buildBody: (system,user,model,opts={}) => {
+      if (opts.webSearch) _warnWebSearchUnsupported('openai_compat');
+      return {model,max_tokens:8192,messages:[{role:'system',content:system},{role:'user',content:user}]};
+    },
     extractText: d => d.choices?.[0]?.message?.content||'',
     extractStop: d => d.choices?.[0]?.finish_reason,
   },
 };
+
+// One-shot warning per provider — output accuracy is materially different
+// between web-search-on and web-search-off agents. User should know when a
+// non-Anthropic provider silently drops the request.
+const _webSearchWarned = {};
+function _warnWebSearchUnsupported(providerKey) {
+  if (_webSearchWarned[providerKey]) return;
+  _webSearchWarned[providerKey] = true;
+  console.warn(`[Provider] ⚠ webSearch:true requested but ${providerKey} has no built-in web search. ` +
+    `Anthropic is the only provider with first-class web search; other providers will return less-fresh data. ` +
+    `Switch to Anthropic for accuracy-critical agents, or accept reduced accuracy on this provider.`);
+  // Surface in UI banner if status strip exists
+  if (typeof document !== 'undefined') {
+    const anchor = document.getElementById('realDataStatus');
+    if (anchor && !document.getElementById('rdWebSearchWarn')) {
+      const b = document.createElement('div');
+      b.id = 'rdWebSearchWarn';
+      b.style.cssText = 'background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);border-radius:8px;padding:8px 12px;margin-top:6px;font-size:11px;color:#fbbf24';
+      b.innerHTML = `⚠ <strong>Provider ${providerKey} doesn't support web search.</strong> ` +
+        `Some agents request live web data — those results will be less accurate on this provider. Anthropic Claude is the only fully-supported provider.`;
+      anchor.appendChild(b);
+    }
+  }
+}
 
 // ── RESPONSE CACHE ──────────────────────────────────────────

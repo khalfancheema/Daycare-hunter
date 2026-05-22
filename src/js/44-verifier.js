@@ -52,6 +52,15 @@
 
     const checks = [];
 
+    // Track which agents fired their fallback — these get EXCLUDED from
+    // the consistency score because comparing baseline placeholder data
+    // against real government data produces a false high or low score.
+    const fallbackAgents = [];
+    for (let n = 1; n <= 17; n++) {
+      const a = R['a' + n];
+      if (a && a._is_fallback) fallbackAgents.push(n);
+    }
+
     // ── A1 Demographics vs ACS ───────────────────────────────────
     const dem = R.real.demographics;
     const a1  = R.a1;
@@ -646,27 +655,38 @@
       }
     }
 
+    // ── Drop checks whose agent fired its fallback (baseline data isn't real) ──
+    const beforeFilter = checks.length;
+    const realChecks = checks.filter(c => {
+      const m = (c.agent || '').match(/^A(\d+)/);
+      return !(m && fallbackAgents.includes(parseInt(m[1])));
+    });
+    const droppedFallback = beforeFilter - realChecks.length;
+
     // ── Need at least 2 valid checks to display ──────────────────
-    const valid = checks.filter(c => c.acc !== null && !isNaN(c.acc));
+    const valid = realChecks.filter(c => c.acc !== null && !isNaN(c.acc));
     if (valid.length < 2) {
-      console.log('[Verifier] Not enough checks to display accuracy card:', valid.length);
+      console.log('[Verifier] Not enough valid checks to display consistency card:', valid.length,
+                  '(dropped', droppedFallback, 'fallback-tainted checks; agents on fallback:', fallbackAgents.join(',') || 'none', ')');
       return;
     }
 
     const avgAcc = valid.reduce((s, c) => s + c.acc, 0) / valid.length;
     const pct    = Math.round(avgAcc * 100);
 
-    R.accuracy = { score: pct, checks: valid, checked_at: Date.now() };
-    console.log(`[Verifier] Accuracy score: ${pct}% (${valid.length} checks)`);
+    R.accuracy = { score: pct, checks: valid, checked_at: Date.now(),
+                   fallback_agents: fallbackAgents, dropped_checks: droppedFallback };
+    console.log(`[Verifier] Consistency score: ${pct}% (${valid.length} checks; ${droppedFallback} dropped due to fallbacks)`);
 
-    _renderAccuracyCard(pct, valid);
+    _renderAccuracyCard(pct, valid, { fallbackAgents, droppedFallback });
   }
 
   // ── Render ─────────────────────────────────────────────────────
 
-  function _renderAccuracyCard(pct, checks) {
+  function _renderAccuracyCard(pct, checks, meta) {
     const statusEl = document.getElementById('realDataStatus');
     if (!statusEl) return;
+    meta = meta || {};
 
     const color = pct >= 85 ? 'var(--green)' : pct >= 70 ? 'var(--amber)' : 'var(--red)';
     const grade = pct >= 90 ? 'A' : pct >= 80 ? 'B' : pct >= 70 ? 'C' : 'D';
@@ -699,8 +719,8 @@
           <span style="font-size:11px;font-weight:700;background:${color};color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center">${grade}</span>
         </div>
         <div>
-          <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--text)">Data Accuracy Score</div>
-          <div style="font-size:10px;color:var(--faint)">${checks.length} AI fields verified vs live government sources</div>
+          <div style="font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--text)" title="Compares AI output fields against proxy values from live government APIs. Not field-for-field equality — proxies use different geographies, units, or sectors (e.g. HUD×3 for commercial rent). Best read as 'AI tracks real-world benchmarks'.">Data Consistency Score</div>
+          <div style="font-size:10px;color:var(--faint)">${checks.length} AI fields cross-checked vs government proxy data${meta.fallbackAgents && meta.fallbackAgents.length ? ` · ⚠ ${meta.fallbackAgents.length} agent${meta.fallbackAgents.length===1?'':'s'} on fallback (excluded): A${meta.fallbackAgents.join(', A')}` : ''}</div>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
           ${pct >= 85

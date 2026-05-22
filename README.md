@@ -18,6 +18,36 @@ No server. No install. No dependencies. Just open and run.
 
 ---
 
+## ⚠ Security & Key Storage — Read Before Deploying
+
+This app is a **static single-page bundle**. Three things follow from that:
+
+1. **API keys baked into the bundle are visible in browser source view.**
+   The build supports `process.env.<KEY>` injection (Vercel env vars / CI secrets)
+   and `src/js/local-keys.js` (gitignored). Both end up inside `<script>` in the
+   shipped HTML. Anyone who opens DevTools on your deployed site can read them.
+2. **In-browser 🔑 button stores keys to `localStorage`.** Convenient for personal
+   use, but it persists in the user's browser. This is **not** a zero-storage BYOK flow.
+3. **No server-side proxy is included by default.** Every API call goes from
+   the user's browser directly to the upstream provider with the embedded key.
+
+**Implications by key type:**
+
+| Key | Risk if leaked | Recommendation |
+|-----|----------------|----------------|
+| Free government APIs (Census, HUD, BEA, NOAA, AirNow, BLS, FRED, NREL, FBI) | Rate-limit pollution only; replaceable free | Acceptable in bundle for personal use. Regenerate if abused. |
+| LLM provider keys (Anthropic, OpenAI, Gemini) | **Billable usage** — could rack up real charges | **NEVER bake into deployed bundle.** Always use the in-app key field OR a server-side proxy. |
+| SAM.gov | Identity-tied, abuse-flaggable | Server-side proxy strongly recommended for any public deployment. |
+
+**For public deployments**, build a server-side proxy (e.g., a Vercel serverless
+function) that holds keys in `process.env` and forwards requests. Frontend never
+sees the key. See `api/` directory (when present) for the reference implementation.
+
+For **personal / single-user / local-network** use, the bundled-key pattern is
+acceptable because the only person opening the page is you.
+
+---
+
 ## Supported AI Providers
 
 | Provider | Default Model | Get API Key |
